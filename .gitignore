@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+.next/
+out/
+dist/
+build/
+*.exe
+
+# Go
+apps/api/bin/
+apps/api/tmp/
+apps/api/.gocache/
+apps/api/.gotmp/
+*.test.exe
+
+# Python
+apps/agent/.venv/
+apps/agent/__pycache__/
+apps/agent/**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# gqlgen generated (tracked in Phase 1 scaffold)
+# apps/api/graph/generated.go

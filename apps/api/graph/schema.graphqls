@@ -1,0 +1,9 @@
+# GraphQL schema — Phase 1 stub; business schema expands in later phases
+schema {
+  query: Query
+}
+
+type Query {
+  """Platform health probe for GraphQL layer"""
+  health: String!
+}
