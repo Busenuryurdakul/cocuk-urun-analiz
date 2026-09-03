@@ -6,10 +6,16 @@ package graph
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/httpx"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/rbac"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 // Register is the resolver for the register field.
@@ -152,6 +158,205 @@ func (r *mutationResolver) SwitchWorkspace(ctx context.Context, organizationID s
 	return true, nil
 }
 
+// CreateOrganization is the resolver for the createOrganization field.
+func (r *mutationResolver) CreateOrganization(ctx context.Context, input model.CreateOrganizationInput) (*model.Organization, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	org, err := r.Org.CreateOrganization(ctx, actorID, input.Name, string(input.ComplianceProfile))
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelOrganization(org), nil
+}
+
+// InviteMember is the resolver for the inviteMember field.
+func (r *mutationResolver) InviteMember(ctx context.Context, input model.InviteMemberInput) (bool, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	if err := r.Org.InviteMember(ctx, actorID, orgID, input.Email, string(input.Role)); err != nil {
+		return false, mapAuthError(err)
+	}
+	return true, nil
+}
+
+// AcceptInvitation is the resolver for the acceptInvitation field.
+func (r *mutationResolver) AcceptInvitation(ctx context.Context, token string) (*model.Organization, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	org, err := r.Org.AcceptInvitation(ctx, actorID, token)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelOrganization(org), nil
+}
+
+// UpdateMemberRole is the resolver for the updateMemberRole field.
+func (r *mutationResolver) UpdateMemberRole(ctx context.Context, input model.UpdateMemberRoleInput) (bool, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	targetID, err := parseObjectID(input.UserID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	if err := r.Org.UpdateMemberRole(ctx, actorID, orgID, targetID, string(input.Role)); err != nil {
+		return false, mapAuthError(err)
+	}
+	return true, nil
+}
+
+// RemoveMember is the resolver for the removeMember field.
+func (r *mutationResolver) RemoveMember(ctx context.Context, input model.RemoveMemberInput) (bool, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	targetID, err := parseObjectID(input.UserID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	if err := r.Org.RemoveMember(ctx, actorID, orgID, targetID); err != nil {
+		return false, mapAuthError(err)
+	}
+	return true, nil
+}
+
+// UpdateOrganizationComplianceProfile is the resolver for the updateOrganizationComplianceProfile field.
+func (r *mutationResolver) UpdateOrganizationComplianceProfile(ctx context.Context, input model.UpdateComplianceProfileInput) (*model.Organization, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	org, err := r.Org.UpdateComplianceProfile(ctx, actorID, orgID, string(input.ComplianceProfile))
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelOrganization(org), nil
+}
+
+// PublishCompliancePolicyVersion is the resolver for the publishCompliancePolicyVersion field.
+func (r *mutationResolver) PublishCompliancePolicyVersion(ctx context.Context, input model.PublishCompliancePolicyInput) (*model.CompliancePolicy, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	policy, err := r.Org.PublishCompliancePolicy(ctx, actorID, orgID, string(input.ComplianceProfile), input.Version, input.Reason)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelCompliancePolicy(policy), nil
+}
+
+// GrantConsent is the resolver for the grantConsent field.
+func (r *mutationResolver) GrantConsent(ctx context.Context, input model.GrantConsentInput) (*model.Consent, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+
+	var orgPtr *primitive.ObjectID
+	policyVersion := "1.0.0"
+
+	if input.OrganizationID != nil {
+		parsed, parseErr := parseObjectID(*input.OrganizationID)
+		if parseErr != nil {
+			return nil, gqlError("INVALID_ID", parseErr)
+		}
+		orgPtr = &parsed
+		role, tenantErr := r.Auth.Tenant.RequireMembership(ctx, actorID, parsed)
+		if tenantErr != nil {
+			return nil, mapAuthError(tenantErr)
+		}
+		if !rbac.CanReadWorkspace(role) {
+			return nil, gqlError("FORBIDDEN", errForbidden)
+		}
+		org, orgErr := r.Auth.Orgs.FindByID(ctx, parsed)
+		if orgErr != nil {
+			return nil, mapAuthError(orgErr)
+		}
+		if active, polErr := r.PolicyRepo.ResolveActive(ctx, org); polErr == nil {
+			policyVersion = active.Version
+		}
+	} else {
+		user, userErr := r.Auth.Users.FindByID(ctx, actorID)
+		if userErr != nil {
+			return nil, mapAuthError(userErr)
+		}
+		org, orgErr := r.Auth.Orgs.FindByID(ctx, user.PersonalOrgID)
+		if orgErr == nil {
+			if active, polErr := r.PolicyRepo.ResolveActive(ctx, org); polErr == nil {
+				policyVersion = active.Version
+			}
+		}
+	}
+
+	if _, err := r.Compliance.Evaluate(ctx, compliance.EvaluateRequest{
+		Operation: "grant_consent",
+		UserID:    actorID,
+		Fields:    map[string]string{"purpose": string(input.Purpose)},
+	}); err != nil {
+		if errors.Is(err, compliance.ErrBypassAttempt) {
+			return nil, mapAuthError(err)
+		}
+	}
+
+	consent, err := r.Consent.Grant(ctx, actorID, orgPtr, domain.ConsentPurpose(input.Purpose), domain.ConsentSourceWeb, policyVersion)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelConsent(consent), nil
+}
+
+// WithdrawConsent is the resolver for the withdrawConsent field.
+func (r *mutationResolver) WithdrawConsent(ctx context.Context, input model.WithdrawConsentInput) (bool, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", err)
+	}
+	var orgPtr *primitive.ObjectID
+	if input.OrganizationID != nil {
+		parsed, parseErr := parseObjectID(*input.OrganizationID)
+		if parseErr != nil {
+			return false, gqlError("INVALID_ID", parseErr)
+		}
+		orgPtr = &parsed
+		if _, tenantErr := r.Auth.Tenant.RequireMembership(ctx, actorID, parsed); tenantErr != nil {
+			return false, mapAuthError(tenantErr)
+		}
+	}
+	if err := r.Consent.Withdraw(ctx, actorID, orgPtr, domain.ConsentPurpose(input.Purpose)); err != nil {
+		return false, mapAuthError(err)
+	}
+	return true, nil
+}
+
 // Health returns GraphQL layer health.
 func (r *queryResolver) Health(ctx context.Context) (string, error) {
 	return "ok", nil
@@ -218,12 +423,102 @@ func (r *queryResolver) Organization(ctx context.Context, organizationID string)
 	if err != nil {
 		return nil, mapAuthError(err)
 	}
-	return &model.Organization{
-		ID:                org.ID.Hex(),
-		Name:              org.Name,
-		Type:              toModelOrgType(org.Type),
-		ComplianceProfile: org.ComplianceProfile,
-	}, nil
+	return toModelOrganization(org), nil
+}
+func (r *queryResolver) OrganizationMembers(ctx context.Context, organizationID string) ([]*model.OrganizationMember, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	members, err := r.Org.ListMembers(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	out := make([]*model.OrganizationMember, 0, len(members))
+	for _, m := range members {
+		out = append(out, &model.OrganizationMember{
+			UserID:    m.UserID.Hex(),
+			Email:     m.Email,
+			Role:      model.OrgRole(m.Role),
+			JoinedAt:  m.JoinedAt.UTC().Format(time.RFC3339),
+			InvitedAt: m.InvitedAt.UTC().Format(time.RFC3339),
+		})
+	}
+	return out, nil
+}
+
+// ActiveCompliancePolicy is the resolver for the activeCompliancePolicy field.
+func (r *queryResolver) ActiveCompliancePolicy(ctx context.Context, organizationID string) (*model.CompliancePolicy, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	org, _, err := r.Auth.GetOrganization(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	policy, err := r.PolicyRepo.ResolveActive(ctx, org)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelCompliancePolicy(policy), nil
+}
+
+// CompliancePolicyVersions is the resolver for the compliancePolicyVersions field.
+func (r *queryResolver) CompliancePolicyVersions(ctx context.Context, organizationID string, limit *int) ([]*model.CompliancePolicy, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	role, err := r.Auth.Tenant.RequireMembership(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	if !rbac.CanUpdateCompliance(role) {
+		return nil, gqlError("FORBIDDEN", errForbidden)
+	}
+	lim := int64(20)
+	if limit != nil {
+		lim = int64(*limit)
+	}
+	policies, err := r.PolicyRepo.Policies.ListPublishedByOrg(ctx, &orgID, lim)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*model.CompliancePolicy, 0, len(policies))
+	for i := range policies {
+		out = append(out, toModelCompliancePolicy(&policies[i]))
+	}
+	return out, nil
+}
+
+// MyConsents is the resolver for the myConsents field.
+func (r *queryResolver) MyConsents(ctx context.Context) ([]*model.Consent, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	consents, err := r.Consent.ListForUser(ctx, actorID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*model.Consent, 0, len(consents))
+	for i := range consents {
+		out = append(out, toModelConsent(&consents[i]))
+	}
+	return out, nil
 }
 
 // Mutation returns MutationResolver implementation.

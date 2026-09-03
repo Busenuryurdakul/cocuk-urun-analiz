@@ -4,12 +4,16 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/httpx"
+	orgsvc "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/org"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/tenant"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -41,8 +45,32 @@ func mapAuthError(err error) error {
 		return gqlError("CHALLENGE_LOCKED", err)
 	case errors.Is(err, auth.ErrRefreshReplay):
 		return gqlError("REFRESH_REPLAY", err)
-	case errors.Is(err, tenant.ErrCrossTenantAccess):
+	case errors.Is(err, tenant.ErrCrossTenantAccess), errors.Is(err, orgsvc.ErrForbidden):
 		return gqlError("FORBIDDEN", errForbidden)
+	case errors.Is(err, orgsvc.ErrLastOwner):
+		return gqlError("LAST_OWNER", err)
+	case errors.Is(err, orgsvc.ErrPersonalOrg):
+		return gqlError("FORBIDDEN", errForbidden)
+	case errors.Is(err, orgsvc.ErrInvalidRole):
+		return gqlError("INVALID_ROLE", err)
+	case errors.Is(err, orgsvc.ErrInvitationExpired):
+		return gqlError("INVITATION_EXPIRED", err)
+	case errors.Is(err, orgsvc.ErrInvitationMismatch):
+		return gqlError("FORBIDDEN", errForbidden)
+	case errors.Is(err, orgsvc.ErrInvitationUsed):
+		return gqlError("INVALID_TOKEN", err)
+	case errors.Is(err, compliance.ErrInvalidProfile):
+		return gqlError("INVALID_PROFILE", err)
+	case errors.Is(err, compliance.ErrInvalidPolicyVersion):
+		return gqlError("INVALID_PROFILE", err)
+	case errors.Is(err, compliance.ErrComplianceViolation):
+		return gqlError("COMPLIANCE_VIOLATION", err)
+	case errors.Is(err, compliance.ErrBypassAttempt):
+		return gqlError("COMPLIANCE_VIOLATION", err)
+	case errors.Is(err, compliance.ErrConsentRequired):
+		return gqlError("CONSENT_REQUIRED", err)
+	case errors.Is(err, repository.ErrDuplicate):
+		return gqlError("DUPLICATE", err)
 	default:
 		return err
 	}
@@ -159,4 +187,50 @@ func toModelOrgType(t domain.OrgType) model.OrgType {
 
 func toModelOrgRole(r domain.OrgRole) model.OrgRole {
 	return model.OrgRole(r)
+}
+
+func toModelOrganization(o *domain.Organization) *model.Organization {
+	return &model.Organization{
+		ID:                      o.ID.Hex(),
+		Name:                    o.Name,
+		Type:                    toModelOrgType(o.Type),
+		ComplianceProfile:       model.ComplianceProfile(o.ComplianceProfile),
+		CompliancePolicyVersion: o.CompliancePolicyVersion,
+	}
+}
+
+func toModelCompliancePolicy(p *domain.CompliancePolicyVersion) *model.CompliancePolicy {
+	return &model.CompliancePolicy{
+		Profile:     model.ComplianceProfile(p.Profile),
+		Version:     p.Version,
+		Status:      model.PolicyStatus(p.Status),
+		EffectiveAt: p.EffectiveAt.UTC().Format(time.RFC3339),
+		Reason:      &p.Reason,
+	}
+}
+
+func toModelConsent(c *domain.Consent) *model.Consent {
+	out := &model.Consent{
+		ID:            c.ID.Hex(),
+		Purpose:       model.ConsentPurpose(c.Purpose),
+		PolicyVersion: c.PolicyVersion,
+		GrantedAt:     c.GrantedAt.UTC().Format(time.RFC3339),
+	}
+	if c.OrganizationID != nil {
+		id := c.OrganizationID.Hex()
+		out.OrganizationID = &id
+	}
+	if c.WithdrawnAt != nil {
+		w := c.WithdrawnAt.UTC().Format(time.RFC3339)
+		out.WithdrawnAt = &w
+	}
+	return out
+}
+
+func requireActor(ctx context.Context) (primitive.ObjectID, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+	return parseObjectID(session.UserID)
 }

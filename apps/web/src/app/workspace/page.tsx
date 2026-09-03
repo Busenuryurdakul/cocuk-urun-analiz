@@ -85,6 +85,11 @@ export default function WorkspacePage() {
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-6">
             <h2 className="mb-4 font-medium">Workspace&apos;ler</h2>
+            <div className="flex gap-3 pt-2">
+              <Link href="/org/create" className="text-sm text-miyuna-600 underline">
+                Organizasyon oluştur
+              </Link>
+            </div>
             {workspaces.length === 0 ? (
               <AsyncView state="empty" />
             ) : (
@@ -97,7 +102,14 @@ export default function WorkspacePage() {
                     <span>
                       {ws.name} <span className="text-slate-500">({ws.type})</span>
                     </span>
-                    <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{ws.role}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{ws.role}</span>
+                      {ws.type === "ORGANIZATION" && (
+                        <Link href={`/org/${ws.organizationId}/members`} className="text-xs text-miyuna-600 underline">
+                          Yönet
+                        </Link>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

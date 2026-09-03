@@ -63,6 +63,16 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 		{"device_verifications", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 		{"mfa_setup_challenges", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
 		{"mfa_setup_challenges", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
+		{"organization_invitations", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		{"organization_invitations", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "email", Value: 1}, {Key: "status", Value: 1}}}},
+		{"organization_invitations", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
+		{"compliance_policy_versions", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "profile", Value: 1}, {Key: "version", Value: -1}}}},
+		{"compliance_policy_versions", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "status", Value: 1}, {Key: "effectiveAt", Value: -1}}}},
+		{"consents", mongo.IndexModel{Keys: bson.D{{Key: "userId", Value: 1}, {Key: "organizationId", Value: 1}, {Key: "purpose", Value: 1}, {Key: "withdrawnAt", Value: 1}}}},
+		{"consents", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "purpose", Value: 1}}}},
+		{"compliance_events", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "timestamp", Value: -1}}}},
+		{"config_audit_log", mongo.IndexModel{Keys: bson.D{{Key: "changedAt", Value: -1}}}},
+		{"config_audit_log", mongo.IndexModel{Keys: bson.D{{Key: "changedBy", Value: 1}, {Key: "changedAt", Value: -1}}}},
 	}
 
 	for _, idx := range indexes {

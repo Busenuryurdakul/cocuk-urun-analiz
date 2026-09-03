@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mail"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
@@ -114,8 +115,8 @@ func (s *Service) Register(ctx context.Context, email, password string) (*Regist
 	org := &domain.Organization{
 		Name:                    "Personal Workspace",
 		Type:                    domain.OrgTypePersonal,
-		ComplianceProfile:       "KVKK",
-		CompliancePolicyVersion: "v1",
+		ComplianceProfile:       compliance.PersonalDefaultComplianceProfile,
+		CompliancePolicyVersion: compliance.PlatformDefaultPolicyVersion,
 		OwnerID:                 user.ID,
 	}
 	if err := s.Orgs.Create(ctx, org); err != nil {

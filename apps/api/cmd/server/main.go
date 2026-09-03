@@ -33,6 +33,10 @@ func main() {
 
 	resolver := &graph.Resolver{
 		Auth:       application.Auth,
+		Org:        application.Org,
+		Consent:    application.Consent,
+		Compliance: application.Compliance,
+		PolicyRepo: application.PolicyRepo,
 		CookieOpts: application.CookieOptions(),
 	}
 
