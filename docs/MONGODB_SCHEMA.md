@@ -1,6 +1,6 @@
 # Miyuna — MongoDB Schema
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Design Principles
@@ -82,13 +82,14 @@ User
 {
   _id: ObjectId,
   organizationId: ObjectId,
-  platform: SHOPIFY,
-  storeDomain: string,
-  credentialsEncrypted: Binary,
+  platform: WOOCOMMERCE | SHOPIFY,   // WOOCOMMERCE primary (CR-004); SHOPIFY optional/future
+  storeBaseUrl: string,
+  credentialsEncrypted: Binary,        // WooCommerce: Consumer Key + Consumer Secret
   status: ACTIVE | REVOKED | ERROR,
   lastVerifiedAt: Date,
   createdAt: Date,
-  updatedAt: Date
+  updatedAt: Date,
+  revokedAt: Date?
 }
 ```
 
@@ -100,7 +101,7 @@ User
 {
   _id: ObjectId,
   organizationId: ObjectId,
-  sourceType: SHOPIFY | URL | CSV | JSON | MANUAL,
+  sourceType: WOOCOMMERCE | URL | CSV | JSON | MANUAL,
   integrationId: ObjectId?,
   sourceRef: string,
   status: PENDING | RUNNING | SUFFICIENT | INSUFFICIENT | FAILED,

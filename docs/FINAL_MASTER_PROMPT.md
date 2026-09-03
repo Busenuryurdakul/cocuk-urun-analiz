@@ -2,7 +2,7 @@
 
 ## Miyuna — Çocuk Ürünleri Agentic Intelligence & Analysis Platform
 
-### Architecture & Product Specification — v1.0.2
+### Architecture & Product Specification — v1.0.3
 
 ```text
 STATUS: FROZEN — NO SCOPE EXPANSION WITHOUT EXPLICIT CHANGE REQUEST
@@ -228,19 +228,35 @@ Katmanlar: Source Data → Derived Data → Agent Assessment → Evidence → Co
 
 LLM: explain/summarize — verdict engine değil. Evidence yoksa UNVERIFIED.
 
-## 17–18. E-TİCARET & SHOPIFY
+## 17–18. E-TİCARET & WOOCOMMERCE
 
 Input: Authorized Platform API, Permitted URL, CSV, JSON, Manual
 
-**PRIMARY:** Shopify (Admin GraphQL API, API-first)
+**PRIMARY:** WooCommerce (REST API, API-first)
 
-WooCommerce: adapter interface only (v1 implement edilmez)
+**CR-004 (approved):** Primary e-commerce integration Shopify yerine WooCommerce olarak değiştirildi. Generic ecommerce adapter boundary korunur.
 
-Credential: EcommerceIntegration — encrypted, import integrationId kullanır.
+Shopify: **OPTIONAL / FUTURE** — v1.0.3'te implement edilmez; generic adapter mimarisi izin verirse ileride eklenebilir.
 
-Doğrulanamazsa: `SHOPIFY_E2E_STATUS: NOT_VERIFIED` — FAZ 4 blocked.
+**Credential model — EcommerceIntegration:**
 
-Mock acceptance geçmez.
+- `platform`: WOOCOMMERCE (primary) | SHOPIFY (optional/future)
+- `storeBaseUrl`: authorized store base URL
+- `credentialsEncrypted`: Consumer Key + Consumer Secret (encrypted at rest)
+- `createdAt`, `updatedAt`, `revokedAt`
+- Raw credentials **asla** loglanmaz veya GraphQL response'da dönmez
+- Import çağrıları yalnızca `integrationId` kullanır
+
+**Real E2E acceptance (WooCommerce):**
+
+- Gerçek WooCommerce store + geçerli REST API credentials
+- `GET /wp-json/wc/v3/products` — en az bir gerçek ürün payload'u
+- Ürün Miyuna canonical model'e normalize edilir
+- Mock data acceptance **geçmez**
+
+Doğrulanamazsa: `WOOCOMMERCE_E2E_STATUS: NOT_VERIFIED` — ecommerce phase blocked.
+
+Reviews: WooCommerce core product response'ta yoksa `reviews = missing`; E2E acceptance reviews'a bağlı değildir.
 
 ## 19. AGENTIC E-COMMERCE IMPORT
 
@@ -300,15 +316,15 @@ CI/CD: feature branch → PR → manual prod deploy. main direct push yasak.
 
 ### IN
 
-Web, Electron Win/Mac, Go GraphQL, Mongo, Redis, S3, tenancy, auth/MFA/device, agent+tools, 2 LLM, evidence, Shopify E2E, imports, LLM control center, fine-tune eval, compliance, Cloudflare, observability, CI/CD, deletion, XCS internal scripts, Miyuna brand/product
+Web, Electron Win/Mac, Go GraphQL, Mongo, Redis, S3, tenancy, auth/MFA/device, agent+tools, 2 LLM, evidence, WooCommerce real E2E (primary), imports, LLM control center, fine-tune eval, compliance, Cloudflare, observability, CI/CD, deletion, XCS internal scripts, Miyuna brand/product
 
-### OUT (v1.0.2 — Future Change Request)
+### OUT (v1.0.3 — Future Change Request)
 
 - Mobile app
 - 3rd LLM
 - Unrestricted crawler
-- Multi-marketplace implementations
-- WooCommerce v1 implementation
+- Multi-marketplace implementations (WooCommerce primary v1; others future CR)
+- Shopify v1 implementation (optional/future — CR-004)
 - Unlimited review collection
 - LLM direct internet
 - Mock ecommerce acceptance
@@ -319,7 +335,11 @@ Web, Electron Win/Mac, Go GraphQL, Mongo, Redis, S3, tenancy, auth/MFA/device, a
 - Unverified scientific claims
 - Linux Electron (bonus only)
 
-### FUTURE CR (NOT IN v1.0.2)
+### APPROVED CR (v1.0.3)
+
+- **CR-004:** WooCommerce Primary E-Commerce Integration — Shopify mandatory requirement removed; WooCommerce REST API primary; `WOOCOMMERCE_E2E_STATUS` phase gate; version bump 1.0.2 → 1.0.3
+
+### FUTURE CR (NOT IN v1.0.3)
 
 - **CR-001:** ChildFit Profile / "Çocuğuma Uygun mu?" + Product Watch / Miyuna Watch
 - **CR-002:** Miyuna Compare
@@ -335,7 +355,7 @@ Her faz: PLAN → IMPLEMENT → TEST → VERIFY → REPORT → STOP/APPROVAL
 
 ## 48–52. EXECUTION RULES, ACCEPTANCE CRITERIA
 
-(Frozen v1.0.2 acceptance list — Shopify real E2E, 2 LLM, evidence, Cloudflare, Electron, MFA, org deletion, vb.)
+(Frozen v1.0.3 acceptance list — WooCommerce real E2E, 2 LLM, evidence, Cloudflare, Electron, MFA, org deletion, vb.)
 
 ## 53. START COMMAND (KOŞULLU)
 
@@ -371,7 +391,7 @@ Klasör yoksa yalnızca project root + docs/ oluştur. Git init yapma.
 
 ### YAPMA
 
-monorepo, Next.js/Go/Python/Electron, Docker, dependency, Shopify impl, LLM, deploy, git mutation
+monorepo, Next.js/Go/Python/Electron, Docker, dependency, WooCommerce impl, LLM, deploy, git mutation
 
 ### DOĞRULA
 
@@ -395,6 +415,10 @@ Başarı = demonstrable EVET: Agent | 2 LLM | Evidence | Security | E-commerce g
 
 Onay olmadan FROZEN prompt değiştirilmez.
 
+**Approved CR:**
+
+- **CR-004:** WooCommerce Primary E-Commerce Integration (2026-09-03) — replaces Shopify as mandatory primary platform
+
 **Planned future CR (not in scope now):**
 
 - CR-001: ChildFit + Product Watch
@@ -405,14 +429,16 @@ Onay olmadan FROZEN prompt değiştirilmez.
 
 | Field | Value |
 |-------|-------|
-| MASTER_PROMPT_VERSION | 1.0.2 FROZEN |
-| ARCHITECTURE_SCOPE | LOCKED |
+| MASTER_PROMPT_VERSION | 1.0.3 FROZEN |
+| ARCHITECTURE_SCOPE | LOCKED (CR-004 applied) |
 | PRODUCT_NAME | Miyuna |
 | PHASE_0_ARCHITECTURE | APPROVED |
 | PHASE_0_FILES | COMPLETE |
-| SHOPIFY_E2E_STATUS | NOT_VERIFIED |
-| IMPLEMENTATION_STATUS | PHASE_2_AUTH_TENANCY_COMPLETE |
+| WOOCOMMERCE_E2E_STATUS | NOT_VERIFIED |
+| SHOPIFY_STATUS | OPTIONAL / FUTURE |
+| IMPLEMENTATION_STATUS | PHASE_3_ORG_COMPLIANCE_COMPLETE |
 | PROJECT_ROOT | C:\Users\MOSTER\Documents\GitHub\cocuk-urun-analiz |
-| NEXT_ALLOWED_ACTION | AWAIT_PHASE_3_APPROVAL |
+| NEXT_ALLOWED_ACTION | AWAIT_WOOCOMMERCE_PHASE_4_PREFLIGHT |
 | PHASE_1_REQUIRES_EXPLICIT_COMMAND | "FAZ 1'E GEÇ" (completed) |
 | PHASE_2_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |
+| PHASE_3_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |
