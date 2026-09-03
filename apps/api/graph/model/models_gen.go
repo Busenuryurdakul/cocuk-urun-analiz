@@ -2,5 +2,249 @@
 
 package model
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type ConfirmMFAInput struct {
+	Code string `json:"code"`
+}
+
+type LoginInput struct {
+	Email             string `json:"email"`
+	Password          string `json:"password"`
+	DeviceFingerprint string `json:"deviceFingerprint"`
+}
+
+type LoginPayload struct {
+	Status LoginStatus `json:"status"`
+	User   *User       `json:"user,omitempty"`
+}
+
+type MFASetupPayload struct {
+	Secret     string `json:"secret"`
+	OtpauthURL string `json:"otpauthUrl"`
+}
+
+type Mutation struct {
+}
+
+type Organization struct {
+	ID                string  `json:"id"`
+	Name              string  `json:"name"`
+	Type              OrgType `json:"type"`
+	ComplianceProfile string  `json:"complianceProfile"`
+}
+
 type Query struct {
+}
+
+type RegisterInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type RegisterPayload struct {
+	Message string `json:"message"`
+}
+
+type User struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"emailVerified"`
+	MfaEnabled    bool   `json:"mfaEnabled"`
+	PersonalOrgID string `json:"personalOrgId"`
+}
+
+type VerifyDeviceInput struct {
+	Code              string `json:"code"`
+	DeviceFingerprint string `json:"deviceFingerprint"`
+}
+
+type VerifyLoginMFAInput struct {
+	Code              string `json:"code"`
+	DeviceFingerprint string `json:"deviceFingerprint"`
+}
+
+type Workspace struct {
+	OrganizationID string  `json:"organizationId"`
+	Name           string  `json:"name"`
+	Type           OrgType `json:"type"`
+	Role           OrgRole `json:"role"`
+}
+
+type LoginStatus string
+
+const (
+	LoginStatusMfaSetupRequired           LoginStatus = "MFA_SETUP_REQUIRED"
+	LoginStatusMfaRequired                LoginStatus = "MFA_REQUIRED"
+	LoginStatusDeviceVerificationRequired LoginStatus = "DEVICE_VERIFICATION_REQUIRED"
+	LoginStatusAuthenticated              LoginStatus = "AUTHENTICATED"
+)
+
+var AllLoginStatus = []LoginStatus{
+	LoginStatusMfaSetupRequired,
+	LoginStatusMfaRequired,
+	LoginStatusDeviceVerificationRequired,
+	LoginStatusAuthenticated,
+}
+
+func (e LoginStatus) IsValid() bool {
+	switch e {
+	case LoginStatusMfaSetupRequired, LoginStatusMfaRequired, LoginStatusDeviceVerificationRequired, LoginStatusAuthenticated:
+		return true
+	}
+	return false
+}
+
+func (e LoginStatus) String() string {
+	return string(e)
+}
+
+func (e *LoginStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LoginStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LoginStatus", str)
+	}
+	return nil
+}
+
+func (e LoginStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *LoginStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e LoginStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type OrgRole string
+
+const (
+	OrgRoleOwner   OrgRole = "OWNER"
+	OrgRoleAdmin   OrgRole = "ADMIN"
+	OrgRoleAnalyst OrgRole = "ANALYST"
+	OrgRoleViewer  OrgRole = "VIEWER"
+)
+
+var AllOrgRole = []OrgRole{
+	OrgRoleOwner,
+	OrgRoleAdmin,
+	OrgRoleAnalyst,
+	OrgRoleViewer,
+}
+
+func (e OrgRole) IsValid() bool {
+	switch e {
+	case OrgRoleOwner, OrgRoleAdmin, OrgRoleAnalyst, OrgRoleViewer:
+		return true
+	}
+	return false
+}
+
+func (e OrgRole) String() string {
+	return string(e)
+}
+
+func (e *OrgRole) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrgRole(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrgRole", str)
+	}
+	return nil
+}
+
+func (e OrgRole) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *OrgRole) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e OrgRole) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type OrgType string
+
+const (
+	OrgTypePersonal     OrgType = "PERSONAL"
+	OrgTypeOrganization OrgType = "ORGANIZATION"
+)
+
+var AllOrgType = []OrgType{
+	OrgTypePersonal,
+	OrgTypeOrganization,
+}
+
+func (e OrgType) IsValid() bool {
+	switch e {
+	case OrgTypePersonal, OrgTypeOrganization:
+		return true
+	}
+	return false
+}
+
+func (e OrgType) String() string {
+	return string(e)
+}
+
+func (e *OrgType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrgType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrgType", str)
+	}
+	return nil
+}
+
+func (e OrgType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *OrgType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e OrgType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

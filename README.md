@@ -11,7 +11,7 @@ Architecture source of truth: [`docs/FINAL_MASTER_PROMPT.md`](docs/FINAL_MASTER_
 ```text
 apps/
   web/     Next.js 14+ (App Router, TypeScript, Tailwind)
-  api/     Go GraphQL API (gqlgen) — health/readiness + GraphQL stub
+  api/     Go GraphQL API (gqlgen) — auth, multi-tenancy, health/readiness
   agent/   Python Agent Orchestrator (internal, FastAPI stub)
 infra/
   docker/  Dev stack: MongoDB, Redis, MinIO, MailHog
@@ -70,9 +70,21 @@ npm run dev
 # http://localhost:3000
 ```
 
-## Phase 1 scope
+## Phase status
 
-Foundation scaffold only — no auth, Shopify, LLM, or agent pipeline yet.
+| Phase | Scope |
+|-------|--------|
+| **Phase 1** (complete) | Monorepo scaffold, dev infra, API/agent/web stubs |
+| **Phase 2** (in progress on `feature/phase-2-auth-tenancy`) | Auth lifecycle, MFA, device verification, MongoDB repos, tenant isolation, MailService (MailHog) |
+
+### Phase 2 auth flow
+
+`Register → Email Verification → MFA → Login → Device Verification → Workspace`
+
+- GraphQL mutations: `register`, `verifyEmail`, `confirmMFA`, `login`, `verifyLoginMFA`, `verifyDevice`, `logout`, `switchWorkspace`
+- GraphQL queries: `me`, `myWorkspaces`, `organization` (tenant-guarded)
+- Web routes: `/auth/register`, `/auth/login`, `/auth/verify-email`, `/auth/mfa`, `/auth/device`, `/workspace`
+- Verification emails → MailHog UI at http://localhost:8025
 
 Each delivery phase: **PLAN → IMPLEMENT → TEST → VERIFY → REPORT → STOP/APPROVAL**
 
