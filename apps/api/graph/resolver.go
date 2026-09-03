@@ -1,7 +1,11 @@
 package graph
 
-// This file will not be regenerated automatically.
-//
-// It serves as an extension point for gqlgen.
+import (
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
+)
 
-type Resolver struct{}
+type Resolver struct {
+	Auth       *auth.Service
+	CookieOpts cookies.Options
+}

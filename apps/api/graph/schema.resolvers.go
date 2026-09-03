@@ -6,14 +6,218 @@ package graph
 
 import (
 	"context"
+
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/httpx"
 )
 
-// Health returns GraphQL layer health (Phase 1 stub).
+// Register is the resolver for the register field.
+func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error) {
+	userID, err := r.Auth.Register(ctx, input.Email, input.Password)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return &model.RegisterPayload{
+		UserID:  userID.Hex(),
+		Message: "Kayıt alındı. E-posta doğrulama bağlantısı gönderildi.",
+	}, nil
+}
+
+// VerifyEmail is the resolver for the verifyEmail field.
+func (r *mutationResolver) VerifyEmail(ctx context.Context, token string) (*model.MFASetupPayload, error) {
+	setup, err := r.Auth.VerifyEmail(ctx, token)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	applyMFASetupCookie(ctx, r.CookieOpts, setup)
+	return &model.MFASetupPayload{
+		Secret:     setup.Secret,
+		OtpauthURL: setup.OTPAuthURL,
+	}, nil
+}
+
+// ConfirmMfa is the resolver for the confirmMFA field.
+func (r *mutationResolver) ConfirmMfa(ctx context.Context, input model.ConfirmMFAInput) (bool, error) {
+	req, ok := httpx.RequestFrom(ctx)
+	if !ok {
+		return false, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	setupToken, ok := cookies.Get(req, cookies.SetupCookie)
+	if !ok {
+		return false, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	if err := r.Auth.ConfirmMFA(ctx, setupToken, input.Code); err != nil {
+		return false, mapAuthError(err)
+	}
+	if w, ok := responseWriter(ctx); ok {
+		cookies.Clear(w, cookies.SetupCookie, r.CookieOpts)
+	}
+	return true, nil
+}
+
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginPayload, error) {
+	result, err := r.Auth.Login(ctx, input.Email, input.Password, input.DeviceFingerprint)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	applyLoginCookies(ctx, r.CookieOpts, result)
+	return toModelLoginPayload(result), nil
+}
+
+// VerifyLoginMfa is the resolver for the verifyLoginMFA field.
+func (r *mutationResolver) VerifyLoginMfa(ctx context.Context, input model.VerifyLoginMFAInput) (*model.LoginPayload, error) {
+	req, ok := httpx.RequestFrom(ctx)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	result, err := r.Auth.VerifyLoginMFA(ctx, pendingToken, input.Code, input.DeviceFingerprint)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	applyLoginCookies(ctx, r.CookieOpts, result)
+	return toModelLoginPayload(result), nil
+}
+
+// VerifyDevice is the resolver for the verifyDevice field.
+func (r *mutationResolver) VerifyDevice(ctx context.Context, input model.VerifyDeviceInput) (*model.LoginPayload, error) {
+	req, ok := httpx.RequestFrom(ctx)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	result, err := r.Auth.VerifyDevice(ctx, pendingToken, input.Code, input.DeviceFingerprint)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	applyLoginCookies(ctx, r.CookieOpts, result)
+	return toModelLoginPayload(result), nil
+}
+
+// Logout is the resolver for the logout field.
+func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
+	req, ok := httpx.RequestFrom(ctx)
+	if !ok {
+		return false, gqlError("UNAUTHORIZED", errUnauthorized)
+	}
+	if token, ok := cookies.Get(req, cookies.SessionCookie); ok {
+		_ = r.Auth.Logout(ctx, token)
+	}
+	if w, ok := responseWriter(ctx); ok {
+		cookies.Clear(w, cookies.SessionCookie, r.CookieOpts)
+		cookies.Clear(w, cookies.PendingCookie, r.CookieOpts)
+		cookies.Clear(w, cookies.SetupCookie, r.CookieOpts)
+	}
+	return true, nil
+}
+
+// SwitchWorkspace is the resolver for the switchWorkspace field.
+func (r *mutationResolver) SwitchWorkspace(ctx context.Context, organizationID string) (bool, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	updated, err := r.Auth.SwitchWorkspace(ctx, session.Token, orgID)
+	if err != nil {
+		return false, mapAuthError(err)
+	}
+	if w, ok := responseWriter(ctx); ok && updated != nil {
+		cookies.Set(w, cookies.SessionCookie, updated.Token, updated.ExpiresAt, r.CookieOpts)
+	}
+	return true, nil
+}
+
+// Health returns GraphQL layer health.
 func (r *queryResolver) Health(ctx context.Context) (string, error) {
 	return "ok", nil
 }
 
+// Me is the resolver for the me field.
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	userID, err := parseObjectID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+	user, err := r.Auth.Users.FindByID(ctx, userID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelUser(user), nil
+}
+
+// MyWorkspaces is the resolver for the myWorkspaces field.
+func (r *queryResolver) MyWorkspaces(ctx context.Context) ([]*model.Workspace, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	userID, err := parseObjectID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+	entries, err := r.Auth.ListWorkspaces(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*model.Workspace, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, &model.Workspace{
+			OrganizationID: e.Organization.ID.Hex(),
+			Name:           e.Organization.Name,
+			Type:           toModelOrgType(e.Organization.Type),
+			Role:           toModelOrgRole(e.Role),
+		})
+	}
+	return out, nil
+}
+
+// Organization is the resolver for the organization field.
+func (r *queryResolver) Organization(ctx context.Context, organizationID string) (*model.Organization, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	userID, err := parseObjectID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	org, _, err := r.Auth.GetOrganization(ctx, userID, orgID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return &model.Organization{
+		ID:                org.ID.Hex(),
+		Name:              org.Name,
+		Type:              toModelOrgType(org.Type),
+		ComplianceProfile: org.ComplianceProfile,
+	}, nil
+}
+
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

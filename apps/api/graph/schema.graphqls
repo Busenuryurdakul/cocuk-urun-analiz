@@ -1,9 +1,107 @@
-# GraphQL schema — Phase 1 stub; business schema expands in later phases
 schema {
   query: Query
+  mutation: Mutation
 }
 
 type Query {
   """Platform health probe for GraphQL layer"""
   health: String!
+  """Authenticated user profile"""
+  me: User
+  """Workspaces the current user belongs to"""
+  myWorkspaces: [Workspace!]!
+  """Organization details — tenant-isolated"""
+  organization(organizationId: ID!): Organization
+}
+
+type Mutation {
+  register(input: RegisterInput!): RegisterPayload!
+  verifyEmail(token: String!): MFASetupPayload!
+  confirmMFA(input: ConfirmMFAInput!): Boolean!
+  login(input: LoginInput!): LoginPayload!
+  verifyLoginMFA(input: VerifyLoginMFAInput!): LoginPayload!
+  verifyDevice(input: VerifyDeviceInput!): LoginPayload!
+  logout: Boolean!
+  switchWorkspace(organizationId: ID!): Boolean!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+}
+
+input ConfirmMFAInput {
+  code: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  deviceFingerprint: String!
+}
+
+input VerifyLoginMFAInput {
+  code: String!
+  deviceFingerprint: String!
+}
+
+input VerifyDeviceInput {
+  code: String!
+  deviceFingerprint: String!
+}
+
+type User {
+  id: ID!
+  email: String!
+  emailVerified: Boolean!
+  mfaEnabled: Boolean!
+  personalOrgId: ID!
+}
+
+type Workspace {
+  organizationId: ID!
+  name: String!
+  type: OrgType!
+  role: OrgRole!
+}
+
+type Organization {
+  id: ID!
+  name: String!
+  type: OrgType!
+  complianceProfile: String!
+}
+
+enum OrgType {
+  PERSONAL
+  ORGANIZATION
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  ANALYST
+  VIEWER
+}
+
+enum LoginStatus {
+  MFA_SETUP_REQUIRED
+  MFA_REQUIRED
+  DEVICE_VERIFICATION_REQUIRED
+  AUTHENTICATED
+}
+
+type RegisterPayload {
+  userId: ID!
+  message: String!
+}
+
+type MFASetupPayload {
+  secret: String!
+  otpauthUrl: String!
+}
+
+type LoginPayload {
+  status: LoginStatus!
+  user: User
 }
