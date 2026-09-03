@@ -60,3 +60,39 @@ func (r *MemberRepository) ListByUser(ctx context.Context, userID primitive.Obje
 	}
 	return members, nil
 }
+
+func (r *MemberRepository) ListByOrg(ctx context.Context, organizationID primitive.ObjectID) ([]domain.OrganizationMember, error) {
+	cur, err := r.col.Find(ctx, bson.M{"organizationId": organizationID})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	var members []domain.OrganizationMember
+	if err := cur.All(ctx, &members); err != nil {
+		return nil, err
+	}
+	return members, nil
+}
+
+func (r *MemberRepository) UpdateRole(ctx context.Context, organizationID, userID primitive.ObjectID, role domain.OrgRole) error {
+	_, err := r.col.UpdateOne(ctx, bson.M{
+		"organizationId": organizationID,
+		"userId":         userID,
+	}, bson.M{"$set": bson.M{"role": role}})
+	return err
+}
+
+func (r *MemberRepository) Delete(ctx context.Context, organizationID, userID primitive.ObjectID) error {
+	_, err := r.col.DeleteOne(ctx, bson.M{
+		"organizationId": organizationID,
+		"userId":         userID,
+	})
+	return err
+}
+
+func (r *MemberRepository) CountOwners(ctx context.Context, organizationID primitive.ObjectID) (int64, error) {
+	return r.col.CountDocuments(ctx, bson.M{
+		"organizationId": organizationID,
+		"role":           domain.RoleOwner,
+	})
+}

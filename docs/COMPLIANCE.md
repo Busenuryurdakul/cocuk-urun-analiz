@@ -116,11 +116,17 @@ Organization-level compliance profile selection:
 ```text
 Organization {
   complianceProfile: KVKK | GDPR | BOTH
-  compliancePolicyVersion: string  // pinned or "latest"
+  compliancePolicyVersion: string  // pinned published version (e.g. 1.0.0)
 }
 ```
 
-Personal workspace default: UNRESOLVED — deploy-time or registration-time default.
+**Policy resolution (Phase 3):**
+
+1. Organization-specific published policy for pinned version (ORG_OVERRIDE)
+2. Platform published default for same pinned version (PLATFORM_DEFAULT)
+3. Runtime `"latest"` resolution is **forbidden**
+
+Personal workspace default profile: **KVKK** (`PERSONAL_DEFAULT_COMPLIANCE_PROFILE`)
 
 ## 11. Audit Requirements
 
@@ -131,7 +137,7 @@ All compliance events logged:
 - Output validation blocks
 - Profile changes
 
-Retention policy: UNRESOLVED — Phase 1+
+Retention policy: **DEPLOYMENT_POLICY_REQUIRED** — concrete duration defined at deployment/legal policy time, not invented in code.
 
 ## 12. Related Documents
 
@@ -144,6 +150,6 @@ Retention policy: UNRESOLVED — Phase 1+
 
 | Item | Status |
 |------|--------|
-| Default compliance profile for personal workspace | UNRESOLVED |
-| Audit log retention period | UNRESOLVED — Phase 1+ |
+| Default compliance profile for personal workspace | **KVKK** (Phase 3 canonical) |
+| Audit log retention period | **DEPLOYMENT_POLICY_REQUIRED** |
 | Data export format specification | UNRESOLVED — deletion phase |

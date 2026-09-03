@@ -6,20 +6,26 @@ import (
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/config"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mail"
 	mongoclient "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mongo"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/org"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/redis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/tenant"
 )
 
 type App struct {
-	Config config.Config
-	Mongo  *mongoclient.Client
-	Redis  *redis.Client
-	Auth   *auth.Service
+	Config     config.Config
+	Mongo      *mongoclient.Client
+	Redis      *redis.Client
+	Auth       *auth.Service
+	Org        *org.Service
+	Compliance *compliance.Engine
+	Consent    *compliance.ConsentService
+	PolicyRepo *compliance.PolicyRepository
 }
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
@@ -48,9 +54,50 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	deviceVerify := repository.NewDeviceVerificationRepository(db)
 	mfaSetup := repository.NewMFASetupRepository(db)
 	security := repository.NewSecurityEventRepository(db)
+	invitations := repository.NewInvitationRepository(db)
+	compliancePolicies := repository.NewCompliancePolicyRepository(db)
+	consents := repository.NewConsentRepository(db)
+	complianceEvents := repository.NewComplianceEventRepository(db)
+	configAudit := repository.NewConfigAuditRepository(db)
+
+	if err := compliance.SeedPlatformPolicies(ctx, compliancePolicies); err != nil {
+		return nil, err
+	}
+
+	policyRepo := &compliance.PolicyRepository{Policies: compliancePolicies}
+	consentSvc := &compliance.ConsentService{
+		Consents:   consents,
+		Events:     complianceEvents,
+		Security:   security,
+		PolicyRepo: policyRepo,
+		Orgs:       orgs,
+	}
+	complianceEngine := &compliance.Engine{
+		PolicyRepo: policyRepo,
+		Consent:    consentSvc,
+		Events:     complianceEvents,
+		Security:   security,
+		Orgs:       orgs,
+	}
 
 	guard := &tenant.Guard{Members: members, Events: security}
 	mailer := mail.NewSMTP(cfg.MailSMTPHost, cfg.MailSMTPPort, cfg.MailFrom)
+
+	orgSvc := &org.Service{
+		Orgs:        orgs,
+		Members:     members,
+		Users:       users,
+		Invitations: invitations,
+		Security:    security,
+		ConfigAudit: configAudit,
+		Policies:    compliancePolicies,
+		Mail:        mailer,
+		Tenant:      guard,
+		Compliance:  complianceEngine,
+		Consent:     consentSvc,
+		PolicyRepo:  policyRepo,
+		WebBaseURL:  cfg.WebBaseURL,
+	}
 
 	policy := auth.SecurityPolicy{
 		MaxOTPAttempts:       cfg.MaxOTPAttempts,
@@ -92,10 +139,14 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 
 	return &App{
-		Config: cfg,
-		Mongo:  mongoClient,
-		Redis:  redisClient,
-		Auth:   authSvc,
+		Config:     cfg,
+		Mongo:      mongoClient,
+		Redis:      redisClient,
+		Auth:       authSvc,
+		Org:        orgSvc,
+		Compliance: complianceEngine,
+		Consent:    consentSvc,
+		PolicyRepo: policyRepo,
 	}, nil
 }
 

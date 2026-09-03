@@ -14,3 +14,11 @@ func CanReadWorkspace(role domain.OrgRole) bool {
 func CanManageMembers(role domain.OrgRole) bool {
 	return role == domain.RoleOwner || role == domain.RoleAdmin
 }
+
+func CanUpdateCompliance(role domain.OrgRole) bool {
+	return role == domain.RoleOwner || role == domain.RoleAdmin
+}
+
+func CanPublishPolicy(role domain.OrgRole) bool {
+	return role == domain.RoleOwner || role == domain.RoleAdmin
+}

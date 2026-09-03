@@ -12,6 +12,14 @@ type Query {
   myWorkspaces: [Workspace!]!
   """Organization details — tenant-isolated"""
   organization(organizationId: ID!): Organization
+  """Members of an organization — tenant-isolated"""
+  organizationMembers(organizationId: ID!): [OrganizationMember!]!
+  """Active compliance policy for organization"""
+  activeCompliancePolicy(organizationId: ID!): CompliancePolicy
+  """Published compliance policy versions"""
+  compliancePolicyVersions(organizationId: ID!, limit: Int = 20): [CompliancePolicy!]!
+  """Current user's consents"""
+  myConsents: [Consent!]!
 }
 
 type Mutation {
@@ -24,6 +32,15 @@ type Mutation {
   logout: Boolean!
   refreshToken: Boolean!
   switchWorkspace(organizationId: ID!): Boolean!
+  createOrganization(input: CreateOrganizationInput!): Organization!
+  inviteMember(input: InviteMemberInput!): Boolean!
+  acceptInvitation(token: String!): Organization!
+  updateMemberRole(input: UpdateMemberRoleInput!): Boolean!
+  removeMember(input: RemoveMemberInput!): Boolean!
+  updateOrganizationComplianceProfile(input: UpdateComplianceProfileInput!): Organization!
+  publishCompliancePolicyVersion(input: PublishCompliancePolicyInput!): CompliancePolicy!
+  grantConsent(input: GrantConsentInput!): Consent!
+  withdrawConsent(input: WithdrawConsentInput!): Boolean!
 }
 
 input RegisterInput {
@@ -51,6 +68,50 @@ input VerifyDeviceInput {
   deviceFingerprint: String!
 }
 
+input CreateOrganizationInput {
+  name: String!
+  complianceProfile: ComplianceProfile!
+}
+
+input InviteMemberInput {
+  organizationId: ID!
+  email: String!
+  role: OrgRole!
+}
+
+input UpdateMemberRoleInput {
+  organizationId: ID!
+  userId: ID!
+  role: OrgRole!
+}
+
+input RemoveMemberInput {
+  organizationId: ID!
+  userId: ID!
+}
+
+input UpdateComplianceProfileInput {
+  organizationId: ID!
+  complianceProfile: ComplianceProfile!
+}
+
+input PublishCompliancePolicyInput {
+  organizationId: ID!
+  complianceProfile: ComplianceProfile!
+  version: String!
+  reason: String!
+}
+
+input GrantConsentInput {
+  purpose: ConsentPurpose!
+  organizationId: ID
+}
+
+input WithdrawConsentInput {
+  purpose: ConsentPurpose!
+  organizationId: ID
+}
+
 type User {
   id: ID!
   email: String!
@@ -70,7 +131,33 @@ type Organization {
   id: ID!
   name: String!
   type: OrgType!
-  complianceProfile: String!
+  complianceProfile: ComplianceProfile!
+  compliancePolicyVersion: String!
+}
+
+type OrganizationMember {
+  userId: ID!
+  email: String!
+  role: OrgRole!
+  joinedAt: String!
+  invitedAt: String!
+}
+
+type CompliancePolicy {
+  profile: ComplianceProfile!
+  version: String!
+  status: PolicyStatus!
+  effectiveAt: String!
+  reason: String
+}
+
+type Consent {
+  id: ID!
+  purpose: ConsentPurpose!
+  policyVersion: String!
+  grantedAt: String!
+  withdrawnAt: String
+  organizationId: ID
 }
 
 enum OrgType {
@@ -83,6 +170,24 @@ enum OrgRole {
   ADMIN
   ANALYST
   VIEWER
+}
+
+enum ComplianceProfile {
+  KVKK
+  GDPR
+  BOTH
+}
+
+enum ConsentPurpose {
+  REGISTRATION
+  ORG_MEMBERSHIP
+  DATA_PROCESSING
+}
+
+enum PolicyStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
 
 enum LoginStatus {

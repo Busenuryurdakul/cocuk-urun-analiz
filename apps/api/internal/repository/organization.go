@@ -41,3 +41,12 @@ func (r *OrganizationRepository) FindByID(ctx context.Context, organizationID pr
 	}
 	return &org, nil
 }
+
+func (r *OrganizationRepository) UpdateCompliance(ctx context.Context, orgID primitive.ObjectID, profile, policyVersion string) error {
+	_, err := r.col.UpdateByID(ctx, orgID, bson.M{"$set": bson.M{
+		"complianceProfile":       profile,
+		"compliancePolicyVersion": policyVersion,
+		"updatedAt":               time.Now().UTC(),
+	}})
+	return err
+}

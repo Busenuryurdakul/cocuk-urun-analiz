@@ -52,7 +52,7 @@ User
   name: string,
   type: PERSONAL | ORGANIZATION,
   complianceProfile: KVKK | GDPR | BOTH,
-  compliancePolicyVersion: string,
+  compliancePolicyVersion: string,        // pinned published version; no runtime "latest"
   ownerId: ObjectId,
   createdAt: Date,
   updatedAt: Date
@@ -261,6 +261,84 @@ User
 
 **Indexes:** `{ userId: 1, deviceFingerprint: 1 }` unique
 
+### organization_invitations
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  email: string,
+  role: OWNER | ADMIN | ANALYST | VIEWER,
+  inviterId: ObjectId,
+  tokenHash: string,
+  status: PENDING | ACCEPTED | REVOKED | EXPIRED,
+  expiresAt: Date,
+  acceptedAt: Date?,
+  acceptedByUserId: ObjectId?,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ tokenHash: 1 }` unique, `{ organizationId: 1, email: 1, status: 1 }`, TTL on `expiresAt`
+
+### compliance_policy_versions
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId?,              // null = platform default
+  profile: KVKK | GDPR | BOTH,
+  version: string,
+  status: DRAFT | PUBLISHED | ARCHIVED,
+  effectiveAt: Date,
+  rules: object,
+  reason: string?,
+  createdBy: ObjectId,
+  createdAt: Date,
+  publishedAt: Date?
+}
+```
+
+**Indexes:** `{ organizationId: 1, profile: 1, version: -1 }`, `{ organizationId: 1, status: 1, effectiveAt: -1 }`
+
+**Published versions are immutable.**
+
+### consents
+
+```text
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  organizationId: ObjectId?,
+  purpose: REGISTRATION | ORG_MEMBERSHIP | DATA_PROCESSING,
+  policyVersion: string,
+  lawfulBasis: string?,
+  grantedAt: Date,
+  withdrawnAt: Date?,
+  source: WEB | ADMIN | API,
+  auditRequestId: string?
+}
+```
+
+**Indexes:** `{ userId: 1, organizationId: 1, purpose: 1, withdrawnAt: 1 }`, `{ organizationId: 1, purpose: 1 }`
+
+### compliance_events
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId?,
+  userId: ObjectId?,
+  eventType: string,
+  ruleId: string?,
+  result: string,
+  details: object,
+  timestamp: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, timestamp: -1 }`
+
 ## 4. Tenant Isolation Enforcement
 
 ### Repository Layer Rules
@@ -311,3 +389,5 @@ Personal vs org data strictly separated by organizationId scope.
 | Soft delete vs hard delete policy | UNRESOLVED — deletion phase |
 | Audit log retention after org deletion | UNRESOLVED — deletion phase |
 | Global vs org-scoped ConfigSnapshot precedence | UNRESOLVED — LLM control phase |
+| Personal workspace default compliance profile | **KVKK** (Phase 3) |
+| Compliance event retention duration | **DEPLOYMENT_POLICY_REQUIRED** |

@@ -9,8 +9,41 @@ import (
 	"strconv"
 )
 
+type CompliancePolicy struct {
+	Profile     ComplianceProfile `json:"profile"`
+	Version     string            `json:"version"`
+	Status      PolicyStatus      `json:"status"`
+	EffectiveAt string            `json:"effectiveAt"`
+	Reason      *string           `json:"reason,omitempty"`
+}
+
 type ConfirmMFAInput struct {
 	Code string `json:"code"`
+}
+
+type Consent struct {
+	ID             string         `json:"id"`
+	Purpose        ConsentPurpose `json:"purpose"`
+	PolicyVersion  string         `json:"policyVersion"`
+	GrantedAt      string         `json:"grantedAt"`
+	WithdrawnAt    *string        `json:"withdrawnAt,omitempty"`
+	OrganizationID *string        `json:"organizationId,omitempty"`
+}
+
+type CreateOrganizationInput struct {
+	Name              string            `json:"name"`
+	ComplianceProfile ComplianceProfile `json:"complianceProfile"`
+}
+
+type GrantConsentInput struct {
+	Purpose        ConsentPurpose `json:"purpose"`
+	OrganizationID *string        `json:"organizationId,omitempty"`
+}
+
+type InviteMemberInput struct {
+	OrganizationID string  `json:"organizationId"`
+	Email          string  `json:"email"`
+	Role           OrgRole `json:"role"`
 }
 
 type LoginInput struct {
@@ -33,10 +66,26 @@ type Mutation struct {
 }
 
 type Organization struct {
-	ID                string  `json:"id"`
-	Name              string  `json:"name"`
-	Type              OrgType `json:"type"`
-	ComplianceProfile string  `json:"complianceProfile"`
+	ID                      string            `json:"id"`
+	Name                    string            `json:"name"`
+	Type                    OrgType           `json:"type"`
+	ComplianceProfile       ComplianceProfile `json:"complianceProfile"`
+	CompliancePolicyVersion string            `json:"compliancePolicyVersion"`
+}
+
+type OrganizationMember struct {
+	UserID    string  `json:"userId"`
+	Email     string  `json:"email"`
+	Role      OrgRole `json:"role"`
+	JoinedAt  string  `json:"joinedAt"`
+	InvitedAt string  `json:"invitedAt"`
+}
+
+type PublishCompliancePolicyInput struct {
+	OrganizationID    string            `json:"organizationId"`
+	ComplianceProfile ComplianceProfile `json:"complianceProfile"`
+	Version           string            `json:"version"`
+	Reason            string            `json:"reason"`
 }
 
 type Query struct {
@@ -49,6 +98,22 @@ type RegisterInput struct {
 
 type RegisterPayload struct {
 	Message string `json:"message"`
+}
+
+type RemoveMemberInput struct {
+	OrganizationID string `json:"organizationId"`
+	UserID         string `json:"userId"`
+}
+
+type UpdateComplianceProfileInput struct {
+	OrganizationID    string            `json:"organizationId"`
+	ComplianceProfile ComplianceProfile `json:"complianceProfile"`
+}
+
+type UpdateMemberRoleInput struct {
+	OrganizationID string  `json:"organizationId"`
+	UserID         string  `json:"userId"`
+	Role           OrgRole `json:"role"`
 }
 
 type User struct {
@@ -69,11 +134,130 @@ type VerifyLoginMFAInput struct {
 	DeviceFingerprint string `json:"deviceFingerprint"`
 }
 
+type WithdrawConsentInput struct {
+	Purpose        ConsentPurpose `json:"purpose"`
+	OrganizationID *string        `json:"organizationId,omitempty"`
+}
+
 type Workspace struct {
 	OrganizationID string  `json:"organizationId"`
 	Name           string  `json:"name"`
 	Type           OrgType `json:"type"`
 	Role           OrgRole `json:"role"`
+}
+
+type ComplianceProfile string
+
+const (
+	ComplianceProfileKVKK ComplianceProfile = "KVKK"
+	ComplianceProfileGdpr ComplianceProfile = "GDPR"
+	ComplianceProfileBoth ComplianceProfile = "BOTH"
+)
+
+var AllComplianceProfile = []ComplianceProfile{
+	ComplianceProfileKVKK,
+	ComplianceProfileGdpr,
+	ComplianceProfileBoth,
+}
+
+func (e ComplianceProfile) IsValid() bool {
+	switch e {
+	case ComplianceProfileKVKK, ComplianceProfileGdpr, ComplianceProfileBoth:
+		return true
+	}
+	return false
+}
+
+func (e ComplianceProfile) String() string {
+	return string(e)
+}
+
+func (e *ComplianceProfile) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ComplianceProfile(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ComplianceProfile", str)
+	}
+	return nil
+}
+
+func (e ComplianceProfile) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ComplianceProfile) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ComplianceProfile) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ConsentPurpose string
+
+const (
+	ConsentPurposeRegistration   ConsentPurpose = "REGISTRATION"
+	ConsentPurposeOrgMembership  ConsentPurpose = "ORG_MEMBERSHIP"
+	ConsentPurposeDataProcessing ConsentPurpose = "DATA_PROCESSING"
+)
+
+var AllConsentPurpose = []ConsentPurpose{
+	ConsentPurposeRegistration,
+	ConsentPurposeOrgMembership,
+	ConsentPurposeDataProcessing,
+}
+
+func (e ConsentPurpose) IsValid() bool {
+	switch e {
+	case ConsentPurposeRegistration, ConsentPurposeOrgMembership, ConsentPurposeDataProcessing:
+		return true
+	}
+	return false
+}
+
+func (e ConsentPurpose) String() string {
+	return string(e)
+}
+
+func (e *ConsentPurpose) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ConsentPurpose(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ConsentPurpose", str)
+	}
+	return nil
+}
+
+func (e ConsentPurpose) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ConsentPurpose) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ConsentPurpose) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type LoginStatus string
@@ -244,6 +428,63 @@ func (e *OrgType) UnmarshalJSON(b []byte) error {
 }
 
 func (e OrgType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type PolicyStatus string
+
+const (
+	PolicyStatusDraft     PolicyStatus = "DRAFT"
+	PolicyStatusPublished PolicyStatus = "PUBLISHED"
+	PolicyStatusArchived  PolicyStatus = "ARCHIVED"
+)
+
+var AllPolicyStatus = []PolicyStatus{
+	PolicyStatusDraft,
+	PolicyStatusPublished,
+	PolicyStatusArchived,
+}
+
+func (e PolicyStatus) IsValid() bool {
+	switch e {
+	case PolicyStatusDraft, PolicyStatusPublished, PolicyStatusArchived:
+		return true
+	}
+	return false
+}
+
+func (e PolicyStatus) String() string {
+	return string(e)
+}
+
+func (e *PolicyStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PolicyStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PolicyStatus", str)
+	}
+	return nil
+}
+
+func (e PolicyStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *PolicyStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e PolicyStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
