@@ -10,7 +10,6 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/httpx"
-	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/tenant"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -38,10 +37,12 @@ func mapAuthError(err error) error {
 		return gqlError("EMAIL_NOT_VERIFIED", err)
 	case errors.Is(err, auth.ErrInvalidToken), errors.Is(err, auth.ErrInvalidCode):
 		return gqlError("INVALID_TOKEN", err)
+	case errors.Is(err, auth.ErrChallengeLocked), errors.Is(err, auth.ErrAccountLocked):
+		return gqlError("CHALLENGE_LOCKED", err)
+	case errors.Is(err, auth.ErrRefreshReplay):
+		return gqlError("REFRESH_REPLAY", err)
 	case errors.Is(err, tenant.ErrCrossTenantAccess):
 		return gqlError("FORBIDDEN", errForbidden)
-	case errors.Is(err, repository.ErrDuplicate):
-		return gqlError("DUPLICATE_EMAIL", err)
 	default:
 		return err
 	}
@@ -92,6 +93,30 @@ func toModelLoginPayload(result *auth.LoginResult) *model.LoginPayload {
 	return payload
 }
 
+func applyAuthCookies(ctx context.Context, opts cookies.Options, tokens *auth.AuthTokens) {
+	w, ok := responseWriter(ctx)
+	if !ok || tokens == nil {
+		return
+	}
+	if tokens.AccessToken != "" {
+		cookies.Set(w, cookies.AccessCookie, tokens.AccessToken, tokens.AccessExpiresAt, opts)
+	}
+	if tokens.RefreshToken != "" {
+		cookies.Set(w, cookies.RefreshCookie, tokens.RefreshToken, tokens.RefreshExpiresAt, opts)
+	}
+}
+
+func clearAuthCookies(ctx context.Context, opts cookies.Options) {
+	w, ok := responseWriter(ctx)
+	if !ok {
+		return
+	}
+	cookies.Clear(w, cookies.AccessCookie, opts)
+	cookies.Clear(w, cookies.RefreshCookie, opts)
+	cookies.Clear(w, cookies.PendingCookie, opts)
+	cookies.Clear(w, cookies.SetupCookie, opts)
+}
+
 func applyLoginCookies(ctx context.Context, opts cookies.Options, result *auth.LoginResult) {
 	w, ok := responseWriter(ctx)
 	if !ok || result == nil {
@@ -99,11 +124,9 @@ func applyLoginCookies(ctx context.Context, opts cookies.Options, result *auth.L
 	}
 	switch result.Status {
 	case auth.LoginStatusAuthenticated:
-		if result.Session != nil {
-			cookies.Set(w, cookies.SessionCookie, result.Session.Token, result.Session.ExpiresAt, opts)
-			cookies.Clear(w, cookies.PendingCookie, opts)
-			cookies.Clear(w, cookies.SetupCookie, opts)
-		}
+		applyAuthCookies(ctx, opts, result.Tokens)
+		cookies.Clear(w, cookies.PendingCookie, opts)
+		cookies.Clear(w, cookies.SetupCookie, opts)
 	case auth.LoginStatusMFARequired, auth.LoginStatusDeviceVerificationRequired:
 		if result.Pending != nil {
 			cookies.Set(w, cookies.PendingCookie, result.Pending.Token, result.Pending.ExpiresAt, opts)

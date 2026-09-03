@@ -33,6 +33,7 @@ func (c *Client) Ping(ctx context.Context) error {
 }
 
 func (c *Client) EnsureIndexes(ctx context.Context) error {
+	ttl := options.Index().SetExpireAfterSeconds(0)
 	indexes := []struct {
 		collection string
 		model      mongo.IndexModel
@@ -49,12 +50,19 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 			Options: options.Index().SetUnique(true),
 		}},
 		{"security_events", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "timestamp", Value: -1}}}},
-		{"sessions", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
-		{"sessions", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(0)}},
+		{"sessions", mongo.IndexModel{Keys: bson.D{{Key: "refreshTokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		{"sessions", mongo.IndexModel{Keys: bson.D{{Key: "familyId", Value: 1}}}},
+		{"sessions", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
+		{"rotated_refresh_tokens", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		{"rotated_refresh_tokens", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 		{"pending_auth", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		{"pending_auth", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 		{"email_verifications", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		{"email_verifications", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 		{"device_verifications", mongo.IndexModel{Keys: bson.D{{Key: "userId", Value: 1}, {Key: "deviceId", Value: 1}}}},
+		{"device_verifications", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 		{"mfa_setup_challenges", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		{"mfa_setup_challenges", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 	}
 
 	for _, idx := range indexes {

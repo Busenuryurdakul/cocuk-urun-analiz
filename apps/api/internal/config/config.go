@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"time"
 )
 
 // Config holds runtime configuration from environment.
@@ -18,6 +20,12 @@ type Config struct {
 	WebBaseURL             string
 	MFAIssuer              string
 	CookieSecure           bool
+	JWTSecret              string
+	AccessTokenTTL         time.Duration
+	RefreshTokenTTL        time.Duration
+	MaxOTPAttempts         int
+	LoginMaxAttempts       int
+	LoginLockoutDuration   time.Duration
 }
 
 // Load reads configuration from environment with dev defaults.
@@ -35,12 +43,37 @@ func Load() Config {
 		WebBaseURL:             getEnv("WEB_BASE_URL", "http://localhost:3000"),
 		MFAIssuer:              getEnv("MFA_ISSUER", "Miyuna"),
 		CookieSecure:           getEnv("COOKIE_SECURE", "false") == "true",
+		JWTSecret:              getEnv("JWT_SECRET", "change-me-jwt-dev-secret-32chars"),
+		AccessTokenTTL:         durationEnv("ACCESS_TOKEN_TTL", 15*time.Minute),
+		RefreshTokenTTL:        durationEnv("REFRESH_TOKEN_TTL", 7*24*time.Hour),
+		MaxOTPAttempts:         intEnv("MAX_OTP_ATTEMPTS", 5),
+		LoginMaxAttempts:       intEnv("LOGIN_MAX_ATTEMPTS", 5),
+		LoginLockoutDuration:   durationEnv("LOGIN_LOCKOUT_DURATION", 15*time.Minute),
 	}
 }
 
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
+	}
+	return fallback
+}
+
+func durationEnv(key string, fallback time.Duration) time.Duration {
+	if v := os.Getenv(key); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			return d
+		}
+	}
+	return fallback
+}
+
+func intEnv(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		var n int
+		if _, err := fmt.Sscanf(v, "%d", &n); err == nil {
+			return n
+		}
 	}
 	return fallback
 }

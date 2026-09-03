@@ -48,7 +48,6 @@ type RegisterInput struct {
 }
 
 type RegisterPayload struct {
-	UserID  string `json:"userId"`
 	Message string `json:"message"`
 }
 

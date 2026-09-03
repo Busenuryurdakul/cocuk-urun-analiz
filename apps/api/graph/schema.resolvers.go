@@ -14,14 +14,11 @@ import (
 
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error) {
-	userID, err := r.Auth.Register(ctx, input.Email, input.Password)
+	result, err := r.Auth.Register(ctx, input.Email, input.Password)
 	if err != nil {
 		return nil, mapAuthError(err)
 	}
-	return &model.RegisterPayload{
-		UserID:  userID.Hex(),
-		Message: "Kayıt alındı. E-posta doğrulama bağlantısı gönderildi.",
-	}, nil
+	return &model.RegisterPayload{Message: result.Message}, nil
 }
 
 // VerifyEmail is the resolver for the verifyEmail field.
@@ -104,18 +101,32 @@ func (r *mutationResolver) VerifyDevice(ctx context.Context, input model.VerifyD
 
 // Logout is the resolver for the logout field.
 func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
+	session, err := requireSession(ctx)
+	if err == nil {
+		if sid, parseErr := parseObjectID(session.SessionID); parseErr == nil {
+			_ = r.Auth.LogoutSession(ctx, sid)
+		}
+	}
+	clearAuthCookies(ctx, r.CookieOpts)
+	return true, nil
+}
+
+// RefreshToken is the resolver for the refreshToken field.
+func (r *mutationResolver) RefreshToken(ctx context.Context) (bool, error) {
 	req, ok := httpx.RequestFrom(ctx)
 	if !ok {
 		return false, gqlError("UNAUTHORIZED", errUnauthorized)
 	}
-	if token, ok := cookies.Get(req, cookies.SessionCookie); ok {
-		_ = r.Auth.Logout(ctx, token)
+	refresh, ok := cookies.Get(req, cookies.RefreshCookie)
+	if !ok {
+		return false, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
-	if w, ok := responseWriter(ctx); ok {
-		cookies.Clear(w, cookies.SessionCookie, r.CookieOpts)
-		cookies.Clear(w, cookies.PendingCookie, r.CookieOpts)
-		cookies.Clear(w, cookies.SetupCookie, r.CookieOpts)
+	tokens, err := r.Auth.RefreshTokens(ctx, refresh)
+	if err != nil {
+		clearAuthCookies(ctx, r.CookieOpts)
+		return false, mapAuthError(err)
 	}
+	applyAuthCookies(ctx, r.CookieOpts, tokens)
 	return true, nil
 }
 
@@ -129,13 +140,15 @@ func (r *mutationResolver) SwitchWorkspace(ctx context.Context, organizationID s
 	if err != nil {
 		return false, gqlError("INVALID_ID", err)
 	}
-	updated, err := r.Auth.SwitchWorkspace(ctx, session.Token, orgID)
+	sessionID, err := parseObjectID(session.SessionID)
+	if err != nil {
+		return false, err
+	}
+	tokens, err := r.Auth.SwitchWorkspaceTokens(ctx, sessionID, orgID)
 	if err != nil {
 		return false, mapAuthError(err)
 	}
-	if w, ok := responseWriter(ctx); ok && updated != nil {
-		cookies.Set(w, cookies.SessionCookie, updated.Token, updated.ExpiresAt, r.CookieOpts)
-	}
+	applyAuthCookies(ctx, r.CookieOpts, tokens)
 	return true, nil
 }
 

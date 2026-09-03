@@ -22,6 +22,7 @@ type Mutation {
   verifyLoginMFA(input: VerifyLoginMFAInput!): LoginPayload!
   verifyDevice(input: VerifyDeviceInput!): LoginPayload!
   logout: Boolean!
+  refreshToken: Boolean!
   switchWorkspace(organizationId: ID!): Boolean!
 }
 
@@ -92,7 +93,6 @@ enum LoginStatus {
 }
 
 type RegisterPayload {
-  userId: ID!
   message: String!
 }
 

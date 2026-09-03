@@ -32,7 +32,8 @@ func ResponseWriterFrom(ctx context.Context) (http.ResponseWriter, bool) {
 }
 
 type SessionContext struct {
-	Token          string
+	AccessToken    string
+	SessionID      string
 	UserID         string
 	OrganizationID string
 }

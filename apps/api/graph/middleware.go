@@ -18,12 +18,13 @@ func sessionMiddleware(authSvc *auth.Service, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := httpx.WithRequest(r.Context(), r)
 		ctx = httpx.WithResponseWriter(ctx, w)
-		if token, ok := cookies.Get(r, cookies.SessionCookie); ok {
-			if session, err := authSvc.SessionFromToken(ctx, token); err == nil {
+		if access, ok := cookies.Get(r, cookies.AccessCookie); ok {
+			if tokens, err := authSvc.ValidateAccessToken(ctx, access); err == nil {
 				ctx = httpx.WithSession(ctx, httpx.SessionContext{
-					Token:          token,
-					UserID:         session.UserID.Hex(),
-					OrganizationID: session.OrganizationID.Hex(),
+					AccessToken:    access,
+					SessionID:      tokens.SessionID.Hex(),
+					UserID:         tokens.UserID.Hex(),
+					OrganizationID: tokens.OrganizationID.Hex(),
 				})
 			}
 		}

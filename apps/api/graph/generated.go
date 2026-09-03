@@ -61,6 +61,7 @@ type ComplexityRoot struct {
 		ConfirmMfa      func(childComplexity int, input model.ConfirmMFAInput) int
 		Login           func(childComplexity int, input model.LoginInput) int
 		Logout          func(childComplexity int) int
+		RefreshToken    func(childComplexity int) int
 		Register        func(childComplexity int, input model.RegisterInput) int
 		SwitchWorkspace func(childComplexity int, organizationID string) int
 		VerifyDevice    func(childComplexity int, input model.VerifyDeviceInput) int
@@ -84,7 +85,6 @@ type ComplexityRoot struct {
 
 	RegisterPayload struct {
 		Message func(childComplexity int) int
-		UserID  func(childComplexity int) int
 	}
 
 	User struct {
@@ -111,6 +111,7 @@ type MutationResolver interface {
 	VerifyLoginMfa(ctx context.Context, input model.VerifyLoginMFAInput) (*model.LoginPayload, error)
 	VerifyDevice(ctx context.Context, input model.VerifyDeviceInput) (*model.LoginPayload, error)
 	Logout(ctx context.Context) (bool, error)
+	RefreshToken(ctx context.Context) (bool, error)
 	SwitchWorkspace(ctx context.Context, organizationID string) (bool, error)
 }
 type QueryResolver interface {
@@ -193,6 +194,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Logout(childComplexity), true
+	case "Mutation.refreshToken":
+		if e.complexity.Mutation.RefreshToken == nil {
+			break
+		}
+
+		return e.complexity.Mutation.RefreshToken(childComplexity), true
 	case "Mutation.register":
 		if e.complexity.Mutation.Register == nil {
 			break
@@ -310,12 +317,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.RegisterPayload.Message(childComplexity), true
-	case "RegisterPayload.userId":
-		if e.complexity.RegisterPayload.UserID == nil {
-			break
-		}
-
-		return e.complexity.RegisterPayload.UserID(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -806,8 +807,6 @@ func (ec *executionContext) fieldContext_Mutation_register(ctx context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "userId":
-				return ec.fieldContext_RegisterPayload_userId(ctx, field)
 			case "message":
 				return ec.fieldContext_RegisterPayload_message(ctx, field)
 			}
@@ -1074,6 +1073,35 @@ func (ec *executionContext) _Mutation_logout(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_Mutation_logout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_refreshToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_refreshToken,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().RefreshToken(ctx)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_refreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1506,35 +1534,6 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RegisterPayload_userId(ctx context.Context, field graphql.CollectedField, obj *model.RegisterPayload) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_RegisterPayload_userId,
-		func(ctx context.Context) (any, error) {
-			return obj.UserID, nil
-		},
-		nil,
-		ec.marshalNID2string,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_RegisterPayload_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisterPayload",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3607,6 +3606,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "refreshToken":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_refreshToken(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "switchWorkspace":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_switchWorkspace(ctx, field)
@@ -3834,11 +3840,6 @@ func (ec *executionContext) _RegisterPayload(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RegisterPayload")
-		case "userId":
-			out.Values[i] = ec._RegisterPayload_userId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "message":
 			out.Values[i] = ec._RegisterPayload_message(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

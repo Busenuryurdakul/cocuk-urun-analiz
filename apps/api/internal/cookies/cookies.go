@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	SessionCookie = "miyuna_session"
+	AccessCookie  = "miyuna_access"
+	RefreshCookie = "miyuna_refresh"
 	PendingCookie = "miyuna_pending"
 	SetupCookie   = "miyuna_mfa_setup"
 )

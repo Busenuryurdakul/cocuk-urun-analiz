@@ -39,9 +39,11 @@ const (
 type SecurityEventType string
 
 const (
-	EventCrossTenantAccess SecurityEventType = "CROSS_TENANT_ACCESS"
-	EventAuthFailure       SecurityEventType = "AUTH_FAILURE"
-	EventMFAFailure        SecurityEventType = "MFA_FAILURE"
+	EventCrossTenantAccess  SecurityEventType = "CROSS_TENANT_ACCESS"
+	EventAuthFailure        SecurityEventType = "AUTH_FAILURE"
+	EventMFAFailure         SecurityEventType = "MFA_FAILURE"
+	EventRefreshTokenReplay SecurityEventType = "REFRESH_TOKEN_REPLAY"
+	EventOTPAttemptLimit    SecurityEventType = "OTP_ATTEMPT_LIMIT"
 )
 
 type User struct {
@@ -96,14 +98,27 @@ type SecurityEvent struct {
 	Timestamp      time.Time           `bson:"timestamp"`
 }
 
+// Session stores refresh token hash and session metadata. Access auth uses short-lived JWT.
 type Session struct {
-	ID             primitive.ObjectID `bson:"_id,omitempty"`
-	TokenHash      string             `bson:"tokenHash"`
-	UserID         primitive.ObjectID `bson:"userId"`
-	OrganizationID primitive.ObjectID `bson:"organizationId"`
-	DeviceID       primitive.ObjectID `bson:"deviceId"`
-	ExpiresAt      time.Time          `bson:"expiresAt"`
-	CreatedAt      time.Time          `bson:"createdAt"`
+	ID               primitive.ObjectID `bson:"_id,omitempty"`
+	UserID           primitive.ObjectID `bson:"userId"`
+	OrganizationID   primitive.ObjectID `bson:"organizationId"`
+	DeviceID         primitive.ObjectID `bson:"deviceId"`
+	FamilyID         primitive.ObjectID `bson:"familyId"`
+	RefreshTokenHash string             `bson:"refreshTokenHash"`
+	Revoked          bool               `bson:"revoked"`
+	ExpiresAt        time.Time          `bson:"expiresAt"`
+	CreatedAt        time.Time          `bson:"createdAt"`
+	UpdatedAt        time.Time          `bson:"updatedAt"`
+}
+
+type RotatedRefreshToken struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	SessionID primitive.ObjectID `bson:"sessionId"`
+	FamilyID  primitive.ObjectID `bson:"familyId"`
+	TokenHash string             `bson:"tokenHash"`
+	RotatedAt time.Time          `bson:"rotatedAt"`
+	ExpiresAt time.Time          `bson:"expiresAt"`
 }
 
 type PendingAuth struct {
@@ -112,32 +127,40 @@ type PendingAuth struct {
 	UserID            primitive.ObjectID `bson:"userId"`
 	DeviceFingerprint string             `bson:"deviceFingerprint"`
 	Stage             string             `bson:"stage"`
+	FailedAttempts    int                `bson:"failedAttempts"`
+	Locked            bool               `bson:"locked"`
 	ExpiresAt         time.Time          `bson:"expiresAt"`
 	CreatedAt         time.Time          `bson:"createdAt"`
 }
 
 type EmailVerification struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UserID    primitive.ObjectID `bson:"userId"`
-	TokenHash string             `bson:"tokenHash"`
-	ExpiresAt time.Time          `bson:"expiresAt"`
-	CreatedAt time.Time          `bson:"createdAt"`
+	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	UserID         primitive.ObjectID `bson:"userId"`
+	TokenHash      string             `bson:"tokenHash"`
+	FailedAttempts int                `bson:"failedAttempts"`
+	Locked         bool               `bson:"locked"`
+	ExpiresAt      time.Time          `bson:"expiresAt"`
+	CreatedAt      time.Time          `bson:"createdAt"`
 }
 
 type DeviceVerification struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UserID    primitive.ObjectID `bson:"userId"`
-	DeviceID  primitive.ObjectID `bson:"deviceId"`
-	CodeHash  string             `bson:"codeHash"`
-	ExpiresAt time.Time          `bson:"expiresAt"`
-	CreatedAt time.Time          `bson:"createdAt"`
+	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	UserID         primitive.ObjectID `bson:"userId"`
+	DeviceID       primitive.ObjectID `bson:"deviceId"`
+	CodeHash       string             `bson:"codeHash"`
+	FailedAttempts int                `bson:"failedAttempts"`
+	Locked         bool               `bson:"locked"`
+	ExpiresAt      time.Time          `bson:"expiresAt"`
+	CreatedAt      time.Time          `bson:"createdAt"`
 }
 
 type MFASetupChallenge struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UserID    primitive.ObjectID `bson:"userId"`
-	TokenHash string             `bson:"tokenHash"`
-	Secret    string             `bson:"secret"`
-	ExpiresAt time.Time          `bson:"expiresAt"`
-	CreatedAt time.Time          `bson:"createdAt"`
+	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	UserID         primitive.ObjectID `bson:"userId"`
+	TokenHash      string             `bson:"tokenHash"`
+	Secret         string             `bson:"secret"`
+	FailedAttempts int                `bson:"failedAttempts"`
+	Locked         bool               `bson:"locked"`
+	ExpiresAt      time.Time          `bson:"expiresAt"`
+	CreatedAt      time.Time          `bson:"createdAt"`
 }

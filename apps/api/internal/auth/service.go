@@ -20,24 +20,16 @@ var (
 	ErrMFARequired        = errors.New("mfa setup required")
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrInvalidCode        = errors.New("invalid code")
+	ErrChallengeLocked    = errors.New("challenge locked")
 )
 
 const (
-	StageMFA        = "MFA"
-	StageDevice     = "DEVICE"
-	sessionTTL      = 24 * time.Hour
-	pendingTTL      = 10 * time.Minute
-	emailVerifyTTL  = 24 * time.Hour
-	mfaSetupTTL     = 30 * time.Minute
-	deviceVerifyTTL = 15 * time.Minute
+	StageMFA    = "MFA"
+	StageDevice = "DEVICE"
 )
 
-type SessionInfo struct {
-	Token          string
-	UserID         primitive.ObjectID
-	OrganizationID primitive.ObjectID
-	DeviceID       primitive.ObjectID
-	ExpiresAt      time.Time
+type RegisterResult struct {
+	Message string
 }
 
 type PendingInfo struct {
@@ -60,7 +52,7 @@ type LoginResult struct {
 	User     *domain.User
 	Pending  *PendingInfo
 	MFASetup *MFASetupInfo
-	Session  *SessionInfo
+	Tokens   *AuthTokens
 }
 
 type LoginStatus string
@@ -78,6 +70,7 @@ type Service struct {
 	Members      *repository.MemberRepository
 	Devices      *repository.DeviceRepository
 	Sessions     *repository.SessionRepository
+	Rotated      *repository.RotatedRefreshRepository
 	Pending      *repository.PendingAuthRepository
 	EmailVerify  *repository.EmailVerificationRepository
 	DeviceVerify *repository.DeviceVerificationRepository
@@ -85,18 +78,23 @@ type Service struct {
 	Security     *repository.SecurityEventRepository
 	Mail         mail.Service
 	Tenant       *tenant.Guard
+	BruteForce   *BruteForceGuard
+	JWT          *JWTManager
+	Policy       SecurityPolicy
 	WebBaseURL   string
 	MFAIssuer    string
 }
 
-func (s *Service) Register(ctx context.Context, email, password string) (primitive.ObjectID, error) {
+const registerAckMessage = "Kayıt alındı. E-posta adresinize doğrulama bağlantısı gönderildi."
+
+func (s *Service) Register(ctx context.Context, email, password string) (*RegisterResult, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
 	if email == "" || len(password) < 8 {
-		return primitive.NilObjectID, ErrInvalidCredentials
+		return nil, ErrInvalidCredentials
 	}
 	hash, err := HashPassword(password)
 	if err != nil {
-		return primitive.NilObjectID, err
+		return nil, err
 	}
 
 	user := &domain.User{
@@ -106,7 +104,11 @@ func (s *Service) Register(ctx context.Context, email, password string) (primiti
 		MFAEnabled:    false,
 	}
 	if err := s.Users.Create(ctx, user); err != nil {
-		return primitive.NilObjectID, err
+		if errors.Is(err, repository.ErrDuplicate) {
+			// Non-enumerating response: same message, no error.
+			return &RegisterResult{Message: registerAckMessage}, nil
+		}
+		return nil, err
 	}
 
 	org := &domain.Organization{
@@ -117,12 +119,12 @@ func (s *Service) Register(ctx context.Context, email, password string) (primiti
 		OwnerID:                 user.ID,
 	}
 	if err := s.Orgs.Create(ctx, org); err != nil {
-		return primitive.NilObjectID, err
+		return nil, err
 	}
 
 	user.PersonalOrgID = org.ID
 	if err := s.Users.Update(ctx, user); err != nil {
-		return primitive.NilObjectID, err
+		return nil, err
 	}
 
 	member := &domain.OrganizationMember{
@@ -131,37 +133,53 @@ func (s *Service) Register(ctx context.Context, email, password string) (primiti
 		Role:           domain.RoleOwner,
 	}
 	if err := s.Members.Create(ctx, member); err != nil {
-		return primitive.NilObjectID, err
+		return nil, err
 	}
 
+	if err := s.sendEmailVerification(ctx, user.ID, email); err != nil {
+		return nil, err
+	}
+
+	return &RegisterResult{Message: registerAckMessage}, nil
+}
+
+func (s *Service) sendEmailVerification(ctx context.Context, userID primitive.ObjectID, email string) error {
 	token, tokenHash, err := NewToken()
 	if err != nil {
-		return primitive.NilObjectID, err
+		return err
 	}
 	ev := &domain.EmailVerification{
-		UserID:    user.ID,
+		UserID:    userID,
 		TokenHash: tokenHash,
-		ExpiresAt: time.Now().UTC().Add(emailVerifyTTL),
+		ExpiresAt: time.Now().UTC().Add(s.Policy.EmailVerifyTTL),
 	}
 	if err := s.EmailVerify.Create(ctx, ev); err != nil {
-		return primitive.NilObjectID, err
+		return err
 	}
-
 	verifyURL := fmt.Sprintf("%s/auth/verify-email?token=%s", strings.TrimRight(s.WebBaseURL, "/"), token)
-	_ = s.Mail.Send(ctx, mail.Message{
+	return s.Mail.Send(ctx, mail.Message{
 		To:      email,
 		Subject: "Miyuna — e-posta doğrulama",
 		Body:    fmt.Sprintf("E-posta adresinizi doğrulamak için bağlantıyı açın:\n%s", verifyURL),
 	})
-
-	return user.ID, nil
 }
 
 func (s *Service) VerifyEmail(ctx context.Context, token string) (*MFASetupInfo, error) {
-	ev, err := s.EmailVerify.ConsumeByTokenHash(ctx, HashToken(token))
+	hash := HashToken(token)
+	if blocked, _ := s.BruteForce.IsOTPBlocked(ctx, "email_verify", hash); blocked {
+		return nil, ErrChallengeLocked
+	}
+	ev, err := s.EmailVerify.FindByTokenHash(ctx, hash)
 	if err != nil {
+		if locked, _ := s.BruteForce.RecordOTPFailure(ctx, "email_verify", hash, nil); locked {
+			_ = s.EmailVerify.LockByTokenHash(ctx, hash)
+		}
 		return nil, ErrInvalidToken
 	}
+	if _, err := s.EmailVerify.ConsumeByTokenHash(ctx, hash); err != nil {
+		return nil, ErrInvalidToken
+	}
+	_ = s.BruteForce.ResetOTPFailures(ctx, "email_verify", hash)
 	if err := s.Users.SetEmailVerified(ctx, ev.UserID); err != nil {
 		return nil, err
 	}
@@ -185,7 +203,7 @@ func (s *Service) beginMFASetup(ctx context.Context, userID primitive.ObjectID) 
 		UserID:    userID,
 		TokenHash: tokenHash,
 		Secret:    secret,
-		ExpiresAt: time.Now().UTC().Add(mfaSetupTTL),
+		ExpiresAt: time.Now().UTC().Add(s.Policy.MFASetupTTL),
 	}
 	if err := s.MFASetup.Create(ctx, challenge); err != nil {
 		return nil, err
@@ -198,34 +216,24 @@ func (s *Service) beginMFASetup(ctx context.Context, userID primitive.ObjectID) 
 	}, nil
 }
 
-func (s *Service) GetMFASetup(ctx context.Context, setupToken string) (*MFASetupInfo, error) {
-	challenge, err := s.MFASetup.FindByTokenHash(ctx, HashToken(setupToken))
-	if err != nil {
-		return nil, ErrInvalidToken
-	}
-	user, err := s.Users.FindByID(ctx, challenge.UserID)
-	if err != nil {
-		return nil, err
-	}
-	_, url, err := GenerateTOTPSecret(s.MFAIssuer, user.Email)
-	if err != nil {
-		return nil, err
-	}
-	return &MFASetupInfo{
-		Token:      setupToken,
-		Secret:     challenge.Secret,
-		OTPAuthURL: url,
-		ExpiresAt:  challenge.ExpiresAt,
-	}, nil
-}
-
 func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) error {
-	challenge, err := s.MFASetup.ConsumeByTokenHash(ctx, HashToken(setupToken))
+	hash := HashToken(setupToken)
+	challenge, err := s.MFASetup.FindByTokenHash(ctx, hash)
 	if err != nil {
 		return ErrInvalidToken
 	}
 	if !ValidateTOTP(challenge.Secret, code) {
 		uid := challenge.UserID
+		if locked, _ := s.MFASetup.IncrementFailedAttempts(ctx, challenge.ID, s.Policy.MaxOTPAttempts); locked {
+			_ = s.Security.Record(ctx, domain.SecurityEvent{
+				UserID:    &uid,
+				EventType: domain.EventOTPAttemptLimit,
+				Severity:  domain.SeverityWarning,
+				Details:   map[string]string{"stage": "mfa_setup"},
+			})
+			return ErrChallengeLocked
+		}
+		_, _ = s.BruteForce.RecordOTPFailure(ctx, "mfa_setup", hash, &uid)
 		_ = s.Security.Record(ctx, domain.SecurityEvent{
 			UserID:    &uid,
 			EventType: domain.EventMFAFailure,
@@ -234,20 +242,32 @@ func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) error
 		})
 		return ErrInvalidCode
 	}
-	return s.Users.EnableMFA(ctx, challenge.UserID, challenge.Secret)
+	consumed, err := s.MFASetup.ConsumeByTokenHash(ctx, hash)
+	if err != nil {
+		return ErrInvalidToken
+	}
+	_ = s.BruteForce.ResetOTPFailures(ctx, "mfa_setup", hash)
+	return s.Users.EnableMFA(ctx, consumed.UserID, consumed.Secret)
 }
 
 func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint string) (*LoginResult, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
+	if locked, _ := s.BruteForce.IsLoginLocked(ctx, email); locked {
+		return nil, ErrAccountLocked
+	}
+
 	user, err := s.Users.FindByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
+			_, _ = s.BruteForce.RecordLoginFailure(ctx, email, nil)
 			return nil, ErrInvalidCredentials
 		}
 		return nil, err
 	}
+
 	if !CheckPassword(user.PasswordHash, password) {
 		uid := user.ID
+		_, _ = s.BruteForce.RecordLoginFailure(ctx, email, &uid)
 		_ = s.Security.Record(ctx, domain.SecurityEvent{
 			UserID:    &uid,
 			EventType: domain.EventAuthFailure,
@@ -256,6 +276,9 @@ func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint 
 		})
 		return nil, ErrInvalidCredentials
 	}
+
+	_ = s.BruteForce.ResetLoginFailures(ctx, email)
+
 	if !user.EmailVerified {
 		return nil, ErrEmailNotVerified
 	}
@@ -264,11 +287,7 @@ func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint 
 		if err != nil {
 			return nil, err
 		}
-		return &LoginResult{
-			Status:   LoginStatusMFASetupRequired,
-			User:     user,
-			MFASetup: setup,
-		}, nil
+		return &LoginResult{Status: LoginStatusMFASetupRequired, User: user, MFASetup: setup}, nil
 	}
 
 	device := &domain.Device{
@@ -290,7 +309,7 @@ func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint 
 		UserID:            user.ID,
 		DeviceFingerprint: deviceFingerprint,
 		Stage:             StageMFA,
-		ExpiresAt:         time.Now().UTC().Add(pendingTTL),
+		ExpiresAt:         time.Now().UTC().Add(s.Policy.PendingAuthTTL),
 	}
 	if err := s.Pending.Create(ctx, pending); err != nil {
 		return nil, err
@@ -310,19 +329,32 @@ func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint 
 }
 
 func (s *Service) VerifyLoginMFA(ctx context.Context, pendingToken, code, deviceFingerprint string) (*LoginResult, error) {
-	pending, err := s.Pending.FindByTokenHash(ctx, HashToken(pendingToken))
+	hash := HashToken(pendingToken)
+	pending, err := s.Pending.FindByTokenHash(ctx, hash)
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
 	if pending.DeviceFingerprint != deviceFingerprint || pending.Stage != StageMFA {
 		return nil, ErrInvalidToken
 	}
+
 	user, err := s.Users.FindByID(ctx, pending.UserID)
 	if err != nil {
 		return nil, err
 	}
+
 	if !ValidateTOTP(user.MFASecret, code) {
 		uid := user.ID
+		if locked, _ := s.Pending.IncrementFailedAttempts(ctx, pending.ID, s.Policy.MaxOTPAttempts); locked {
+			_ = s.Security.Record(ctx, domain.SecurityEvent{
+				UserID:    &uid,
+				EventType: domain.EventOTPAttemptLimit,
+				Severity:  domain.SeverityWarning,
+				Details:   map[string]string{"stage": "login_mfa"},
+			})
+			return nil, ErrChallengeLocked
+		}
+		_, _ = s.BruteForce.RecordOTPFailure(ctx, "login_mfa", hash, &uid)
 		_ = s.Security.Record(ctx, domain.SecurityEvent{
 			UserID:    &uid,
 			EventType: domain.EventMFAFailure,
@@ -332,17 +364,18 @@ func (s *Service) VerifyLoginMFA(ctx context.Context, pendingToken, code, device
 		return nil, ErrInvalidCode
 	}
 	_ = s.Pending.DeleteByTokenHash(ctx, pending.TokenHash)
+	_ = s.BruteForce.ResetOTPFailures(ctx, "login_mfa", hash)
 
 	device, err := s.Devices.FindByUserAndFingerprint(ctx, user.ID, deviceFingerprint)
 	if err != nil {
 		return nil, err
 	}
 	if device.Verified {
-		session, err := s.createSession(ctx, user, device)
+		tokens, err := s.issueAuthTokens(ctx, user, device)
 		if err != nil {
 			return nil, err
 		}
-		return &LoginResult{Status: LoginStatusAuthenticated, User: user, Session: session}, nil
+		return &LoginResult{Status: LoginStatusAuthenticated, User: user, Tokens: tokens}, nil
 	}
 
 	codePlain, codeHash, err := NewNumericCode()
@@ -353,7 +386,7 @@ func (s *Service) VerifyLoginMFA(ctx context.Context, pendingToken, code, device
 		UserID:    user.ID,
 		DeviceID:  device.ID,
 		CodeHash:  codeHash,
-		ExpiresAt: time.Now().UTC().Add(deviceVerifyTTL),
+		ExpiresAt: time.Now().UTC().Add(s.Policy.DeviceVerifyTTL),
 	}
 	if err := s.DeviceVerify.Create(ctx, dv); err != nil {
 		return nil, err
@@ -373,7 +406,7 @@ func (s *Service) VerifyLoginMFA(ctx context.Context, pendingToken, code, device
 		UserID:            user.ID,
 		DeviceFingerprint: deviceFingerprint,
 		Stage:             StageDevice,
-		ExpiresAt:         time.Now().UTC().Add(pendingTTL),
+		ExpiresAt:         time.Now().UTC().Add(s.Policy.PendingAuthTTL),
 	}
 	if err := s.Pending.Create(ctx, next); err != nil {
 		return nil, err
@@ -393,77 +426,55 @@ func (s *Service) VerifyLoginMFA(ctx context.Context, pendingToken, code, device
 }
 
 func (s *Service) VerifyDevice(ctx context.Context, pendingToken, code, deviceFingerprint string) (*LoginResult, error) {
-	pending, err := s.Pending.FindByTokenHash(ctx, HashToken(pendingToken))
+	hash := HashToken(pendingToken)
+	pending, err := s.Pending.FindByTokenHash(ctx, hash)
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
 	if pending.DeviceFingerprint != deviceFingerprint || pending.Stage != StageDevice {
 		return nil, ErrInvalidToken
 	}
+
 	device, err := s.Devices.FindByUserAndFingerprint(ctx, pending.UserID, deviceFingerprint)
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
-	if _, err := s.DeviceVerify.ConsumeByUserDeviceAndCode(ctx, pending.UserID, device.ID, HashToken(code)); err != nil {
+
+	dv, err := s.DeviceVerify.FindActive(ctx, pending.UserID, device.ID)
+	if err != nil {
 		return nil, ErrInvalidCode
 	}
+
+	if _, err := s.DeviceVerify.ConsumeByUserDeviceAndCode(ctx, pending.UserID, device.ID, HashToken(code)); err != nil {
+		uid := pending.UserID
+		if locked, _ := s.DeviceVerify.IncrementFailedAttempts(ctx, dv.ID, s.Policy.MaxOTPAttempts); locked {
+			_ = s.Security.Record(ctx, domain.SecurityEvent{
+				UserID:    &uid,
+				EventType: domain.EventOTPAttemptLimit,
+				Severity:  domain.SeverityWarning,
+				Details:   map[string]string{"stage": "device_verify"},
+			})
+			return nil, ErrChallengeLocked
+		}
+		_, _ = s.BruteForce.RecordOTPFailure(ctx, "device_verify", dv.ID.Hex(), &uid)
+		return nil, ErrInvalidCode
+	}
+
 	if err := s.Devices.MarkVerified(ctx, device.ID); err != nil {
 		return nil, err
 	}
 	_ = s.Pending.DeleteByTokenHash(ctx, pending.TokenHash)
+	_ = s.BruteForce.ResetOTPFailures(ctx, "device_verify", dv.ID.Hex())
 
 	user, err := s.Users.FindByID(ctx, pending.UserID)
 	if err != nil {
 		return nil, err
 	}
-	session, err := s.createSession(ctx, user, device)
+	tokens, err := s.issueAuthTokens(ctx, user, device)
 	if err != nil {
 		return nil, err
 	}
-	return &LoginResult{Status: LoginStatusAuthenticated, User: user, Session: session}, nil
-}
-
-func (s *Service) createSession(ctx context.Context, user *domain.User, device *domain.Device) (*SessionInfo, error) {
-	token, tokenHash, err := NewToken()
-	if err != nil {
-		return nil, err
-	}
-	expires := time.Now().UTC().Add(sessionTTL)
-	session := &domain.Session{
-		TokenHash:      tokenHash,
-		UserID:         user.ID,
-		OrganizationID: user.PersonalOrgID,
-		DeviceID:       device.ID,
-		ExpiresAt:      expires,
-	}
-	if err := s.Sessions.Create(ctx, session); err != nil {
-		return nil, err
-	}
-	return &SessionInfo{
-		Token:          token,
-		UserID:         user.ID,
-		OrganizationID: user.PersonalOrgID,
-		DeviceID:       device.ID,
-		ExpiresAt:      expires,
-	}, nil
-}
-
-func (s *Service) SessionFromToken(ctx context.Context, token string) (*SessionInfo, error) {
-	session, err := s.Sessions.FindByTokenHash(ctx, HashToken(token))
-	if err != nil {
-		return nil, ErrInvalidToken
-	}
-	return &SessionInfo{
-		Token:          token,
-		UserID:         session.UserID,
-		OrganizationID: session.OrganizationID,
-		DeviceID:       session.DeviceID,
-		ExpiresAt:      session.ExpiresAt,
-	}, nil
-}
-
-func (s *Service) Logout(ctx context.Context, token string) error {
-	return s.Sessions.DeleteByTokenHash(ctx, HashToken(token))
+	return &LoginResult{Status: LoginStatusAuthenticated, User: user, Tokens: tokens}, nil
 }
 
 func (s *Service) GetOrganization(ctx context.Context, userID, organizationID primitive.ObjectID) (*domain.Organization, domain.OrgRole, error) {
@@ -500,19 +511,4 @@ func (s *Service) ListWorkspaces(ctx context.Context, userID primitive.ObjectID)
 type WorkspaceEntry struct {
 	Organization *domain.Organization
 	Role         domain.OrgRole
-}
-
-func (s *Service) SwitchWorkspace(ctx context.Context, sessionToken string, targetOrgID primitive.ObjectID) (*SessionInfo, error) {
-	sessionInfo, err := s.SessionFromToken(ctx, sessionToken)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := s.Tenant.RequireMembership(ctx, sessionInfo.UserID, targetOrgID); err != nil {
-		return nil, err
-	}
-	if err := s.Sessions.UpdateOrganization(ctx, HashToken(sessionToken), targetOrgID); err != nil {
-		return nil, err
-	}
-	sessionInfo.OrganizationID = targetOrgID
-	return sessionInfo, nil
 }
