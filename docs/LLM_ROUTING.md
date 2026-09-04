@@ -1,6 +1,6 @@
 # Miyuna — LLM Routing & Control
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Two-LLM Architecture

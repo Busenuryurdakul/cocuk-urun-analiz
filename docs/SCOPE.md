@@ -1,6 +1,6 @@
 # Miyuna — Scope Definition
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Product Identity
@@ -10,7 +10,7 @@
 | Product Name | **Miyuna** |
 | Full Name | Miyuna — Çocuk Ürünleri Akıllı Analiz ve Karar Destek Platformu |
 | Tagline | Skoru değil, skorun kanıtını göster. |
-| Version | 1.0.3 FROZEN |
+| Version | 1.0.2 FROZEN |
 | Positioning | Decision-support / risk-assessment system |
 
 ## 2. Scope Freeze Rule
@@ -21,7 +21,7 @@
 - Scope sessizce değiştirilmez
 - Belirsiz gereksinimler → **UNRESOLVED** olarak raporlanır
 
-## 3. IN SCOPE (v1.0.3)
+## 3. IN SCOPE (v1.0.2)
 
 ### Platform
 
@@ -68,14 +68,14 @@
 
 ### E-Commerce
 
-- [x] WooCommerce REST API (PRIMARY, real E2E) — **CR-004**
+- [x] Shopify Admin GraphQL API (PRIMARY, real E2E)
 - [x] Permitted product URL import
 - [x] CSV / JSON / manual import
 - [x] Encrypted EcommerceIntegration credentials
 - [x] Agentic import pipeline
-- [x] Review sampling (max 100, when available)
+- [x] Review sampling (max 100)
 - [x] Price history (deterministic analytics)
-- [x] Generic ecommerce adapter boundary (WooCommerce primary v1)
+- [x] WooCommerce adapter interface (definition only)
 
 ### Security & Infrastructure
 
@@ -92,15 +92,15 @@
 - [x] CI/CD (feature branch → PR → manual prod deploy)
 - [x] Protected main branch
 
-## 4. OUT OF SCOPE (v1.0.3)
+## 4. OUT OF SCOPE (v1.0.2)
 
 | Feature | Notes |
 |---------|-------|
 | Mobile app | Future CR |
 | 3rd LLM / third reviewer | Explicitly forbidden |
 | Unrestricted web crawler | LLM has no direct internet |
-| Multi-marketplace implementations | WooCommerce primary v1; others future CR |
-| Shopify v1 implementation | OPTIONAL / FUTURE (CR-004) |
+| Multi-marketplace implementations | Shopify only (v1) |
+| WooCommerce v1 implementation | Interface only |
 | Unlimited review collection | Max 100 per product |
 | LLM direct internet access | Tool Registry only |
 | Mock ecommerce acceptance | Real E2E required |
@@ -112,22 +112,7 @@
 | Linux Electron | Bonus only, not required |
 | Self-hosted mail server | Not required v1 |
 
-## 5. Approved Change Requests
-
-### CR-004: WooCommerce Primary E-Commerce Integration (APPROVED 2026-09-03)
-
-| Field | Value |
-|-------|-------|
-| Old primary platform | Shopify (Admin GraphQL) |
-| New primary platform | WooCommerce (REST API) |
-| Version bump | 1.0.2 FROZEN → 1.0.3 FROZEN |
-| Rationale | Faster/controllable real E2E verification; Shopify Partner friction; not instructor-mandated core |
-| Shopify status | OPTIONAL / FUTURE — not implemented v1.0.3 |
-| Phase gate | `WOOCOMMERCE_E2E_STATUS` replaces `SHOPIFY_E2E_STATUS` |
-| Agent/evidence/security architecture | Unchanged |
-| Generic adapter boundary | Preserved |
-
-## 6. Future Change Requests (NOT IN v1.0.3)
+## 5. Future Change Requests (NOT IN v1.0.2)
 
 Bu özellikler master prompt'a **eklenmez**. Ayrı CR ile onaylanır:
 
@@ -144,19 +129,19 @@ Bu özellikler master prompt'a **eklenmez**. Ayrı CR ile onaylanır:
 
 - Business/audience fit analysis
 
-## 7. Change Request Process
+## 6. Change Request Process
 
 ```text
 1. CR açıklaması (scope, rationale, acceptance criteria)
 2. Etki analizi (architecture, security, compliance, timeline)
 3. Explicit onay (stakeholder sign-off)
-4. Version bump (e.g., 1.0.2 → 1.0.3)
+4. Version bump (e.g., 1.0.2 → 1.1.0)
 5. Docs sync (master prompt + affected architecture docs)
 ```
 
 Onay olmadan FROZEN prompt değiştirilmez.
 
-## 8. Delivery Phases
+## 7. Delivery Phases
 
 ```text
 PHASE 0 (APPROVED, docs pending) → PHASE 1 → ... → PHASE 13
@@ -166,24 +151,22 @@ Each phase: **PLAN → IMPLEMENT → TEST → VERIFY → REPORT → STOP/APPROVA
 
 Phase 1 requires explicit command: **"FAZ 1'E GEÇ"**
 
-## 9. Current Status
+## 8. Current Status
 
 | Field | Value |
 |-------|-------|
-| MASTER_PROMPT_VERSION | 1.0.3 FROZEN |
-| ARCHITECTURE_SCOPE | LOCKED (CR-004 applied) |
+| MASTER_PROMPT_VERSION | 1.0.2 FROZEN |
+| ARCHITECTURE_SCOPE | LOCKED |
 | PRODUCT_NAME | Miyuna |
 | PHASE_0_ARCHITECTURE | APPROVED |
 | PHASE_0_FILES | COMPLETE |
-| WOOCOMMERCE_E2E_STATUS | NOT_VERIFIED |
-| SHOPIFY_STATUS | OPTIONAL / FUTURE |
-| IMPLEMENTATION_STATUS | PHASE_3_ORG_COMPLIANCE_COMPLETE |
-| NEXT_ALLOWED_ACTION | AWAIT_WOOCOMMERCE_PHASE_4_PREFLIGHT |
+| SHOPIFY_E2E_STATUS | NOT_VERIFIED |
+| IMPLEMENTATION_STATUS | PHASE_2_AUTH_TENANCY_COMPLETE |
+| NEXT_ALLOWED_ACTION | AWAIT_PHASE_3_APPROVAL |
 | PHASE_1_REQUIRES_EXPLICIT_COMMAND | "FAZ 1'E GEÇ" (completed) |
 | PHASE_2_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |
-| PHASE_3_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |
 
-## 10. Success Criteria (Final)
+## 9. Success Criteria (Final)
 
 Demonstrable **EVET** for all:
 
@@ -193,7 +176,7 @@ Demonstrable **EVET** for all:
 | 2 LLM | YES |
 | Evidence | YES |
 | Security | YES |
-| E-commerce (real WooCommerce) | YES |
+| E-commerce (real) | YES |
 | Fine-tune | YES |
 | Admin LLM Control | YES |
 | KVKK/GDPR | YES |
@@ -201,7 +184,7 @@ Demonstrable **EVET** for all:
 | Cloudflare | YES |
 | Production | YES |
 
-## 11. Related Documents
+## 10. Related Documents
 
 All Phase 0 architecture documents reference and defer to [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md):
 

@@ -1,6 +1,6 @@
 # Miyuna — High-Level Architecture
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Overview
@@ -19,7 +19,7 @@ Miyuna, çocuk ürünlerini çok kaynaklı toplayan, normalize eden ve agent tab
 | Evidence-first | Ciddi iddialar kanıt olmadan kesin dil kullanamaz |
 | Compliance always-on | Engine kapatılamaz; policy profilleri versioned |
 | No LLM internet | External fetch yalnızca Tool Registry + Authorization Chain |
-| Real e-commerce | WooCommerce real E2E zorunlu; mock acceptance geçmez |
+| Real e-commerce | Shopify E2E zorunlu; mock acceptance geçmez |
 | Defense in depth | Cloudflare → Application → Agent → Outbound |
 
 ## 3. System Topology
@@ -203,7 +203,7 @@ Detay: [CLOUDFLARE.md](./CLOUDFLARE.md), [CI_CD.md](./CI_CD.md)
 | [LLM_ROUTING.md](./LLM_ROUTING.md) | Automatic routing + manual control center |
 | [COMPLIANCE.md](./COMPLIANCE.md) | KVKK/GDPR engine |
 | [EVIDENCE_MODEL.md](./EVIDENCE_MODEL.md) | Claims, evidence, verification |
-| [ECOMMERCE_IMPORT.md](./ECOMMERCE_IMPORT.md) | WooCommerce E2E, import pipeline |
+| [ECOMMERCE_IMPORT.md](./ECOMMERCE_IMPORT.md) | Shopify E2E, import pipeline |
 | [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md) | Collections, indexes, tenancy |
 | [SECURITY.md](./SECURITY.md) | Auth, fetch security, defense in depth |
 | [CLOUDFLARE.md](./CLOUDFLARE.md) | Edge configuration |
