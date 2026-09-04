@@ -66,16 +66,15 @@
 - [x] Report footer disclaimer (mandatory)
 - [x] PII redaction
 
-### E-Commerce
+### Product Data Import
 
-- [x] Shopify Admin GraphQL API (PRIMARY, real E2E)
 - [x] Permitted product URL import
 - [x] CSV / JSON / manual import
-- [x] Encrypted EcommerceIntegration credentials
 - [x] Agentic import pipeline
-- [x] Review sampling (max 100)
+- [x] Review sampling (max 100, when present in source)
 - [x] Price history (deterministic analytics)
-- [x] WooCommerce adapter interface (definition only)
+
+**CANCELLED (2026-09-04):** Shopify, WooCommerce ve diğer platform store API entegrasyonları.
 
 ### Security & Infrastructure
 
@@ -99,11 +98,12 @@
 | Mobile app | Future CR |
 | 3rd LLM / third reviewer | Explicitly forbidden |
 | Unrestricted web crawler | LLM has no direct internet |
-| Multi-marketplace implementations | Shopify only (v1) |
-| WooCommerce v1 implementation | Interface only |
+| Platform store API (Shopify, WooCommerce) | **CANCELLED** — 2026-09-04 |
+| Multi-marketplace / pazaryeri adapters | Future CR |
+| Encrypted EcommerceIntegration (platform API) | CANCELLED with platform API |
 | Unlimited review collection | Max 100 per product |
 | LLM direct internet access | Tool Registry only |
-| Mock ecommerce acceptance | Real E2E required |
+| Mock import acceptance | Real validation required |
 | Public internal services | Mongo, Redis, Agent, LLM private |
 | Public prod GraphQL playground | Forbidden |
 | Auto production deploy | Manual only |
@@ -160,9 +160,9 @@ Phase 1 requires explicit command: **"FAZ 1'E GEÇ"**
 | PRODUCT_NAME | Miyuna |
 | PHASE_0_ARCHITECTURE | APPROVED |
 | PHASE_0_FILES | COMPLETE |
-| SHOPIFY_E2E_STATUS | NOT_VERIFIED |
-| IMPLEMENTATION_STATUS | PHASE_2_AUTH_TENANCY_COMPLETE |
-| NEXT_ALLOWED_ACTION | AWAIT_PHASE_3_APPROVAL |
+| PLATFORM_ECOMMERCE_API_STATUS | CANCELLED |
+| IMPLEMENTATION_STATUS | PHASE_3_ORG_COMPLIANCE_COMPLETE |
+| NEXT_ALLOWED_ACTION | AWAIT_NEXT_PHASE_APPROVAL |
 | PHASE_1_REQUIRES_EXPLICIT_COMMAND | "FAZ 1'E GEÇ" (completed) |
 | PHASE_2_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |
 
@@ -176,7 +176,7 @@ Demonstrable **EVET** for all:
 | 2 LLM | YES |
 | Evidence | YES |
 | Security | YES |
-| E-commerce (real) | YES |
+| Product data import (URL/CSV/JSON/manual) | YES |
 | Fine-tune | YES |
 | Admin LLM Control | YES |
 | KVKK/GDPR | YES |

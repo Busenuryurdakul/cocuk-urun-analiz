@@ -22,7 +22,6 @@ User
               ├── Products[]
               ├── ImportJobs[]
               ├── AnalysisRuns[]
-              ├── EcommerceIntegrations[]
               └── ConfigSnapshots[]
 ```
 
@@ -76,23 +75,9 @@ User
 
 **Indexes:** `{ organizationId: 1, userId: 1 }` unique, `{ userId: 1 }`
 
-### ecommerce_integrations
+### ecommerce_integrations — DEFERRED / CANCELLED
 
-```text
-{
-  _id: ObjectId,
-  organizationId: ObjectId,
-  platform: SHOPIFY,
-  storeDomain: string,
-  credentialsEncrypted: Binary,
-  status: ACTIVE | REVOKED | ERROR,
-  lastVerifiedAt: Date,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-**Indexes:** `{ organizationId: 1, platform: 1 }`, `{ organizationId: 1, status: 1 }`
+Platform store API (Shopify, WooCommerce) iptal edildi (2026-09-04). Bu koleksiyon v1'de **implement edilmez**.
 
 ### import_jobs
 
@@ -100,8 +85,7 @@ User
 {
   _id: ObjectId,
   organizationId: ObjectId,
-  sourceType: SHOPIFY | URL | CSV | JSON | MANUAL,
-  integrationId: ObjectId?,
+  sourceType: URL | CSV | JSON | MANUAL,
   sourceRef: string,
   status: PENDING | RUNNING | SUFFICIENT | INSUFFICIENT | FAILED,
   rawStorageRef: string,

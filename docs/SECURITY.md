@@ -88,10 +88,9 @@ External fetch (ecommerce_fetcher, URL import) controls:
 
 ## 6. Credential Management
 
-### EcommerceIntegration
+Platform store API credential modeli (`EcommerceIntegration`) **iptal edildi (2026-09-04)** — v1'de implement edilmez.
 
-- API keys/tokens encrypted at rest (MongoDB)
-- Decryption only in secure runtime context
+Genel credential kuralları (gelecek CR'ler için referans):
 - Never logged, never returned to client
 - Revocation support
 

@@ -59,7 +59,7 @@ SourceReference {
   type: ECOMMERCE_API | URL | CSV | JSON | MANUAL | VERIFIED_KNOWLEDGE | DETERMINISTIC_RULE
   identifier: string           // productId, url, fileId, ruleId
   fetchedAt?: ISO8601
-  integrationId?: string       // for ecommerce sources
+  sourceRef?: string           // URL, file ref, or manual entry id
 }
 ```
 

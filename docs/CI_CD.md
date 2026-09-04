@@ -58,7 +58,7 @@ Report → PR status check
 | Auth | MFA flow, device verification |
 | Agent | Real AgentRunEvent, no fake progress |
 | LLM | 2 LLM routing, 5 concurrent load test |
-| E-commerce | Shopify real E2E (not mock) |
+| Product data import | CSV/JSON/manual + permitted URL (not mock) |
 | Evidence | Claim-evidence validation |
 | Compliance | Engine always-on verification |
 | Security | Tenant escape test |
@@ -131,7 +131,7 @@ Mandatory demonstrable acceptance:
 - [ ] 2 LLM with worker/reviewer rotation
 - [ ] Evidence-based reports with disclaimer
 - [ ] Security: tenant escape test pass
-- [ ] E-commerce: Shopify real E2E
+- [ ] Product import: CSV/JSON/manual + permitted URL validation
 - [ ] Fine-tune eval gate
 - [ ] Admin LLM control center + snapshot demo
 - [ ] KVKK/GDPR compliance engine

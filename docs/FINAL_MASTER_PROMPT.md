@@ -228,19 +228,17 @@ Katmanlar: Source Data → Derived Data → Agent Assessment → Evidence → Co
 
 LLM: explain/summarize — verdict engine değil. Evidence yoksa UNVERIFIED.
 
-## 17–18. E-TİCARET & SHOPIFY
+## 17–18. ÜRÜN VERİ İMPORTU
 
-Input: Authorized Platform API, Permitted URL, CSV, JSON, Manual
+Input: Permitted URL, CSV, JSON, Manual
 
-**PRIMARY:** Shopify (Admin GraphQL API, API-first)
+**Platform API entegrasyonları (Shopify, WooCommerce vb.) iptal edildi (2026-09-04).**
 
-WooCommerce: adapter interface only (v1 implement edilmez)
+v1'de mağaza platform credential modeli (`EcommerceIntegration`) implement edilmez.
 
-Credential: EcommerceIntegration — encrypted, import integrationId kullanır.
+Import pipeline: fetch policy → normalize → validate → review sample (max 100, kaynakta varsa).
 
-Doğrulanamazsa: `SHOPIFY_E2E_STATUS: NOT_VERIFIED` — FAZ 4 blocked.
-
-Mock acceptance geçmez.
+Insufficient → fake success yok.
 
 ## 19. AGENTIC E-COMMERCE IMPORT
 
@@ -300,18 +298,18 @@ CI/CD: feature branch → PR → manual prod deploy. main direct push yasak.
 
 ### IN
 
-Web, Electron Win/Mac, Go GraphQL, Mongo, Redis, S3, tenancy, auth/MFA/device, agent+tools, 2 LLM, evidence, Shopify E2E, imports, LLM control center, fine-tune eval, compliance, Cloudflare, observability, CI/CD, deletion, XCS internal scripts, Miyuna brand/product
+Web, Electron Win/Mac, Go GraphQL, Mongo, Redis, S3, tenancy, auth/MFA/device, agent+tools, 2 LLM, evidence, product data import (URL/CSV/JSON/manual), LLM control center, fine-tune eval, compliance, Cloudflare, observability, CI/CD, deletion, XCS internal scripts, Miyuna brand/product
 
 ### OUT (v1.0.2 — Future Change Request)
 
 - Mobile app
 - 3rd LLM
 - Unrestricted crawler
-- Multi-marketplace implementations
-- WooCommerce v1 implementation
+- Platform store API integrations (Shopify, WooCommerce) — **CANCELLED**
+- Multi-marketplace / pazaryeri scrape adapters — future CR
 - Unlimited review collection
 - LLM direct internet
-- Mock ecommerce acceptance
+- Mock import acceptance
 - Public internal services
 - Public prod GraphQL playground
 - Auto production deploy
@@ -335,7 +333,7 @@ Her faz: PLAN → IMPLEMENT → TEST → VERIFY → REPORT → STOP/APPROVAL
 
 ## 48–52. EXECUTION RULES, ACCEPTANCE CRITERIA
 
-(Frozen v1.0.2 acceptance list — Shopify real E2E, 2 LLM, evidence, Cloudflare, Electron, MFA, org deletion, vb.)
+(Frozen v1.0.2 acceptance list — product import, 2 LLM, evidence, Cloudflare, Electron, MFA, org deletion, vb.)
 
 ## 53. START COMMAND (KOŞULLU)
 
@@ -371,7 +369,7 @@ Klasör yoksa yalnızca project root + docs/ oluştur. Git init yapma.
 
 ### YAPMA
 
-monorepo, Next.js/Go/Python/Electron, Docker, dependency, Shopify impl, LLM, deploy, git mutation
+monorepo, Next.js/Go/Python/Electron, Docker, dependency, product import, LLM, deploy, git mutation
 
 ### DOĞRULA
 
@@ -383,7 +381,7 @@ COMPLETION REPORT formatı (§54). Başarı: `PHASE_0_FILES: COMPLETE` → STOP 
 
 ## FINAL RULE
 
-Başarı = demonstrable EVET: Agent | 2 LLM | Evidence | Security | E-commerce gerçek | Fine-tune | Admin LLM | KVKK/GDPR | Electron | Cloudflare | Production
+Başarı = demonstrable EVET: Agent | 2 LLM | Evidence | Security | Product import | Fine-tune | Admin LLM | KVKK/GDPR | Electron | Cloudflare | Production
 
 ## CHANGE REQUEST PROCESS
 
@@ -410,9 +408,9 @@ Onay olmadan FROZEN prompt değiştirilmez.
 | PRODUCT_NAME | Miyuna |
 | PHASE_0_ARCHITECTURE | APPROVED |
 | PHASE_0_FILES | COMPLETE |
-| SHOPIFY_E2E_STATUS | NOT_VERIFIED |
-| IMPLEMENTATION_STATUS | PHASE_2_AUTH_TENANCY_COMPLETE |
+| PLATFORM_ECOMMERCE_API_STATUS | CANCELLED |
+| IMPLEMENTATION_STATUS | PHASE_3_ORG_COMPLIANCE_COMPLETE |
 | PROJECT_ROOT | C:\Users\MOSTER\Documents\GitHub\cocuk-urun-analiz |
-| NEXT_ALLOWED_ACTION | AWAIT_PHASE_3_APPROVAL |
+| NEXT_ALLOWED_ACTION | AWAIT_NEXT_PHASE_APPROVAL |
 | PHASE_1_REQUIRES_EXPLICIT_COMMAND | "FAZ 1'E GEÇ" (completed) |
 | PHASE_2_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |

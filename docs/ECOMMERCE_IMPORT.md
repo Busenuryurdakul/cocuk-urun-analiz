@@ -1,57 +1,30 @@
-# Miyuna — E-Commerce Import
+# Miyuna — Product Data Import
 
 > **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Supported Input Sources
 
-| Source | v1.0.2 Status |
-|--------|---------------|
-| Authorized Platform API (Shopify) | **PRIMARY — E2E required** |
-| Permitted Product URL | Supported |
+| Source | v1 Status |
+|--------|-----------|
+| Permitted product URL | Supported |
 | CSV upload | Supported |
 | JSON upload | Supported |
 | Manual product entry | Supported |
 
-## 2. Shopify Integration (Primary)
+### Platform API integrations — CANCELLED
 
-**Platform:** Shopify Admin GraphQL API (API-first)
+**Shopify, WooCommerce ve diğer mağaza platform API entegrasyonları iptal edildi (2026-09-04).**
 
-**Credential model:**
+- `SHOPIFY_E2E_STATUS` / platform E2E gate kaldırıldı
+- `EcommerceIntegration` credential modeli **implement edilmez** (v1)
+- Phase 4 platform adapter işi yok
+- Gelecekte marketplace/pazaryeri verisi ayrı Change Request ile değerlendirilir
 
-```text
-EcommerceIntegration {
-  id: string
-  organizationId: string
-  platform: SHOPIFY
-  credentialsEncrypted: Binary   // encrypted at rest; API key, store domain, etc.
-  status: ACTIVE | REVOKED | ERROR
-  createdAt: ISO8601
-  lastVerifiedAt?: ISO8601
-}
-```
-
-- `credentialsEncrypted`: encrypted at rest
-- Raw secret **response/log içine girmez**
-- Raw secret **GraphQL response'da dönmez**
-- Import çağrıları yalnızca `integrationId` kullanır
-- Mock acceptance **geçmez**
-- Real E2E verification zorunlu
-
-**Current status:** `SHOPIFY_E2E_STATUS: NOT_VERIFIED` — FAZ 4 blocked until verified.
-
-## 3. WooCommerce
-
-**v1.0.2:** Adapter interface only — **implement edilmez.**
-
-Adapter interface tanımı future marketplace expansion için hazırlanır; v1'de kod yazılmaz.
-
-## 4. Agentic Import Pipeline
+## 2. Agentic Import Pipeline
 
 ```text
-Source
-  ↓
-Adapter                    ← platform-specific (Shopify GraphQL)
+Source (URL | CSV | JSON | Manual)
   ↓
 Fetch Policy               ← fetch_policy_checker
   ↓
@@ -59,11 +32,11 @@ Import Planner             ← import_planner
   ↓
 Tool Authorization
   ↓
-Fetch                      ← ecommerce_fetcher
+Fetch / Parse              ← ecommerce_fetcher (permitted URL only) or dataset_validator
   ↓
 Raw Storage                ← S3/MinIO tenant-scoped prefix
   ↓
-review_sampler             ← max 100 reviews
+review_sampler             ← max 100 reviews (when present in source)
   ↓
 product_normalizer
   ↓
@@ -76,7 +49,7 @@ Quality Check
 Decision: Sufficient | Re-fetch | Insufficient
 ```
 
-## 5. Quality Decision Matrix
+## 3. Quality Decision Matrix
 
 | Decision | Meaning | Action |
 |----------|---------|--------|
@@ -86,19 +59,16 @@ Decision: Sufficient | Re-fetch | Insufficient
 
 Insufficient durumda kullanıcıya explicit failure/insufficient status döner.
 
-## 6. Normalized Product Schema
+## 4. Normalized Product Schema
 
 Kaynakta olmayan alan uydurulmaz — `missing: true`.
-
-**Core fields (normalized):**
 
 ```text
 NormalizedProduct {
   organizationId: string
-  sourceType: SHOPIFY | URL | CSV | JSON | MANUAL
+  sourceType: URL | CSV | JSON | MANUAL
   sourceRef: string
-  integrationId?: string
-  
+
   title: ProductField
   description: ProductField
   brand: ProductField
@@ -109,10 +79,10 @@ NormalizedProduct {
   price: ProductField
   currency: ProductField
   images: ProductField[]
-  
-  reviews: ReviewSample        // max 100
+
+  reviews: ReviewSample        // max 100 when present in source
   priceHistory: PriceHistoryEntry[]
-  
+
   importJobId: string
   rawStorageRef: string
   normalizedAt: ISO8601
@@ -120,12 +90,11 @@ NormalizedProduct {
 }
 ```
 
-## 7. Review Sampling
+## 5. Review Sampling
 
-`review_sampler`:
+`review_sampler` (when reviews present in imported data):
 
-- Maximum **100 reviews** per product (v1.0.2 limit)
-- Sampling strategy: UNRESOLVED — Phase 4 (likely recent + rating distribution)
+- Maximum **100 reviews** per product (v1 limit)
 - Unlimited review collection = OUT OF SCOPE
 
 ```text
@@ -137,7 +106,7 @@ ReviewSample {
 }
 ```
 
-## 8. Price History
+## 6. Price History
 
 `price_history_analyzer` — deterministic analytics:
 
@@ -150,31 +119,26 @@ PriceHistoryEntry {
 }
 ```
 
-Deterministic calculations (not LLM):
-
-- Min/max/avg over period
-- Trend direction
-- Price/performance signal flags
-
-## 9. Fetch Security
+## 7. Fetch Security
 
 Import fetch operations [SECURITY.md](./SECURITY.md) fetch security kurallarına tabidir:
 
 - SSRF protection
 - DNS rebinding prevention
-- Allow/deny URL lists
+- Allow/deny URL lists (permitted URLs only)
 - Redirect limit
 - Timeout
 - Max response size
 - Tenant quota
 - Rate limit
 - Retry with backoff
-- Credential encryption
 - Input sanitization
 - Malicious content scan
 - Audit logging
 
-## 10. Import Diff
+**No unrestricted generic crawler.**
+
+## 8. Import Diff
 
 `import_diff_generator`:
 
@@ -182,7 +146,7 @@ Import fetch operations [SECURITY.md](./SECURITY.md) fetch security kurallarına
 - Track field-level changes
 - Feed into analysis as Derived Data layer
 
-## 11. Storage Layout
+## 9. Storage Layout
 
 ```text
 s3://{bucket}/{organizationId}/imports/{importJobId}/raw/
@@ -191,30 +155,30 @@ s3://{bucket}/{organizationId}/imports/{importJobId}/normalized/
 
 Tenant-scoped prefixes; cross-tenant access forbidden.
 
-## 12. Acceptance Criteria (E-Commerce)
+## 10. Acceptance Criteria (Product Import)
 
 | Criterion | Required |
 |-----------|----------|
-| Real Shopify Admin GraphQL E2E | YES |
-| Encrypted credentials | YES |
-| Mock-only acceptance | NO (fails) |
+| CSV / JSON / manual import path | YES |
+| Permitted URL fetch (policy-controlled) | YES |
+| Platform API E2E (Shopify/WooCommerce) | **NO — CANCELLED** |
 | Insufficient → no fake success | YES |
-| Review cap 100 | YES |
+| Review cap 100 (when reviews in source) | YES |
 | Missing fields explicit | YES |
 | Fetch security controls | YES |
 
-## 13. Related Documents
+## 11. Related Documents
 
 - [SECURITY.md](./SECURITY.md) — fetch security
 - [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md) — persistence
 - [AGENT_ORCHESTRATION.md](./AGENT_ORCHESTRATION.md) — tool pipeline
 - [EVIDENCE_MODEL.md](./EVIDENCE_MODEL.md) — source data layer
 
-## 14. UNRESOLVED
+## 12. UNRESOLVED
 
 | Item | Status |
 |------|--------|
-| Review sampling algorithm | UNRESOLVED — Phase 4 |
-| Re-fetch max attempts | UNRESOLVED — Phase 4 |
-| Permitted URL allowlist management UI | UNRESOLVED — Phase 4 |
-| Shopify webhook vs poll strategy | UNRESOLVED — Phase 4 |
+| Review sampling algorithm | UNRESOLVED |
+| Re-fetch max attempts | UNRESOLVED |
+| Permitted URL allowlist management UI | UNRESOLVED |
+| Marketplace dataset import (Hepsiburada/Trendyol vb.) | Future CR |
