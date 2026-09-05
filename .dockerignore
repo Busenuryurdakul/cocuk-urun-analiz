@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.git/
+scripts/
+docs/
+infra/
+apps/agent/
+apps/desktop/
+apps/web/
+**/__pycache__/
+**/.pytest_cache/
+**/*.jsonl
+**/*.csv

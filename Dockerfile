@@ -1,5 +1,5 @@
 # Miyuna API — Render Docker (root)
-FROM golang:1.23-bookworm AS builder
+FROM golang:1.26-bookworm AS builder
 WORKDIR /src
 COPY apps/api/go.mod apps/api/go.sum ./apps/api/
 WORKDIR /src/apps/api

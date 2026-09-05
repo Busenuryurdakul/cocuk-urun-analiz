@@ -54,11 +54,12 @@ function New-RandomSecret {
 
 function Require-EnvVar {
     param([string]$Name)
-    if (-not $env:$Name) {
+    $value = [Environment]::GetEnvironmentVariable($Name)
+    if ([string]::IsNullOrWhiteSpace($value)) {
         Write-Host "$Name is required."
         exit 1
     }
-    return $env:$Name
+    return $value
 }
 
 $apiServiceId = Require-EnvVar -Name 'RENDER_API_SERVICE_ID'
