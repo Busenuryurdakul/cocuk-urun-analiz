@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/config"
@@ -36,7 +37,10 @@ type App struct {
 	UGC            *ugc.Service
 	Marketplace    *marketplace.Service
 	Dataset        *dataset.Service
+	Agent          *agent.Service
 	ImportConsumer *marketplace.Consumer
+	AgentInternal  *agent.InternalHandler
+	RecoveryWorker *agent.RecoveryWorker
 }
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
@@ -79,6 +83,10 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	rawPayloadRepo := repository.NewRawSourcePayloadRepository(db)
 	datasetRecordsRepo := repository.NewDatasetRecordRepository(db)
 	datasetVersionsRepo := repository.NewDatasetVersionRepository(db)
+	analysisRunsRepo := repository.NewAnalysisRunRepository(db)
+	agentEventsRepo := repository.NewAgentRunEventRepository(db)
+	toolExecutionsRepo := repository.NewToolExecutionRepository(db)
+	configSnapshotsRepo := repository.NewConfigSnapshotRepository(db)
 
 	if err := compliance.SeedPlatformPolicies(ctx, compliancePolicies); err != nil {
 		return nil, err
@@ -164,6 +172,37 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 	importConsumer := marketplace.NewConsumer(marketplaceSvc, 2*time.Second)
 
+	agentRegistry := agent.NewRegistry()
+	agentResolver := &agent.InputResolver{
+		Products:   productsRepo,
+		Reviews:    reviewsRepo,
+		UX:         uxRepo,
+		ImportRuns: importRunsRepo,
+	}
+	agentExecutor := &agent.Executor{Registry: agentRegistry, Compliance: complianceEngine}
+	agentAuthorizer := &agent.Authorizer{Registry: agentRegistry, Security: security}
+	grantStore := &agent.GrantStore{Redis: redisClient, Security: security, TTL: 5 * time.Minute}
+	leaseStore := &agent.LeaseStore{Redis: redisClient, TTL: 2 * time.Minute}
+	orchestratorClient := agent.NewOrchestratorClient(cfg.AgentOrchestratorURL, cfg.AgentInternalToken, cfg.AgentIPCTimeout)
+	agentSvc := agent.NewService(agent.ServiceDeps{
+		Runs:         analysisRunsRepo,
+		Events:       agentEventsRepo,
+		Executions:   toolExecutionsRepo,
+		Snapshots:    configSnapshotsRepo,
+		Orgs:         orgs,
+		Resolver:     agentResolver,
+		Executor:     agentExecutor,
+		Authorizer:   agentAuthorizer,
+		Compliance:   complianceEngine,
+		Registry:     agentRegistry,
+		Orchestrator: orchestratorClient,
+		Grants:       grantStore,
+		Leases:       leaseStore,
+		Security:     security,
+		Tenant:       guard,
+	})
+	recoveryWorker := agent.NewRecoveryWorker(agentSvc, leaseStore, 30*time.Second)
+
 	policy := auth.SecurityPolicy{
 		MaxOTPAttempts:       cfg.MaxOTPAttempts,
 		LoginMaxAttempts:     cfg.LoginMaxAttempts,
@@ -215,8 +254,14 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Products:       productSvc,
 		UGC:            ugcSvc,
 		Marketplace:    marketplaceSvc,
-		Dataset:        datasetSvc,
+		Dataset:          datasetSvc,
+		Agent:          agentSvc,
 		ImportConsumer: importConsumer,
+		AgentInternal: &agent.InternalHandler{
+			Service: agentSvc,
+			Token:   cfg.AgentInternalToken,
+		},
+		RecoveryWorker: recoveryWorker,
 	}, nil
 }
 
@@ -239,11 +284,17 @@ func (a *App) StartBackgroundWorkers() {
 	if a.ImportConsumer != nil {
 		a.ImportConsumer.Start()
 	}
+	if a.RecoveryWorker != nil {
+		a.RecoveryWorker.Start()
+	}
 }
 
 func (a *App) Shutdown(ctx context.Context) {
 	if a.ImportConsumer != nil {
 		a.ImportConsumer.Stop(ctx)
+	}
+	if a.RecoveryWorker != nil {
+		a.RecoveryWorker.Stop()
 	}
 	if err := a.Mongo.Disconnect(ctx); err != nil {
 		log.Printf("mongodb disconnect: %v", err)

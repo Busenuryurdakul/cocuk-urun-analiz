@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
@@ -21,5 +22,6 @@ type Resolver struct {
 	UGCService         *ugc.Service
 	MarketplaceService *marketplace.Service
 	DatasetService     *dataset.Service
+	AgentService       *agent.Service
 	CookieOpts         cookies.Options
 }

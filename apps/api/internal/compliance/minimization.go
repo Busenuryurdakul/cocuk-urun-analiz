@@ -22,6 +22,12 @@ var allowedFieldsByOperation = map[string]map[string]bool{
 		"usageStatus":       true,
 		"satisfactionLevel": true,
 	},
+	"start_analysis_run": {
+		"productId": true,
+	},
+	"analysis_tool_loop": {
+		"productId": true,
+	},
 }
 
 func ValidateMinimization(operation string, fields map[string]string) error {

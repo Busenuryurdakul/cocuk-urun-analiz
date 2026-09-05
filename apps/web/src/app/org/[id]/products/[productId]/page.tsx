@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { AnalysisPanel } from "@/components/analysis-panel";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
 import { graphqlRequest } from "@/lib/graphql";
@@ -201,9 +202,7 @@ export default function ProductDetailPage() {
             <p className="max-w-2xl text-sm leading-relaxed text-muted">{product.description.value}</p>
           )}
 
-          <section className="alert-warn">
-            Analiz, Agent pipeline tamamlandığında kullanılabilir. Resmi sertifikasyon iddiası yoktur.
-          </section>
+          <AnalysisPanel orgId={orgId} productId={productId} canStart canCancel />
 
           <section className="card space-y-4">
             <div>

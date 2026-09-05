@@ -177,6 +177,30 @@ Admin config değişikliği yalnızca **yeni run**ları etkiler; eski raporlar d
 
 Orchestrator public internet'e expose edilmez.
 
+**Internal HTTP (implemented):**
+
+| Go internal route | Purpose |
+|-------------------|---------|
+| `POST /internal/agent/v1/events` | lifecycle event persistence |
+| `POST /internal/agent/v1/runs/status` | status transitions |
+| `GET /internal/agent/v1/runs/context` | run context + capability snapshot |
+| `POST /internal/agent/v1/tools/authorize` | tool authorization + grant issue |
+| `POST /internal/agent/v1/tools/execute` | authorized tool execution |
+| `GET /internal/agent/v1/runs/cancellation` | cancellation signal |
+| `POST /internal/agent/v1/runs/heartbeat` | run lease heartbeat |
+| `POST /internal/agent/v1/runs/lease/claim` | atomic run lease claim |
+
+**Python internal routes:** `POST /internal/v1/runs/start`, `POST /internal/v1/runs/cancel`
+
+**Redis keys (Phase 5 hardening):**
+
+| Key pattern | Purpose |
+|-------------|---------|
+| `agent:grant:{grantIdHash}` | TTL single-use execution grant (atomic consume) |
+| `agent:run:lease:{organizationId}:{analysisRunId}` | orchestrator run lease + heartbeat |
+
+Grant plaintext/token asla persist/log edilmez; yalnızca hash saklanır.
+
 ## 12. Error Handling
 
 | Condition | Behavior |

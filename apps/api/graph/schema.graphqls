@@ -36,6 +36,12 @@ type Query {
   marketplaceImportStatus(organizationId: ID!, importRunId: ID!): MarketplaceImportRun
   """Dataset eligibility summary for organization"""
   datasetEligibilitySummary(organizationId: ID!): DatasetEligibilitySummary!
+  """Single analysis run — tenant-isolated"""
+  agentRun(organizationId: ID!, analysisRunId: ID!): AnalysisRun
+  """Analysis runs for organization — tenant-isolated"""
+  analysisRuns(organizationId: ID!, status: AnalysisRunStatus, limit: Int = 20): [AnalysisRun!]!
+  """Agent run events — append-only progress"""
+  agentRunEvents(organizationId: ID!, analysisRunId: ID!, afterSequence: Int = 0, limit: Int = 100): [AgentRunEvent!]!
 }
 
 type Mutation {
@@ -65,6 +71,8 @@ type Mutation {
   startMarketplaceURLImport(input: StartMarketplaceURLImportInput!): MarketplaceImportRun!
   startMarketplaceFileImport(input: StartMarketplaceFileImportInput!): MarketplaceImportRun!
   buildDatasetDraft(input: BuildDatasetDraftInput!): DatasetVersion!
+  startAgentRun(input: StartAgentRunInput!): AnalysisRun!
+  cancelAgentRun(input: CancelAgentRunInput!): AnalysisRun!
 }
 
 input RegisterInput {
@@ -238,8 +246,11 @@ type LoginPayload {
 type ProductFieldMeta {
   value: String
   missing: Boolean!
+  missingReason: String
   source: String
   sourceRecordId: String
+  confidence: Float
+  extractedAt: String
 }
 
 type Product {
@@ -249,6 +260,18 @@ type Product {
   brand: ProductFieldMeta!
   category: ProductFieldMeta!
   description: ProductFieldMeta!
+  targetAge: ProductFieldMeta!
+  materials: ProductFieldMeta!
+  safetyWarnings: ProductFieldMeta!
+  currentPrice: ProductFieldMeta!
+  originalPrice: ProductFieldMeta!
+  currency: ProductFieldMeta!
+  seller: ProductFieldMeta!
+  rating: ProductFieldMeta!
+  reviewCount: ProductFieldMeta!
+  attributes: ProductFieldMeta!
+  imageRefs: ProductFieldMeta!
+  stockStatus: ProductFieldMeta!
   sku: ProductFieldMeta!
   createdAt: String!
   updatedAt: String!
@@ -419,6 +442,16 @@ input CreateProductInput {
   brand: String
   category: String
   description: String
+  targetAge: String
+  materials: String
+  safetyWarnings: String
+  currentPrice: String
+  originalPrice: String
+  currency: String
+  seller: String
+  rating: String
+  reviewCount: String
+  stockStatus: String
   source: MarketplaceSource!
   sourceProductId: String!
   sourceUrl: String
@@ -474,4 +507,71 @@ input StartMarketplaceFileImportInput {
 input BuildDatasetDraftInput {
   organizationId: ID!
   version: String!
+}
+
+input StartAgentRunInput {
+  organizationId: ID!
+  productId: ID!
+  marketplaceImportRunId: ID
+  clientRequestId: ID!
+}
+
+input CancelAgentRunInput {
+  organizationId: ID!
+  analysisRunId: ID!
+}
+
+type AnalysisRun {
+  id: ID!
+  organizationId: ID!
+  productId: ID!
+  marketplaceImportRunId: ID
+  clientRequestId: ID!
+  status: AnalysisRunStatus!
+  currentPhase: String
+  traceId: String!
+  configSnapshotId: ID!
+  toolRegistryVersion: String!
+  toolPolicyVersion: String!
+  compliancePolicyVersion: String!
+  plannerVersion: String!
+  iterationCount: Int!
+  terminalError: String
+  terminalReason: String
+  startedAt: String
+  completedAt: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type AgentRunEvent {
+  id: ID!
+  organizationId: ID!
+  analysisRunId: ID!
+  sequence: Int!
+  phase: String!
+  toolName: String
+  status: AgentEventStatus!
+  metadata: [EventMetadataEntry!]!
+  traceId: String!
+  timestamp: String!
+}
+
+type EventMetadataEntry {
+  key: String!
+  value: String!
+}
+
+enum AnalysisRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum AgentEventStatus {
+  RUNNING
+  COMPLETED
+  FAILED
 }

@@ -42,6 +42,7 @@ func main() {
 		UGCService:         application.UGC,
 		MarketplaceService: application.Marketplace,
 		DatasetService:     application.Dataset,
+		AgentService:       application.Agent,
 		CookieOpts:         application.CookieOptions(),
 	}
 
@@ -56,6 +57,9 @@ func main() {
 
 	r.Get("/health", health.Liveness)
 	r.Get("/ready", health.Readiness)
+	if application.AgentInternal != nil {
+		application.AgentInternal.Register(r)
+	}
 	r.Handle("/graphql", graph.NewHandler(resolver, application.Auth))
 	if cfg.AllowGraphQLPlayground {
 		r.Handle("/", playground.Handler("Miyuna GraphQL", "/graphql"))

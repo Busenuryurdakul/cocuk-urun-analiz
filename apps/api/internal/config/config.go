@@ -13,6 +13,9 @@ type Config struct {
 	MongoURI               string
 	RedisURL               string
 	AgentOrchestratorURL   string
+	AgentInternalToken     string
+	AgentIPCTimeout        time.Duration
+	GoInternalAPIURL       string
 	AllowGraphQLPlayground bool
 	MailSMTPHost           string
 	MailSMTPPort           string
@@ -41,6 +44,9 @@ func Load() Config {
 		MongoURI:               getEnv("MONGODB_URI", "mongodb://localhost:27017/miyuna"),
 		RedisURL:               getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		AgentOrchestratorURL:   getEnv("AGENT_ORCHESTRATOR_URL", "http://127.0.0.1:8090"),
+		AgentInternalToken:     getEnv("AGENT_INTERNAL_TOKEN", "dev-internal-token-change-me"),
+		AgentIPCTimeout:        durationEnv("AGENT_IPC_TIMEOUT", 15*time.Second),
+		GoInternalAPIURL:       getEnv("GO_INTERNAL_API_URL", "http://127.0.0.1:8080"),
 		AllowGraphQLPlayground: getEnv("ALLOW_GRAPHQL_PLAYGROUND", "true") == "true",
 		MailSMTPHost:           getEnv("MAIL_SMTP_HOST", "localhost"),
 		MailSMTPPort:           getEnv("MAIL_SMTP_PORT", "1025"),

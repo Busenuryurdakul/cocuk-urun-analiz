@@ -49,24 +49,41 @@ Register → Email Verification → MFA → Login → Device Verification → Wo
 
 Cross-tenant erişim: **REJECT + SECURITY EVENT**
 
-## 4. Tool Authorization Chain
+## 4. Phase 5 Analysis Run Security (IMPLEMENTED)
+
+Phase 5 agent analysis runs use canonical GraphQL operations:
+
+| Operation | RBAC |
+|-----------|------|
+| `startAgentRun` | ANALYST+ (tenant-scoped) |
+| `cancelAgentRun` | ADMIN; or ANALYST on own run |
+| `agentRun` / `analysisRuns` / `agentRunEvents` | VIEWER+ read within tenant |
+
+**Tenant isolation:** Cross-tenant start/read/list/event access → `FORBIDDEN` + security event.
+
+**Idempotency:** Duplicate `clientRequestId` within an organization returns the same run.
+
+**Internal IPC:** Python orchestrator calls Go-only `/internal/agent/v1/*` endpoints with `X-Miyuna-Internal-Token`. Missing/invalid token → `401`.
+
+## 5. Tool Authorization Chain (Phase 5 — IMPLEMENTED for deterministic tools)
 
 ```text
-LLM Tool Intent
-  → Tool Policy (versioned)
-  → User Permission (RBAC)
-  → Org Permission (tenant scope)
-  → Input Validation
-  → Execution Sandbox
-  → Tool Runtime
-  → Audit Event
+Python Tool Intent (RunManager)
+  → Go Tool Policy + Registry version check
+  → RBAC / tenant scope (run-bound)
+  → Input hash validation
+  → Redis grant issue (hashed key, TTL, run/tool/input binding)
+  → Go tool execution (single-use atomic consume)
+  → Output schema + compliance validation before observation persist
+  → Audit event (agent_run_events)
 ```
 
-- LLM doğrudan tool execute edemez
-- LLM doğrudan internete erişemez
-- Yetkisiz → REJECT + SECURITY EVENT
+- Python orchestrator **cannot** bypass Go authorization or execute tools directly
+- LLM tool intent (Phase 6+) still flows through the same chain — **NOT IMPLEMENTED in Phase 5**
+- Redis grant replay / binding mismatch / expiry → REJECT + security event; fail-closed when Redis unavailable
+- Unavailable registry tools (`import_planner`, etc.) cannot be authorized or executed in Phase 5 analysis runs
 
-## 5. Fetch Security
+## 6. Fetch Security
 
 External fetch (ecommerce_fetcher, URL import) controls:
 
@@ -86,7 +103,7 @@ External fetch (ecommerce_fetcher, URL import) controls:
 | Malicious scan | Content-type and payload inspection |
 | Audit | All fetch attempts logged |
 
-## 6. Credential Management
+## 7. Credential Management
 
 Platform store API credential modeli (`EcommerceIntegration`) **iptal edildi (2026-09-04)** — v1'de implement edilmez.
 
@@ -100,14 +117,14 @@ Genel credential kuralları (gelecek CR'ler için referans):
 - No secrets in source code
 - Rotation support architecture
 
-## 7. Multi-Tenant Security
+## 8. Multi-Tenant Security
 
 - organizationId from authenticated session only
 - Repository layer enforces organizationId on every query
 - Tenant escape test mandatory (see [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md))
 - Cross-tenant GraphQL ID access → 403 + security event
 
-## 8. Security Events
+## 9. Security Events
 
 ```text
 SecurityEvent {
@@ -123,7 +140,7 @@ SecurityEvent {
 
 Critical events trigger alerting (implementation Phase 1+).
 
-## 9. GraphQL Security
+## 10. GraphQL Security
 
 - Authentication required for all business operations
 - Health/readiness dışında public REST business API yok
@@ -131,20 +148,20 @@ Critical events trigger alerting (implementation Phase 1+).
 - Query depth/complexity limits
 - Rate limiting (application layer + Cloudflare edge)
 
-## 10. PII Protection
+## 11. PII Protection
 
 - `pii_redactor` in agent pipeline
 - PII never in audit logs (plaintext)
 - Compliance engine always-on (see [COMPLIANCE.md](./COMPLIANCE.md))
 
-## 11. Account & Organization Deletion Security
+## 12. Account & Organization Deletion Security
 
 - Ownership transfer required before owner deletion
 - Org deletion requires OWNER role
 - Cascade data purge with audit trail
 - Deletion confirmation flow (prevent accidental deletion)
 
-## 12. Internal Service Exposure
+## 13. Internal Service Exposure
 
 **Forbidden:**
 
@@ -155,7 +172,7 @@ Critical events trigger alerting (implementation Phase 1+).
 
 Internal services accessible only via private network / internal API boundaries.
 
-## 13. Mail Security
+## 14. Mail Security
 
 MailService abstraction:
 
@@ -164,7 +181,7 @@ MailService abstraction:
 - No credentials in client-side code
 - Email verification tokens: time-limited, single-use
 
-## 14. Related Documents
+## 15. Related Documents
 
 - [CLOUDFLARE.md](./CLOUDFLARE.md) — edge security
 - [COMPLIANCE.md](./COMPLIANCE.md) — KVKK/GDPR
@@ -172,7 +189,7 @@ MailService abstraction:
 - [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md) — tenant isolation
 - [CI_CD.md](./CI_CD.md) — secure deployment
 
-## 15. UNRESOLVED
+## 16. UNRESOLVED
 
 | Item | Status |
 |------|--------|

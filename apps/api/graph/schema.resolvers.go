@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
@@ -379,6 +380,16 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 		Brand:           deref(input.Brand),
 		Category:        deref(input.Category),
 		Description:     deref(input.Description),
+		TargetAge:       deref(input.TargetAge),
+		Materials:       deref(input.Materials),
+		SafetyWarnings:  deref(input.SafetyWarnings),
+		CurrentPrice:    deref(input.CurrentPrice),
+		OriginalPrice:   deref(input.OriginalPrice),
+		Currency:        deref(input.Currency),
+		Seller:          deref(input.Seller),
+		Rating:          deref(input.Rating),
+		ReviewCount:     deref(input.ReviewCount),
+		StockStatus:     deref(input.StockStatus),
 		Source:          domain.MarketplaceSource(input.Source),
 		SourceProductID: input.SourceProductID,
 		SourceURL:       deref(input.SourceURL),
@@ -570,6 +581,62 @@ func (r *mutationResolver) BuildDatasetDraft(ctx context.Context, input model.Bu
 		return nil, mapPhase4Error(err)
 	}
 	return toModelDatasetVersion(version), nil
+}
+
+// StartAgentRun is the resolver for the startAgentRun field.
+func (r *mutationResolver) StartAgentRun(ctx context.Context, input model.StartAgentRunInput) (*model.AnalysisRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	productID, err := parseObjectID(input.ProductID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	startInput := agent.StartRunInput{
+		OrganizationID:  orgID,
+		ActorID:         actorID,
+		ProductID:       productID,
+		ClientRequestID: input.ClientRequestID,
+	}
+	if input.MarketplaceImportRunID != nil {
+		importRunID, err := parseObjectID(*input.MarketplaceImportRunID)
+		if err != nil {
+			return nil, gqlError("INVALID_INPUT", err)
+		}
+		startInput.MarketplaceImportRunID = &importRunID
+	}
+
+	run, err := r.AgentService.StartRun(ctx, startInput)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelAnalysisRun(run), nil
+}
+
+// CancelAgentRun is the resolver for the cancelAgentRun field.
+func (r *mutationResolver) CancelAgentRun(ctx context.Context, input model.CancelAgentRunInput) (*model.AnalysisRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	runID, err := parseObjectID(input.AnalysisRunID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	run, err := r.AgentService.CancelRun(ctx, actorID, orgID, runID)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelAnalysisRun(run), nil
 }
 
 // Health returns GraphQL layer health.
@@ -896,6 +963,83 @@ func (r *queryResolver) DatasetEligibilitySummary(ctx context.Context, organizat
 		return nil, mapPhase4Error(err)
 	}
 	return toModelEligibilitySummary(summary), nil
+}
+
+// AgentRun is the resolver for the agentRun field.
+func (r *queryResolver) AgentRun(ctx context.Context, organizationID string, analysisRunID string) (*model.AnalysisRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	runID, err := parseObjectID(analysisRunID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	run, err := r.AgentService.GetRun(ctx, actorID, orgID, runID)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelAnalysisRun(run), nil
+}
+
+// AnalysisRuns is the resolver for the analysisRuns field.
+func (r *queryResolver) AnalysisRuns(ctx context.Context, organizationID string, status *model.AnalysisRunStatus, limit *int) ([]*model.AnalysisRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	lim := 20
+	if limit != nil {
+		lim = *limit
+	}
+
+	runs, err := r.AgentService.ListRuns(ctx, actorID, orgID, domainAnalysisStatus(status), lim)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	out := make([]*model.AnalysisRun, 0, len(runs))
+	for i := range runs {
+		out = append(out, toModelAnalysisRun(&runs[i]))
+	}
+	return out, nil
+}
+
+// AgentRunEvents is the resolver for the agentRunEvents field.
+func (r *queryResolver) AgentRunEvents(ctx context.Context, organizationID string, analysisRunID string, afterSequence *int, limit *int) ([]*model.AgentRunEvent, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	runID, err := parseObjectID(analysisRunID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	after := int64(0)
+	if afterSequence != nil {
+		after = int64(*afterSequence)
+	}
+	lim := 100
+	if limit != nil {
+		lim = *limit
+	}
+
+	events, err := r.AgentService.ListEvents(ctx, actorID, orgID, runID, after, lim)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelAgentRunEvents(events), nil
 }
 
 // Mutation returns MutationResolver implementation.
