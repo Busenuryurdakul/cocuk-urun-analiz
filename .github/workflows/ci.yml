@@ -26,6 +26,7 @@ jobs:
       MONGODB_URI: mongodb://localhost:27017/miyuna_test
       REDIS_URL: redis://localhost:6379/0
       JWT_SECRET: ci-test-jwt-secret-key-32chars!
+      PYTHON_EXECUTABLE: python
     defaults:
       run:
         working-directory: apps/api
@@ -34,6 +35,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install agent orchestrator
+        working-directory: apps/agent
+        run: pip install -e ".[dev]"
+      - name: Verify agent import
+        run: python -c "import miyuna_agent"
+        working-directory: apps/agent
       - run: go mod download
       - name: Verify gofmt
         run: test -z "$(gofmt -l .)"

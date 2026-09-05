@@ -35,24 +35,27 @@ import (
 const internalToken = "phase5-integration-token"
 
 type Phase5Harness struct {
-	T           *testing.T
-	Ctx         context.Context
-	App         *app.App
-	MongoURI    string
-	RedisURL    string
-	BaseURL     string
-	Token       string
-	OrgID       primitive.ObjectID
-	AnalystID   primitive.ObjectID
-	ViewerID    primitive.ObjectID
-	OtherOrgID  primitive.ObjectID
-	OtherUserID primitive.ObjectID
-	ProductID   primitive.ObjectID
-	OtherProdID primitive.ObjectID
-	server      *http.Server
-	listener    net.Listener
-	pythonCmd   *exec.Cmd
-	cleanups    []func()
+	T              *testing.T
+	Ctx            context.Context
+	App            *app.App
+	MongoURI       string
+	RedisURL       string
+	BaseURL        string
+	Token          string
+	OrgID          primitive.ObjectID
+	AnalystID      primitive.ObjectID
+	ViewerID       primitive.ObjectID
+	OtherOrgID     primitive.ObjectID
+	OtherUserID    primitive.ObjectID
+	ProductID      primitive.ObjectID
+	OtherProdID    primitive.ObjectID
+	server         *http.Server
+	listener       net.Listener
+	pythonCmd      *exec.Cmd
+	pythonStdout   *bytes.Buffer
+	pythonStderr   *bytes.Buffer
+	pythonWaitDone chan error
+	cleanups       []func()
 }
 
 type HarnessOption func(*harnessConfig)
@@ -135,7 +138,7 @@ func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 			h.App.Agent.Orchestrator.BaseURL = cfg.orchestratorURL
 		}
 		h.startPython(t, pythonPort)
-		waitHTTP200(t, cfg.orchestratorURL+"/ready", 20*time.Second)
+		waitOrchestratorReady(t, h.pythonCmd, h.pythonWaitDone, cfg.orchestratorURL+"/ready", 20*time.Second, h.pythonStdout, h.pythonStderr)
 	}
 
 	h.seedTenants(t)
@@ -169,6 +172,12 @@ func startStubOrchestrator(t *testing.T, h *Phase5Harness) string {
 func (h *Phase5Harness) Close() {
 	if h.pythonCmd != nil && h.pythonCmd.Process != nil {
 		_ = h.pythonCmd.Process.Kill()
+		if h.pythonWaitDone != nil {
+			select {
+			case <-h.pythonWaitDone:
+			case <-time.After(3 * time.Second):
+			}
+		}
 	}
 	if h.server != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -219,17 +228,24 @@ func (h *Phase5Harness) startHTTPServer(t *testing.T) {
 func (h *Phase5Harness) startPython(t *testing.T, port int) {
 	t.Helper()
 	agentDir := filepath.Join(repoRoot(t), "apps", "agent")
-	cmd := exec.CommandContext(h.Ctx, pyExecutable(), "-3", "-m", "uvicorn", "miyuna_agent.main:app", "--host", "127.0.0.1", "--port", strconv.Itoa(port))
+	launcher := resolvePythonLauncher("uvicorn", "miyuna_agent.main:app", "--host", "127.0.0.1", "--port", strconv.Itoa(port))
+	cmd := exec.CommandContext(h.Ctx, launcher.exe, launcher.args...)
 	cmd.Dir = agentDir
+	h.pythonStdout = &bytes.Buffer{}
+	h.pythonStderr = &bytes.Buffer{}
+	cmd.Stdout = h.pythonStdout
+	cmd.Stderr = h.pythonStderr
 	cmd.Env = append(os.Environ(),
 		"PYTHONPATH="+filepath.Join(agentDir, "src"),
 		"GO_API_URL="+h.BaseURL,
 		"INTERNAL_TOKEN="+internalToken,
 	)
 	if err := cmd.Start(); err != nil {
-		t.Fatalf("start python orchestrator: %v", err)
+		t.Fatalf("start python orchestrator (%s %v): %v", launcher.exe, launcher.args, err)
 	}
 	h.pythonCmd = cmd
+	h.pythonWaitDone = make(chan error, 1)
+	go func() { h.pythonWaitDone <- cmd.Wait() }()
 }
 
 func (h *Phase5Harness) seedTenants(t *testing.T) {
@@ -423,8 +439,20 @@ func mustFreePort(t *testing.T) int {
 
 func waitHTTP200(t *testing.T, url string, timeout time.Duration) {
 	t.Helper()
+	waitOrchestratorReady(t, nil, nil, url, timeout, nil, nil)
+}
+
+func waitOrchestratorReady(t *testing.T, cmd *exec.Cmd, waitDone <-chan error, url string, timeout time.Duration, stdout, stderr *bytes.Buffer) {
+	t.Helper()
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
+		if waitDone != nil {
+			select {
+			case err := <-waitDone:
+				t.Fatalf("python orchestrator exited before %s ready: %v%s", url, err, pythonProcessOutput(stdout, stderr))
+			default:
+			}
+		}
 		resp, err := http.Get(url)
 		if err == nil && resp.StatusCode == http.StatusOK {
 			resp.Body.Close()
@@ -435,7 +463,54 @@ func waitHTTP200(t *testing.T, url string, timeout time.Duration) {
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
-	t.Fatalf("timeout waiting for %s", url)
+	if cmd != nil && cmd.Process != nil {
+		_ = cmd.Process.Kill()
+		if waitDone != nil {
+			select {
+			case <-waitDone:
+			case <-time.After(2 * time.Second):
+			}
+		}
+	}
+	t.Fatalf("timeout waiting for %s%s", url, pythonProcessOutput(stdout, stderr))
+}
+
+func pythonProcessOutput(stdout, stderr *bytes.Buffer) string {
+	if stdout == nil && stderr == nil {
+		return ""
+	}
+	out := ""
+	if stdout != nil && stdout.Len() > 0 {
+		out += "\nstdout:\n" + stdout.String()
+	}
+	if stderr != nil && stderr.Len() > 0 {
+		out += "\nstderr:\n" + stderr.String()
+	}
+	return out
+}
+
+type pythonLauncher struct {
+	exe  string
+	args []string
+}
+
+func resolvePythonLauncher(module string, moduleArgs ...string) pythonLauncher {
+	if exe := strings.TrimSpace(os.Getenv("PYTHON_EXECUTABLE")); exe != "" {
+		return pythonLauncher{
+			exe:  exe,
+			args: append([]string{"-m", module}, moduleArgs...),
+		}
+	}
+	if runtime.GOOS == "windows" {
+		return pythonLauncher{
+			exe:  "py",
+			args: append([]string{"-3", "-m", module}, moduleArgs...),
+		}
+	}
+	return pythonLauncher{
+		exe:  "python3",
+		args: append([]string{"-m", module}, moduleArgs...),
+	}
 }
 
 func repoRoot(t *testing.T) string {
@@ -445,13 +520,6 @@ func repoRoot(t *testing.T) string {
 		t.Fatal("runtime caller failed")
 	}
 	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", "..", ".."))
-}
-
-func pyExecutable() string {
-	if runtime.GOOS == "windows" {
-		return "py"
-	}
-	return "python3"
 }
 
 func gqlErrorCode(err map[string]any) string {

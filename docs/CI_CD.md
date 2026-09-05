@@ -57,6 +57,11 @@ Report → PR status check
 |-------|-----------|
 | Auth | MFA flow, device verification |
 | Agent | Real AgentRunEvent, no fake progress |
+
+The `api` CI job installs the Python agent package (`pip install -e ".[dev]"` in
+`apps/agent`) and sets `PYTHON_EXECUTABLE` so Go Phase 5 live E2E tests can
+start the real orchestrator on an ephemeral port during `go test ./...`.
+
 | LLM | 2 LLM routing, 5 concurrent load test |
 | Product data import | CSV/JSON/manual + permitted URL (not mock) |
 | Evidence | Claim-evidence validation |
