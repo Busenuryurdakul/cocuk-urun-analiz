@@ -254,7 +254,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Products:       productSvc,
 		UGC:            ugcSvc,
 		Marketplace:    marketplaceSvc,
-		Dataset:          datasetSvc,
+		Dataset:        datasetSvc,
 		Agent:          agentSvc,
 		ImportConsumer: importConsumer,
 		AgentInternal: &agent.InternalHandler{
