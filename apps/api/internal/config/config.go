@@ -51,7 +51,7 @@ type Config struct {
 func Load() Config {
 	return Config{
 		Host:                   getEnv("API_HOST", "0.0.0.0"),
-		Port:                   getEnv("API_PORT", "8080"),
+		Port:                   getEnv("PORT", getEnv("API_PORT", "8080")),
 		MongoURI:               getEnv("MONGODB_URI", "mongodb://localhost:27017/miyuna"),
 		RedisURL:               getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		AgentOrchestratorURL:   getEnv("AGENT_ORCHESTRATOR_URL", "http://127.0.0.1:8090"),
