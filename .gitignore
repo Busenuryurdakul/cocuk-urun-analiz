@@ -80,3 +80,6 @@ artifacts/phase6/
 
 # Local Hugging Face model weights (large binaries)
 models/
+.vercel
+.env*
+!.env.example

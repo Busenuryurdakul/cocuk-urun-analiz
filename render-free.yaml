@@ -1,0 +1,113 @@
+# Miyuna — Render Blueprint (free tier + Hugging Face LLM)
+# No paid Standard/Starter plans required. Ollama private services omitted.
+# Apply: https://dashboard.render.com/blueprint/new?repo=https://github.com/Busenuryurdakul/cocuk-urun-analiz&branch=feature/phase-6-llm-gateway
+#
+# Set sync:false secrets after apply. LLM uses Hugging Face Inference API (not self-hosted Ollama).
+
+projects:
+  - name: Miyuna
+    environments:
+      - name: production
+        services:
+          - type: keyvalue
+            name: miyuna-redis
+            plan: free
+            region: frankfurt
+            maxmemoryPolicy: allkeys-lru
+            ipAllowList: []
+
+          - type: web
+            name: miyuna-agent
+            runtime: docker
+            plan: free
+            region: frankfurt
+            repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
+            branch: feature/phase-6-llm-gateway
+            dockerfilePath: ./infra/render/agent/Dockerfile
+            dockerContext: .
+            healthCheckPath: /health
+            envVars:
+              - key: GO_API_URL
+                fromService:
+                  type: web
+                  name: miyuna-api
+                  envVarKey: RENDER_EXTERNAL_URL
+              - key: INTERNAL_TOKEN
+                sync: false
+
+          - type: web
+            name: miyuna-api
+            runtime: docker
+            plan: free
+            region: frankfurt
+            repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
+            branch: feature/phase-6-llm-gateway
+            dockerfilePath: ./infra/render/api/Dockerfile
+            dockerContext: .
+            healthCheckPath: /health
+            envVars:
+              - key: API_HOST
+                value: 0.0.0.0
+              - key: API_PORT
+                value: "8080"
+              - key: ALLOW_GRAPHQL_PLAYGROUND
+                value: "false"
+              - key: COOKIE_SECURE
+                value: "true"
+              - key: MAIL_QUEUE_ENABLED
+                value: "true"
+              - key: LLM_USE_MOCK
+                value: "false"
+              - key: TURNSTILE_ENABLED
+                value: "false"
+              - key: MONGODB_URI
+                sync: false
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: miyuna-redis
+                  property: connectionString
+              - key: WEB_BASE_URL
+                value: https://miyuna-web.vercel.app
+              - key: JWT_SECRET
+                sync: false
+              - key: AGENT_INTERNAL_TOKEN
+                sync: false
+              - key: AGENT_ORCHESTRATOR_URL
+                fromService:
+                  type: web
+                  name: miyuna-agent
+                  envVarKey: RENDER_EXTERNAL_URL
+              - key: GO_INTERNAL_API_URL
+                fromService:
+                  type: web
+                  name: miyuna-api
+                  envVarKey: RENDER_EXTERNAL_URL
+              - key: LLM_PRIMARY_BASE_URL
+                value: https://router.huggingface.co/v1
+              - key: LLM_SECONDARY_BASE_URL
+                value: https://router.huggingface.co/v1
+              - key: LLM_PRIMARY_API_KEY
+                sync: false
+              - key: LLM_SECONDARY_API_KEY
+                sync: false
+              - key: LLM_PRIMARY_MODEL_NAME
+                value: Qwen/Qwen2.5-0.5B-Instruct
+              - key: LLM_SECONDARY_MODEL_NAME
+                value: meta-llama/Llama-3.2-1B-Instruct
+              - key: MAIL_SMTP_HOST
+                sync: false
+              - key: MAIL_SMTP_PORT
+                sync: false
+              - key: MAIL_SMTP_USER
+                sync: false
+              - key: MAIL_SMTP_PASS
+                sync: false
+              - key: MAIL_SMTP_TLS
+                value: "true"
+              - key: MAIL_FROM
+                sync: false
+              - key: TURNSTILE_SECRET_KEY
+                sync: false
+              - key: CREDENTIALS_ENCRYPTION_KEY
+                sync: false
