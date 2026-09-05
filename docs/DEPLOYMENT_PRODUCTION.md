@@ -16,6 +16,8 @@ MongoDB Atlas (external, MONGODB_URI)
 
 ## 1. Render (Backend + LLM + Agent)
 
+> **Billing required:** Render account must have a payment method before applying this Blueprint (Standard LLM + Starter API/agent plans). Validation error: `need_payment_info`. Add billing at [Render Account Settings](https://dashboard.render.com/u/settings#billing).
+
 ### Blueprint
 
 1. Push `render.yaml` and Dockerfiles to GitHub (`main` branch).
@@ -46,23 +48,31 @@ MongoDB Atlas (external, MONGODB_URI)
 
 First deploy pulls models (~5–15 min per LLM service).
 
-## 2. Vercel (Web App)
+## 2. Vercel (Web App) — LIVE
 
-```bash
-cd apps/web
-npx vercel link
-npx vercel env add NEXT_PUBLIC_API_URL production
-# Value: https://api.{domain}/graphql  (or Render URL until custom domain)
-npx vercel env add NEXT_PUBLIC_TURNSTILE_SITE_KEY production
-npx vercel deploy --prod
-```
+**Production URL:** https://miyuna-web.vercel.app
 
-**Root directory:** `apps/web` (set in Vercel Project Settings).
+Project: `buse7/miyuna-web` (root directory: `apps/web`)
+
+Set env vars in [Vercel Dashboard → miyuna-web → Settings → Environment Variables](https://vercel.com/buse7/miyuna-web/settings/environment-variables):
 
 | Env | Value |
 |-----|-------|
-| `NEXT_PUBLIC_API_URL` | `https://api.{domain}/graphql` |
+| `NEXT_PUBLIC_API_URL` | `https://api.{domain}/graphql` (or Render URL until custom domain) |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
+
+Redeploy after env changes:
+
+```bash
+cd apps/web
+npx vercel deploy --prod --yes
+```
+
+Or from repo root (linked project):
+
+```bash
+npx vercel deploy --prod --yes --archive=tgz
+```
 
 ## 3. Cloudflare
 
