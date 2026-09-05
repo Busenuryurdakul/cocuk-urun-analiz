@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AsyncView } from "@/components/async-view";
+import { AppShell } from "@/components/layout/app-shell";
 import { graphqlRequest } from "@/lib/graphql";
 
 type Policy = {
@@ -85,37 +85,61 @@ export default function OrgCompliancePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">Uyumluluk</h1>
+    <AppShell
+      title="Uyumluluk"
+      kicker="Organizasyon"
+      orgId={orgId}
+      description="Compliance Engine her zaman açıktır; OFF profili desteklenmez."
+    >
       {view === "loading" && <AsyncView state="loading" />}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
-      {view === "error" && <AsyncView state="retry" retry={<button type="button" onClick={() => void load()} className="underline">Tekrar dene</button>} />}
+      {view === "error" && (
+        <AsyncView
+          state="retry"
+          retry={
+            <button type="button" onClick={() => void load()} className="btn-secondary">
+              Tekrar dene
+            </button>
+          }
+        />
+      )}
       {view === "success" && policy && (
-        <>
-          <section className="rounded-xl border bg-white p-4 text-sm">
-            <p>Aktif politika: {policy.profile} / {policy.version}</p>
-            <p className="text-slate-500">Compliance Engine her zaman açıktır; OFF profili desteklenmez.</p>
+        <div className="space-y-6">
+          <section className="card text-sm">
+            <p className="kicker">Aktif politika</p>
+            <p className="mt-2 font-display text-2xl">
+              {policy.profile} / {policy.version}
+            </p>
+            <p className="mt-2 text-muted">Durum: {policy.status}</p>
           </section>
-          <form onSubmit={updateProfile} className="space-y-3 rounded-xl border bg-white p-4">
-            <h2 className="font-medium">Profil güncelle (OWNER/ADMIN)</h2>
-            <select className="w-full rounded border px-3 py-2" value={profile} onChange={(e) => setProfile(e.target.value)}>
+          <form onSubmit={updateProfile} className="card max-w-lg space-y-3">
+            <h2 className="font-display text-xl">Profil güncelle (OWNER/ADMIN)</h2>
+            <select className="input" value={profile} onChange={(e) => setProfile(e.target.value)}>
               <option value="KVKK">KVKK</option>
               <option value="GDPR">GDPR</option>
               <option value="BOTH">BOTH</option>
             </select>
-            <button type="submit" className="rounded-md bg-miyuna-600 px-4 py-2 text-sm text-white">Güncelle</button>
+            <button type="submit" className="btn-primary">
+              Güncelle
+            </button>
           </form>
-          <section className="space-y-2 rounded-xl border bg-white p-4">
-            <h2 className="font-medium">Onaylarım</h2>
-            {consents.length === 0 ? <AsyncView state="empty" /> : (
+          <section className="card space-y-3">
+            <h2 className="font-display text-xl">Onaylarım</h2>
+            {consents.length === 0 ? (
+              <AsyncView state="empty" />
+            ) : (
               <ul className="space-y-2 text-sm">
                 {consents.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between">
-                    <span>{c.purpose} ({c.policyVersion})</span>
+                  <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl bg-cream px-3 py-2">
+                    <span>
+                      {c.purpose} ({c.policyVersion})
+                    </span>
                     {!c.withdrawnAt ? (
-                      <button type="button" className="text-red-600 underline" onClick={() => void withdrawConsent(c.purpose)}>Geri çek</button>
+                      <button type="button" className="text-sm font-semibold text-red-700 underline" onClick={() => void withdrawConsent(c.purpose)}>
+                        Geri çek
+                      </button>
                     ) : (
-                      <span className="text-slate-400">Geri çekildi</span>
+                      <span className="text-muted">Geri çekildi</span>
                     )}
                   </li>
                 ))}
@@ -123,15 +147,14 @@ export default function OrgCompliancePage() {
             )}
             <div className="flex flex-wrap gap-2 pt-2">
               {["REGISTRATION", "DATA_PROCESSING", "ORG_MEMBERSHIP"].map((p) => (
-                <button key={p} type="button" className="rounded border px-2 py-1 text-xs" onClick={() => void grantConsent(p)}>
+                <button key={p} type="button" className="btn-secondary !px-3 !py-1.5 text-xs" onClick={() => void grantConsent(p)}>
                   {p} onayla
                 </button>
               ))}
             </div>
           </section>
-        </>
+        </div>
       )}
-      <Link href={`/org/${orgId}/members`} className="text-sm text-slate-500 underline">Üyeler</Link>
-    </main>
+    </AppShell>
   );
 }

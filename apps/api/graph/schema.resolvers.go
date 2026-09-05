@@ -6,16 +6,21 @@ package graph
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
+	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/httpx"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/marketplace"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/product"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/rbac"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/ugc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"time"
 )
 
 // Register is the resolver for the register field.
@@ -357,6 +362,216 @@ func (r *mutationResolver) WithdrawConsent(ctx context.Context, input model.With
 	return true, nil
 }
 
+// CreateProduct is the resolver for the createProduct field.
+func (r *mutationResolver) CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.CreateProductPayload, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	productResult, dedup, err := r.ProductService.Create(ctx, product.CreateInput{
+		OrganizationID:  orgID,
+		ActorID:         actorID,
+		Name:            input.Name,
+		Brand:           deref(input.Brand),
+		Category:        deref(input.Category),
+		Description:     deref(input.Description),
+		Source:          domain.MarketplaceSource(input.Source),
+		SourceProductID: input.SourceProductID,
+		SourceURL:       deref(input.SourceURL),
+		SKU:             deref(input.Sku),
+	})
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return &model.CreateProductPayload{
+		Product:      toModelProduct(productResult),
+		Deduplicated: dedup,
+	}, nil
+}
+
+// CreateUserExperience is the resolver for the createUserExperience field.
+func (r *mutationResolver) CreateUserExperience(ctx context.Context, input model.CreateUserExperienceInput) (*model.UserExperience, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, productID, err := parseOrgProductIDs(input.OrganizationID, input.ProductID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	ux, err := r.UGCService.Create(ctx, ugc.CreateInput{
+		OrganizationID:    orgID,
+		ActorID:           actorID,
+		ProductID:         productID,
+		UsageStatus:       domain.UsageStatus(input.UsageStatus),
+		SatisfactionLevel: domain.SatisfactionLevel(input.SatisfactionLevel),
+		Rating:            input.Rating,
+		IssueType:         derefIssueType(input.IssueType),
+		Narrative:         input.Narrative,
+	})
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelUserExperience(ux), nil
+}
+
+// UpdateUserExperience is the resolver for the updateUserExperience field.
+func (r *mutationResolver) UpdateUserExperience(ctx context.Context, input model.UpdateUserExperienceInput) (*model.UserExperience, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	expID, err := parseObjectID(input.ExperienceID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	ux, err := r.UGCService.Update(ctx, ugc.UpdateInput{
+		OrganizationID:    orgID,
+		ActorID:           actorID,
+		ExperienceID:      expID,
+		UsageStatus:       domain.UsageStatus(input.UsageStatus),
+		SatisfactionLevel: domain.SatisfactionLevel(input.SatisfactionLevel),
+		Rating:            input.Rating,
+		IssueType:         derefIssueType(input.IssueType),
+		Narrative:         input.Narrative,
+	})
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelUserExperience(ux), nil
+}
+
+// DeleteUserExperience is the resolver for the deleteUserExperience field.
+func (r *mutationResolver) DeleteUserExperience(ctx context.Context, input model.DeleteUserExperienceInput) (bool, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	expID, err := parseObjectID(input.ExperienceID)
+	if err != nil {
+		return false, gqlError("INVALID_ID", err)
+	}
+	if err := r.UGCService.Delete(ctx, actorID, orgID, expID); err != nil {
+		return false, mapPhase4Error(err)
+	}
+	return true, nil
+}
+
+// ModerateUserExperience is the resolver for the moderateUserExperience field.
+func (r *mutationResolver) ModerateUserExperience(ctx context.Context, input model.ModerateUserExperienceInput) (*model.UserExperience, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	expID, err := parseObjectID(input.ExperienceID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	var quality *domain.QualityStatus
+	if input.QualityStatus != nil {
+		v := domain.QualityStatus(*input.QualityStatus)
+		quality = &v
+	}
+	ux, err := r.UGCService.Moderate(ctx, ugc.ModerateInput{
+		OrganizationID:   orgID,
+		ActorID:          actorID,
+		ExperienceID:     expID,
+		ModerationStatus: domain.ModerationStatus(input.ModerationStatus),
+		QualityStatus:    quality,
+	})
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelUserExperience(ux), nil
+}
+
+// StartMarketplaceURLImport is the resolver for the startMarketplaceURLImport field.
+func (r *mutationResolver) StartMarketplaceURLImport(ctx context.Context, input model.StartMarketplaceURLImportInput) (*model.MarketplaceImportRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	run, err := r.MarketplaceService.StartURLImport(ctx, marketplace.StartURLImportInput{
+		OrganizationID: orgID,
+		ActorID:        actorID,
+		SourceURL:      input.SourceURL,
+	})
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelImportRun(run), nil
+}
+
+// StartMarketplaceFileImport is the resolver for the startMarketplaceFileImport field.
+func (r *mutationResolver) StartMarketplaceFileImport(ctx context.Context, input model.StartMarketplaceFileImportInput) (*model.MarketplaceImportRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	content, err := base64.StdEncoding.DecodeString(input.ContentBase64)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	run, err := r.MarketplaceService.StartFileImport(ctx, marketplace.StartFileImportInput{
+		OrganizationID: orgID,
+		ActorID:        actorID,
+		Source:         domain.MarketplaceSource(input.Source),
+		AccessMode:     domain.AccessMode(input.AccessMode),
+		Filename:       input.Filename,
+		Content:        content,
+		ContentType:    input.ContentType,
+	})
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelImportRun(run), nil
+}
+
+// BuildDatasetDraft is the resolver for the buildDatasetDraft field.
+func (r *mutationResolver) BuildDatasetDraft(ctx context.Context, input model.BuildDatasetDraftInput) (*model.DatasetVersion, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	version, err := r.DatasetService.BuildDatasetDraft(ctx, dataset.BuildDraftInput{
+		OrganizationID: orgID,
+		ActorID:        actorID,
+		VersionLabel:   input.Version,
+	})
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelDatasetVersion(version), nil
+}
+
 // Health returns GraphQL layer health.
 func (r *queryResolver) Health(ctx context.Context) (string, error) {
 	return "ok", nil
@@ -425,6 +640,8 @@ func (r *queryResolver) Organization(ctx context.Context, organizationID string)
 	}
 	return toModelOrganization(org), nil
 }
+
+// OrganizationMembers is the resolver for the organizationMembers field.
 func (r *queryResolver) OrganizationMembers(ctx context.Context, organizationID string) ([]*model.OrganizationMember, error) {
 	actorID, err := requireActor(ctx)
 	if err != nil {
@@ -519,6 +736,166 @@ func (r *queryResolver) MyConsents(ctx context.Context) ([]*model.Consent, error
 		out = append(out, toModelConsent(&consents[i]))
 	}
 	return out, nil
+}
+
+// Products is the resolver for the products field.
+func (r *queryResolver) Products(ctx context.Context, organizationID string, limit *int) ([]*model.Product, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	items, err := r.ProductService.List(ctx, actorID, orgID, limitOrDefault(limit, 50))
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	out := make([]*model.Product, 0, len(items))
+	for i := range items {
+		out = append(out, toModelProduct(&items[i]))
+	}
+	return out, nil
+}
+
+// Product is the resolver for the product field.
+func (r *queryResolver) Product(ctx context.Context, organizationID string, productID string) (*model.Product, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, pid, err := parseOrgProductIDs(organizationID, productID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	item, err := r.ProductService.Get(ctx, actorID, orgID, pid)
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelProduct(item), nil
+}
+
+// UserExperiences is the resolver for the userExperiences field.
+func (r *queryResolver) UserExperiences(ctx context.Context, organizationID string, productID string) ([]*model.UserExperience, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, pid, err := parseOrgProductIDs(organizationID, productID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	items, err := r.UGCService.ListByProduct(ctx, actorID, orgID, pid)
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	out := make([]*model.UserExperience, 0, len(items))
+	for i := range items {
+		out = append(out, toModelUserExperience(&items[i]))
+	}
+	return out, nil
+}
+
+// MarketplaceImportRuns is the resolver for the marketplaceImportRuns field.
+func (r *queryResolver) MarketplaceImportRuns(ctx context.Context, organizationID string, limit *int) ([]*model.MarketplaceImportRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	runs, err := r.MarketplaceService.ListRuns(ctx, actorID, orgID, limitOrDefault(limit, 20))
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	out := make([]*model.MarketplaceImportRun, 0, len(runs))
+	for i := range runs {
+		out = append(out, toModelImportRun(&runs[i]))
+	}
+	return out, nil
+}
+
+// DatasetVersions is the resolver for the datasetVersions field.
+func (r *queryResolver) DatasetVersions(ctx context.Context, organizationID string, limit *int) ([]*model.DatasetVersion, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	versions, err := r.DatasetService.ListVersions(ctx, actorID, orgID, limitOrDefault(limit, 20))
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	out := make([]*model.DatasetVersion, 0, len(versions))
+	for i := range versions {
+		out = append(out, toModelDatasetVersion(&versions[i]))
+	}
+	return out, nil
+}
+
+// ProductMarketplaceReviews is the resolver for the productMarketplaceReviews field.
+func (r *queryResolver) ProductMarketplaceReviews(ctx context.Context, organizationID string, productID string) ([]*model.MarketplaceReview, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, pid, err := parseOrgProductIDs(organizationID, productID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	items, err := r.MarketplaceService.ListReviewsByProduct(ctx, actorID, orgID, pid)
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	out := make([]*model.MarketplaceReview, 0, len(items))
+	for i := range items {
+		out = append(out, toModelMarketplaceReview(&items[i]))
+	}
+	return out, nil
+}
+
+// MarketplaceImportStatus is the resolver for the marketplaceImportStatus field.
+func (r *queryResolver) MarketplaceImportStatus(ctx context.Context, organizationID string, importRunID string) (*model.MarketplaceImportRun, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	runID, err := parseObjectID(importRunID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	run, err := r.MarketplaceService.GetRun(ctx, actorID, orgID, runID)
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelImportRun(run), nil
+}
+
+// DatasetEligibilitySummary is the resolver for the datasetEligibilitySummary field.
+func (r *queryResolver) DatasetEligibilitySummary(ctx context.Context, organizationID string) (*model.DatasetEligibilitySummary, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	summary, err := r.DatasetService.EligibilitySummary(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelEligibilitySummary(summary), nil
 }
 
 // Mutation returns MutationResolver implementation.

@@ -3,7 +3,7 @@ import VerifyEmailClient from "./verify-email-client";
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<p className="p-16 text-sm text-slate-600">Yükleniyor…</p>}>
+    <Suspense fallback={<p className="p-16 text-sm text-muted">Yükleniyor…</p>}>
       <VerifyEmailClient />
     </Suspense>
   );

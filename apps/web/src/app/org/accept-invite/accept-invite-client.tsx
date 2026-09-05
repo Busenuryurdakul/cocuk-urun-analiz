@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AsyncView } from "@/components/async-view";
+import { AuthShell } from "@/components/layout/auth-shell";
 import { graphqlRequest } from "@/lib/graphql";
 
 export default function AcceptInviteClient() {
@@ -35,14 +36,13 @@ export default function AcceptInviteClient() {
   }, [token]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">Davet Kabul</h1>
+    <AuthShell title="Davet kabul" subtitle="Organizasyon davetini onaylayın.">
       {state === "loading" && <AsyncView state="loading" />}
       {state === "unauthorized" && (
         <AsyncView
           state="unauthorized"
           unauthorized={
-            <Link href={`/auth/login?next=/org/accept-invite?token=${encodeURIComponent(token)}`} className="underline">
+            <Link href={`/auth/login?next=/org/accept-invite?token=${encodeURIComponent(token)}`} className="btn-primary">
               Giriş yapın
             </Link>
           }
@@ -50,11 +50,13 @@ export default function AcceptInviteClient() {
       )}
       {state === "error" && <AsyncView state="error" />}
       {state === "success" && orgId && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm">
+        <div className="alert-success">
           <p>Davet kabul edildi.</p>
-          <Link href={`/org/${orgId}/members`} className="mt-2 inline-block underline">Organizasyona git</Link>
+          <Link href={`/org/${orgId}/members`} className="mt-3 inline-block font-semibold underline">
+            Organizasyona git
+          </Link>
         </div>
       )}
-    </main>
+    </AuthShell>
   );
 }

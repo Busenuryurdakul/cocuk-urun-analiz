@@ -40,44 +40,43 @@ export function AsyncView({
 
 function DefaultLoading() {
   return (
-    <div role="status" className="rounded-lg border border-slate-200 bg-white p-8 text-center">
-      <p className="text-sm text-slate-600">Yükleniyor…</p>
+    <div role="status" className="card text-center">
+      <div className="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-forest-soft" />
+      <p className="text-sm text-muted">Yükleniyor…</p>
     </div>
   );
 }
 
 function DefaultError() {
   return (
-    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
-      <p className="text-sm text-red-800">Bir hata oluştu.</p>
+    <div role="alert" className="alert-error text-center">
+      <p>Bir hata oluştu.</p>
     </div>
   );
 }
 
 function DefaultEmpty() {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-8 text-center">
-      <p className="text-sm text-slate-600">Gösterilecek veri yok.</p>
+    <div className="card text-center">
+      <p className="font-display text-xl text-ink">Henüz bir şey yok</p>
+      <p className="mt-1 text-sm text-muted">Gösterilecek veri bulunamadı.</p>
     </div>
   );
 }
 
 function DefaultUnauthorized() {
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-8 text-center">
-      <p className="text-sm text-amber-900">Bu içeriği görüntüleme yetkiniz yok.</p>
+    <div className="alert-warn text-center">
+      <p>Bu içeriği görüntüleme yetkiniz yok.</p>
     </div>
   );
 }
 
 function DefaultRetry() {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-8 text-center">
-      <p className="mb-3 text-sm text-slate-600">İstek tamamlanamadı.</p>
-      <button
-        type="button"
-        className="rounded-md bg-miyuna-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
-      >
+    <div className="card text-center">
+      <p className="mb-4 text-sm text-muted">İstek tamamlanamadı.</p>
+      <button type="button" className="btn-primary">
         Tekrar dene
       </button>
     </div>

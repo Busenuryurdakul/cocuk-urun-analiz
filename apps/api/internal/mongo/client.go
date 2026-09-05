@@ -80,6 +80,32 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 			return fmt.Errorf("index %s: %w", idx.collection, err)
 		}
 	}
+
+	phase4Indexes := []struct {
+		collection string
+		model      mongo.IndexModel
+	}{
+		{"products", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "createdAt", Value: -1}}}},
+		{"product_source_mappings", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}, {Key: "source", Value: 1}, {Key: "sourceProductId", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"user_experiences", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "productId", Value: 1}}}},
+		{"marketplace_reviews", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}, {Key: "fingerprint", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"marketplace_import_runs", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "createdAt", Value: -1}}}},
+		{"raw_source_payloads", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "importRunId", Value: 1}}}},
+		{"dataset_records", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "datasetEligibility", Value: 1}}}},
+		{"dataset_records", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "datasetVersionId", Value: 1}}}},
+		{"dataset_versions", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "createdAt", Value: -1}}}},
+	}
+	for _, idx := range phase4Indexes {
+		if _, err := c.DB.Collection(idx.collection).Indexes().CreateOne(ctx, idx.model); err != nil {
+			return fmt.Errorf("index %s: %w", idx.collection, err)
+		}
+	}
 	return nil
 }
 

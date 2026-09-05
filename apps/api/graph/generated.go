@@ -64,6 +64,35 @@ type ComplexityRoot struct {
 		WithdrawnAt    func(childComplexity int) int
 	}
 
+	CreateProductPayload struct {
+		Deduplicated func(childComplexity int) int
+		Product      func(childComplexity int) int
+	}
+
+	DatasetEligibilitySummary struct {
+		EligibilityDistribution func(childComplexity int) int
+		MarketplaceCount        func(childComplexity int) int
+		OrganizationID          func(childComplexity int) int
+		SourceDistribution      func(childComplexity int) int
+		TotalRecords            func(childComplexity int) int
+		UgcCount                func(childComplexity int) int
+	}
+
+	DatasetVersion struct {
+		ContentHash       func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
+		ID                func(childComplexity int) int
+		NormalizerVersion func(childComplexity int) int
+		OrganizationID    func(childComplexity int) int
+		Status            func(childComplexity int) int
+		Version           func(childComplexity int) int
+	}
+
+	EligibilityCount struct {
+		Count       func(childComplexity int) int
+		Eligibility func(childComplexity int) int
+	}
+
 	LoginPayload struct {
 		Status func(childComplexity int) int
 		User   func(childComplexity int) int
@@ -74,21 +103,58 @@ type ComplexityRoot struct {
 		Secret     func(childComplexity int) int
 	}
 
+	MarketplaceImportRun struct {
+		AccessMode      func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		ErrorCode       func(childComplexity int) int
+		ErrorMessage    func(childComplexity int) int
+		ID              func(childComplexity int) int
+		OrganizationID  func(childComplexity int) int
+		RecordsAccepted func(childComplexity int) int
+		RecordsRejected func(childComplexity int) int
+		RecordsSeen     func(childComplexity int) int
+		Source          func(childComplexity int) int
+		SourceURL       func(childComplexity int) int
+		Status          func(childComplexity int) int
+	}
+
+	MarketplaceReview struct {
+		CreatedAt          func(childComplexity int) int
+		DatasetEligibility func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Language           func(childComplexity int) int
+		ModerationStatus   func(childComplexity int) int
+		OrganizationID     func(childComplexity int) int
+		ProductID          func(childComplexity int) int
+		Rating             func(childComplexity int) int
+		ReviewDate         func(childComplexity int) int
+		ReviewText         func(childComplexity int) int
+		Source             func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AcceptInvitation                    func(childComplexity int, token string) int
+		BuildDatasetDraft                   func(childComplexity int, input model.BuildDatasetDraftInput) int
 		ConfirmMfa                          func(childComplexity int, input model.ConfirmMFAInput) int
 		CreateOrganization                  func(childComplexity int, input model.CreateOrganizationInput) int
+		CreateProduct                       func(childComplexity int, input model.CreateProductInput) int
+		CreateUserExperience                func(childComplexity int, input model.CreateUserExperienceInput) int
+		DeleteUserExperience                func(childComplexity int, input model.DeleteUserExperienceInput) int
 		GrantConsent                        func(childComplexity int, input model.GrantConsentInput) int
 		InviteMember                        func(childComplexity int, input model.InviteMemberInput) int
 		Login                               func(childComplexity int, input model.LoginInput) int
 		Logout                              func(childComplexity int) int
+		ModerateUserExperience              func(childComplexity int, input model.ModerateUserExperienceInput) int
 		PublishCompliancePolicyVersion      func(childComplexity int, input model.PublishCompliancePolicyInput) int
 		RefreshToken                        func(childComplexity int) int
 		Register                            func(childComplexity int, input model.RegisterInput) int
 		RemoveMember                        func(childComplexity int, input model.RemoveMemberInput) int
+		StartMarketplaceFileImport          func(childComplexity int, input model.StartMarketplaceFileImportInput) int
+		StartMarketplaceURLImport           func(childComplexity int, input model.StartMarketplaceURLImportInput) int
 		SwitchWorkspace                     func(childComplexity int, organizationID string) int
 		UpdateMemberRole                    func(childComplexity int, input model.UpdateMemberRoleInput) int
 		UpdateOrganizationComplianceProfile func(childComplexity int, input model.UpdateComplianceProfileInput) int
+		UpdateUserExperience                func(childComplexity int, input model.UpdateUserExperienceInput) int
 		VerifyDevice                        func(childComplexity int, input model.VerifyDeviceInput) int
 		VerifyEmail                         func(childComplexity int, token string) int
 		VerifyLoginMfa                      func(childComplexity int, input model.VerifyLoginMFAInput) int
@@ -111,19 +177,51 @@ type ComplexityRoot struct {
 		UserID    func(childComplexity int) int
 	}
 
+	Product struct {
+		Brand          func(childComplexity int) int
+		Category       func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		Description    func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Name           func(childComplexity int) int
+		OrganizationID func(childComplexity int) int
+		Sku            func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
+	}
+
+	ProductFieldMeta struct {
+		Missing        func(childComplexity int) int
+		Source         func(childComplexity int) int
+		SourceRecordID func(childComplexity int) int
+		Value          func(childComplexity int) int
+	}
+
 	Query struct {
-		ActiveCompliancePolicy   func(childComplexity int, organizationID string) int
-		CompliancePolicyVersions func(childComplexity int, organizationID string, limit *int) int
-		Health                   func(childComplexity int) int
-		Me                       func(childComplexity int) int
-		MyConsents               func(childComplexity int) int
-		MyWorkspaces             func(childComplexity int) int
-		Organization             func(childComplexity int, organizationID string) int
-		OrganizationMembers      func(childComplexity int, organizationID string) int
+		ActiveCompliancePolicy    func(childComplexity int, organizationID string) int
+		CompliancePolicyVersions  func(childComplexity int, organizationID string, limit *int) int
+		DatasetEligibilitySummary func(childComplexity int, organizationID string) int
+		DatasetVersions           func(childComplexity int, organizationID string, limit *int) int
+		Health                    func(childComplexity int) int
+		MarketplaceImportRuns     func(childComplexity int, organizationID string, limit *int) int
+		MarketplaceImportStatus   func(childComplexity int, organizationID string, importRunID string) int
+		Me                        func(childComplexity int) int
+		MyConsents                func(childComplexity int) int
+		MyWorkspaces              func(childComplexity int) int
+		Organization              func(childComplexity int, organizationID string) int
+		OrganizationMembers       func(childComplexity int, organizationID string) int
+		Product                   func(childComplexity int, organizationID string, productID string) int
+		ProductMarketplaceReviews func(childComplexity int, organizationID string, productID string) int
+		Products                  func(childComplexity int, organizationID string, limit *int) int
+		UserExperiences           func(childComplexity int, organizationID string, productID string) int
 	}
 
 	RegisterPayload struct {
 		Message func(childComplexity int) int
+	}
+
+	SourceCount struct {
+		Count      func(childComplexity int) int
+		RecordType func(childComplexity int) int
 	}
 
 	User struct {
@@ -132,6 +230,23 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		MfaEnabled    func(childComplexity int) int
 		PersonalOrgID func(childComplexity int) int
+	}
+
+	UserExperience struct {
+		CreatedAt          func(childComplexity int) int
+		DatasetEligibility func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		IssueType          func(childComplexity int) int
+		ModerationStatus   func(childComplexity int) int
+		Narrative          func(childComplexity int) int
+		OrganizationID     func(childComplexity int) int
+		ProductID          func(childComplexity int) int
+		QualityStatus      func(childComplexity int) int
+		Rating             func(childComplexity int) int
+		SatisfactionLevel  func(childComplexity int) int
+		UpdatedAt          func(childComplexity int) int
+		UsageStatus        func(childComplexity int) int
+		UserID             func(childComplexity int) int
 	}
 
 	Workspace struct {
@@ -161,6 +276,14 @@ type MutationResolver interface {
 	PublishCompliancePolicyVersion(ctx context.Context, input model.PublishCompliancePolicyInput) (*model.CompliancePolicy, error)
 	GrantConsent(ctx context.Context, input model.GrantConsentInput) (*model.Consent, error)
 	WithdrawConsent(ctx context.Context, input model.WithdrawConsentInput) (bool, error)
+	CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.CreateProductPayload, error)
+	CreateUserExperience(ctx context.Context, input model.CreateUserExperienceInput) (*model.UserExperience, error)
+	UpdateUserExperience(ctx context.Context, input model.UpdateUserExperienceInput) (*model.UserExperience, error)
+	DeleteUserExperience(ctx context.Context, input model.DeleteUserExperienceInput) (bool, error)
+	ModerateUserExperience(ctx context.Context, input model.ModerateUserExperienceInput) (*model.UserExperience, error)
+	StartMarketplaceURLImport(ctx context.Context, input model.StartMarketplaceURLImportInput) (*model.MarketplaceImportRun, error)
+	StartMarketplaceFileImport(ctx context.Context, input model.StartMarketplaceFileImportInput) (*model.MarketplaceImportRun, error)
+	BuildDatasetDraft(ctx context.Context, input model.BuildDatasetDraftInput) (*model.DatasetVersion, error)
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (string, error)
@@ -171,6 +294,14 @@ type QueryResolver interface {
 	ActiveCompliancePolicy(ctx context.Context, organizationID string) (*model.CompliancePolicy, error)
 	CompliancePolicyVersions(ctx context.Context, organizationID string, limit *int) ([]*model.CompliancePolicy, error)
 	MyConsents(ctx context.Context) ([]*model.Consent, error)
+	Products(ctx context.Context, organizationID string, limit *int) ([]*model.Product, error)
+	Product(ctx context.Context, organizationID string, productID string) (*model.Product, error)
+	UserExperiences(ctx context.Context, organizationID string, productID string) ([]*model.UserExperience, error)
+	MarketplaceImportRuns(ctx context.Context, organizationID string, limit *int) ([]*model.MarketplaceImportRun, error)
+	DatasetVersions(ctx context.Context, organizationID string, limit *int) ([]*model.DatasetVersion, error)
+	ProductMarketplaceReviews(ctx context.Context, organizationID string, productID string) ([]*model.MarketplaceReview, error)
+	MarketplaceImportStatus(ctx context.Context, organizationID string, importRunID string) (*model.MarketplaceImportRun, error)
+	DatasetEligibilitySummary(ctx context.Context, organizationID string) (*model.DatasetEligibilitySummary, error)
 }
 
 type executableSchema struct {
@@ -260,6 +391,112 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Consent.WithdrawnAt(childComplexity), true
 
+	case "CreateProductPayload.deduplicated":
+		if e.complexity.CreateProductPayload.Deduplicated == nil {
+			break
+		}
+
+		return e.complexity.CreateProductPayload.Deduplicated(childComplexity), true
+	case "CreateProductPayload.product":
+		if e.complexity.CreateProductPayload.Product == nil {
+			break
+		}
+
+		return e.complexity.CreateProductPayload.Product(childComplexity), true
+
+	case "DatasetEligibilitySummary.eligibilityDistribution":
+		if e.complexity.DatasetEligibilitySummary.EligibilityDistribution == nil {
+			break
+		}
+
+		return e.complexity.DatasetEligibilitySummary.EligibilityDistribution(childComplexity), true
+	case "DatasetEligibilitySummary.marketplaceCount":
+		if e.complexity.DatasetEligibilitySummary.MarketplaceCount == nil {
+			break
+		}
+
+		return e.complexity.DatasetEligibilitySummary.MarketplaceCount(childComplexity), true
+	case "DatasetEligibilitySummary.organizationId":
+		if e.complexity.DatasetEligibilitySummary.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.DatasetEligibilitySummary.OrganizationID(childComplexity), true
+	case "DatasetEligibilitySummary.sourceDistribution":
+		if e.complexity.DatasetEligibilitySummary.SourceDistribution == nil {
+			break
+		}
+
+		return e.complexity.DatasetEligibilitySummary.SourceDistribution(childComplexity), true
+	case "DatasetEligibilitySummary.totalRecords":
+		if e.complexity.DatasetEligibilitySummary.TotalRecords == nil {
+			break
+		}
+
+		return e.complexity.DatasetEligibilitySummary.TotalRecords(childComplexity), true
+	case "DatasetEligibilitySummary.ugcCount":
+		if e.complexity.DatasetEligibilitySummary.UgcCount == nil {
+			break
+		}
+
+		return e.complexity.DatasetEligibilitySummary.UgcCount(childComplexity), true
+
+	case "DatasetVersion.contentHash":
+		if e.complexity.DatasetVersion.ContentHash == nil {
+			break
+		}
+
+		return e.complexity.DatasetVersion.ContentHash(childComplexity), true
+	case "DatasetVersion.createdAt":
+		if e.complexity.DatasetVersion.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.DatasetVersion.CreatedAt(childComplexity), true
+	case "DatasetVersion.id":
+		if e.complexity.DatasetVersion.ID == nil {
+			break
+		}
+
+		return e.complexity.DatasetVersion.ID(childComplexity), true
+	case "DatasetVersion.normalizerVersion":
+		if e.complexity.DatasetVersion.NormalizerVersion == nil {
+			break
+		}
+
+		return e.complexity.DatasetVersion.NormalizerVersion(childComplexity), true
+	case "DatasetVersion.organizationId":
+		if e.complexity.DatasetVersion.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.DatasetVersion.OrganizationID(childComplexity), true
+	case "DatasetVersion.status":
+		if e.complexity.DatasetVersion.Status == nil {
+			break
+		}
+
+		return e.complexity.DatasetVersion.Status(childComplexity), true
+	case "DatasetVersion.version":
+		if e.complexity.DatasetVersion.Version == nil {
+			break
+		}
+
+		return e.complexity.DatasetVersion.Version(childComplexity), true
+
+	case "EligibilityCount.count":
+		if e.complexity.EligibilityCount.Count == nil {
+			break
+		}
+
+		return e.complexity.EligibilityCount.Count(childComplexity), true
+	case "EligibilityCount.eligibility":
+		if e.complexity.EligibilityCount.Eligibility == nil {
+			break
+		}
+
+		return e.complexity.EligibilityCount.Eligibility(childComplexity), true
+
 	case "LoginPayload.status":
 		if e.complexity.LoginPayload.Status == nil {
 			break
@@ -286,6 +523,146 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.MFASetupPayload.Secret(childComplexity), true
 
+	case "MarketplaceImportRun.accessMode":
+		if e.complexity.MarketplaceImportRun.AccessMode == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.AccessMode(childComplexity), true
+	case "MarketplaceImportRun.createdAt":
+		if e.complexity.MarketplaceImportRun.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.CreatedAt(childComplexity), true
+	case "MarketplaceImportRun.errorCode":
+		if e.complexity.MarketplaceImportRun.ErrorCode == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.ErrorCode(childComplexity), true
+	case "MarketplaceImportRun.errorMessage":
+		if e.complexity.MarketplaceImportRun.ErrorMessage == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.ErrorMessage(childComplexity), true
+	case "MarketplaceImportRun.id":
+		if e.complexity.MarketplaceImportRun.ID == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.ID(childComplexity), true
+	case "MarketplaceImportRun.organizationId":
+		if e.complexity.MarketplaceImportRun.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.OrganizationID(childComplexity), true
+	case "MarketplaceImportRun.recordsAccepted":
+		if e.complexity.MarketplaceImportRun.RecordsAccepted == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.RecordsAccepted(childComplexity), true
+	case "MarketplaceImportRun.recordsRejected":
+		if e.complexity.MarketplaceImportRun.RecordsRejected == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.RecordsRejected(childComplexity), true
+	case "MarketplaceImportRun.recordsSeen":
+		if e.complexity.MarketplaceImportRun.RecordsSeen == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.RecordsSeen(childComplexity), true
+	case "MarketplaceImportRun.source":
+		if e.complexity.MarketplaceImportRun.Source == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.Source(childComplexity), true
+	case "MarketplaceImportRun.sourceUrl":
+		if e.complexity.MarketplaceImportRun.SourceURL == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.SourceURL(childComplexity), true
+	case "MarketplaceImportRun.status":
+		if e.complexity.MarketplaceImportRun.Status == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceImportRun.Status(childComplexity), true
+
+	case "MarketplaceReview.createdAt":
+		if e.complexity.MarketplaceReview.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.CreatedAt(childComplexity), true
+	case "MarketplaceReview.datasetEligibility":
+		if e.complexity.MarketplaceReview.DatasetEligibility == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.DatasetEligibility(childComplexity), true
+	case "MarketplaceReview.id":
+		if e.complexity.MarketplaceReview.ID == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.ID(childComplexity), true
+	case "MarketplaceReview.language":
+		if e.complexity.MarketplaceReview.Language == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.Language(childComplexity), true
+	case "MarketplaceReview.moderationStatus":
+		if e.complexity.MarketplaceReview.ModerationStatus == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.ModerationStatus(childComplexity), true
+	case "MarketplaceReview.organizationId":
+		if e.complexity.MarketplaceReview.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.OrganizationID(childComplexity), true
+	case "MarketplaceReview.productId":
+		if e.complexity.MarketplaceReview.ProductID == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.ProductID(childComplexity), true
+	case "MarketplaceReview.rating":
+		if e.complexity.MarketplaceReview.Rating == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.Rating(childComplexity), true
+	case "MarketplaceReview.reviewDate":
+		if e.complexity.MarketplaceReview.ReviewDate == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.ReviewDate(childComplexity), true
+	case "MarketplaceReview.reviewText":
+		if e.complexity.MarketplaceReview.ReviewText == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.ReviewText(childComplexity), true
+	case "MarketplaceReview.source":
+		if e.complexity.MarketplaceReview.Source == nil {
+			break
+		}
+
+		return e.complexity.MarketplaceReview.Source(childComplexity), true
+
 	case "Mutation.acceptInvitation":
 		if e.complexity.Mutation.AcceptInvitation == nil {
 			break
@@ -297,6 +674,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.AcceptInvitation(childComplexity, args["token"].(string)), true
+	case "Mutation.buildDatasetDraft":
+		if e.complexity.Mutation.BuildDatasetDraft == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_buildDatasetDraft_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BuildDatasetDraft(childComplexity, args["input"].(model.BuildDatasetDraftInput)), true
 	case "Mutation.confirmMFA":
 		if e.complexity.Mutation.ConfirmMfa == nil {
 			break
@@ -319,6 +707,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateOrganization(childComplexity, args["input"].(model.CreateOrganizationInput)), true
+	case "Mutation.createProduct":
+		if e.complexity.Mutation.CreateProduct == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createProduct_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateProduct(childComplexity, args["input"].(model.CreateProductInput)), true
+	case "Mutation.createUserExperience":
+		if e.complexity.Mutation.CreateUserExperience == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUserExperience_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUserExperience(childComplexity, args["input"].(model.CreateUserExperienceInput)), true
+	case "Mutation.deleteUserExperience":
+		if e.complexity.Mutation.DeleteUserExperience == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteUserExperience_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteUserExperience(childComplexity, args["input"].(model.DeleteUserExperienceInput)), true
 	case "Mutation.grantConsent":
 		if e.complexity.Mutation.GrantConsent == nil {
 			break
@@ -358,6 +779,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Logout(childComplexity), true
+	case "Mutation.moderateUserExperience":
+		if e.complexity.Mutation.ModerateUserExperience == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_moderateUserExperience_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ModerateUserExperience(childComplexity, args["input"].(model.ModerateUserExperienceInput)), true
 	case "Mutation.publishCompliancePolicyVersion":
 		if e.complexity.Mutation.PublishCompliancePolicyVersion == nil {
 			break
@@ -397,6 +829,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.RemoveMember(childComplexity, args["input"].(model.RemoveMemberInput)), true
+	case "Mutation.startMarketplaceFileImport":
+		if e.complexity.Mutation.StartMarketplaceFileImport == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_startMarketplaceFileImport_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.StartMarketplaceFileImport(childComplexity, args["input"].(model.StartMarketplaceFileImportInput)), true
+	case "Mutation.startMarketplaceURLImport":
+		if e.complexity.Mutation.StartMarketplaceURLImport == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_startMarketplaceURLImport_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.StartMarketplaceURLImport(childComplexity, args["input"].(model.StartMarketplaceURLImportInput)), true
 	case "Mutation.switchWorkspace":
 		if e.complexity.Mutation.SwitchWorkspace == nil {
 			break
@@ -430,6 +884,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateOrganizationComplianceProfile(childComplexity, args["input"].(model.UpdateComplianceProfileInput)), true
+	case "Mutation.updateUserExperience":
+		if e.complexity.Mutation.UpdateUserExperience == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserExperience_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserExperience(childComplexity, args["input"].(model.UpdateUserExperienceInput)), true
 	case "Mutation.verifyDevice":
 		if e.complexity.Mutation.VerifyDevice == nil {
 			break
@@ -537,6 +1002,86 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.OrganizationMember.UserID(childComplexity), true
 
+	case "Product.brand":
+		if e.complexity.Product.Brand == nil {
+			break
+		}
+
+		return e.complexity.Product.Brand(childComplexity), true
+	case "Product.category":
+		if e.complexity.Product.Category == nil {
+			break
+		}
+
+		return e.complexity.Product.Category(childComplexity), true
+	case "Product.createdAt":
+		if e.complexity.Product.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Product.CreatedAt(childComplexity), true
+	case "Product.description":
+		if e.complexity.Product.Description == nil {
+			break
+		}
+
+		return e.complexity.Product.Description(childComplexity), true
+	case "Product.id":
+		if e.complexity.Product.ID == nil {
+			break
+		}
+
+		return e.complexity.Product.ID(childComplexity), true
+	case "Product.name":
+		if e.complexity.Product.Name == nil {
+			break
+		}
+
+		return e.complexity.Product.Name(childComplexity), true
+	case "Product.organizationId":
+		if e.complexity.Product.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.Product.OrganizationID(childComplexity), true
+	case "Product.sku":
+		if e.complexity.Product.Sku == nil {
+			break
+		}
+
+		return e.complexity.Product.Sku(childComplexity), true
+	case "Product.updatedAt":
+		if e.complexity.Product.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Product.UpdatedAt(childComplexity), true
+
+	case "ProductFieldMeta.missing":
+		if e.complexity.ProductFieldMeta.Missing == nil {
+			break
+		}
+
+		return e.complexity.ProductFieldMeta.Missing(childComplexity), true
+	case "ProductFieldMeta.source":
+		if e.complexity.ProductFieldMeta.Source == nil {
+			break
+		}
+
+		return e.complexity.ProductFieldMeta.Source(childComplexity), true
+	case "ProductFieldMeta.sourceRecordId":
+		if e.complexity.ProductFieldMeta.SourceRecordID == nil {
+			break
+		}
+
+		return e.complexity.ProductFieldMeta.SourceRecordID(childComplexity), true
+	case "ProductFieldMeta.value":
+		if e.complexity.ProductFieldMeta.Value == nil {
+			break
+		}
+
+		return e.complexity.ProductFieldMeta.Value(childComplexity), true
+
 	case "Query.activeCompliancePolicy":
 		if e.complexity.Query.ActiveCompliancePolicy == nil {
 			break
@@ -559,12 +1104,56 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.CompliancePolicyVersions(childComplexity, args["organizationId"].(string), args["limit"].(*int)), true
+	case "Query.datasetEligibilitySummary":
+		if e.complexity.Query.DatasetEligibilitySummary == nil {
+			break
+		}
+
+		args, err := ec.field_Query_datasetEligibilitySummary_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DatasetEligibilitySummary(childComplexity, args["organizationId"].(string)), true
+	case "Query.datasetVersions":
+		if e.complexity.Query.DatasetVersions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_datasetVersions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DatasetVersions(childComplexity, args["organizationId"].(string), args["limit"].(*int)), true
 	case "Query.health":
 		if e.complexity.Query.Health == nil {
 			break
 		}
 
 		return e.complexity.Query.Health(childComplexity), true
+	case "Query.marketplaceImportRuns":
+		if e.complexity.Query.MarketplaceImportRuns == nil {
+			break
+		}
+
+		args, err := ec.field_Query_marketplaceImportRuns_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MarketplaceImportRuns(childComplexity, args["organizationId"].(string), args["limit"].(*int)), true
+	case "Query.marketplaceImportStatus":
+		if e.complexity.Query.MarketplaceImportStatus == nil {
+			break
+		}
+
+		args, err := ec.field_Query_marketplaceImportStatus_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MarketplaceImportStatus(childComplexity, args["organizationId"].(string), args["importRunId"].(string)), true
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
 			break
@@ -605,6 +1194,50 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.OrganizationMembers(childComplexity, args["organizationId"].(string)), true
+	case "Query.product":
+		if e.complexity.Query.Product == nil {
+			break
+		}
+
+		args, err := ec.field_Query_product_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Product(childComplexity, args["organizationId"].(string), args["productId"].(string)), true
+	case "Query.productMarketplaceReviews":
+		if e.complexity.Query.ProductMarketplaceReviews == nil {
+			break
+		}
+
+		args, err := ec.field_Query_productMarketplaceReviews_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ProductMarketplaceReviews(childComplexity, args["organizationId"].(string), args["productId"].(string)), true
+	case "Query.products":
+		if e.complexity.Query.Products == nil {
+			break
+		}
+
+		args, err := ec.field_Query_products_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Products(childComplexity, args["organizationId"].(string), args["limit"].(*int)), true
+	case "Query.userExperiences":
+		if e.complexity.Query.UserExperiences == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userExperiences_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserExperiences(childComplexity, args["organizationId"].(string), args["productId"].(string)), true
 
 	case "RegisterPayload.message":
 		if e.complexity.RegisterPayload.Message == nil {
@@ -612,6 +1245,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.RegisterPayload.Message(childComplexity), true
+
+	case "SourceCount.count":
+		if e.complexity.SourceCount.Count == nil {
+			break
+		}
+
+		return e.complexity.SourceCount.Count(childComplexity), true
+	case "SourceCount.recordType":
+		if e.complexity.SourceCount.RecordType == nil {
+			break
+		}
+
+		return e.complexity.SourceCount.RecordType(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -643,6 +1289,91 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.PersonalOrgID(childComplexity), true
+
+	case "UserExperience.createdAt":
+		if e.complexity.UserExperience.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.CreatedAt(childComplexity), true
+	case "UserExperience.datasetEligibility":
+		if e.complexity.UserExperience.DatasetEligibility == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.DatasetEligibility(childComplexity), true
+	case "UserExperience.id":
+		if e.complexity.UserExperience.ID == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.ID(childComplexity), true
+	case "UserExperience.issueType":
+		if e.complexity.UserExperience.IssueType == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.IssueType(childComplexity), true
+	case "UserExperience.moderationStatus":
+		if e.complexity.UserExperience.ModerationStatus == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.ModerationStatus(childComplexity), true
+	case "UserExperience.narrative":
+		if e.complexity.UserExperience.Narrative == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.Narrative(childComplexity), true
+	case "UserExperience.organizationId":
+		if e.complexity.UserExperience.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.OrganizationID(childComplexity), true
+	case "UserExperience.productId":
+		if e.complexity.UserExperience.ProductID == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.ProductID(childComplexity), true
+	case "UserExperience.qualityStatus":
+		if e.complexity.UserExperience.QualityStatus == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.QualityStatus(childComplexity), true
+	case "UserExperience.rating":
+		if e.complexity.UserExperience.Rating == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.Rating(childComplexity), true
+	case "UserExperience.satisfactionLevel":
+		if e.complexity.UserExperience.SatisfactionLevel == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.SatisfactionLevel(childComplexity), true
+	case "UserExperience.updatedAt":
+		if e.complexity.UserExperience.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.UpdatedAt(childComplexity), true
+	case "UserExperience.usageStatus":
+		if e.complexity.UserExperience.UsageStatus == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.UsageStatus(childComplexity), true
+	case "UserExperience.userId":
+		if e.complexity.UserExperience.UserID == nil {
+			break
+		}
+
+		return e.complexity.UserExperience.UserID(childComplexity), true
 
 	case "Workspace.name":
 		if e.complexity.Workspace.Name == nil {
@@ -677,16 +1408,24 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputBuildDatasetDraftInput,
 		ec.unmarshalInputConfirmMFAInput,
 		ec.unmarshalInputCreateOrganizationInput,
+		ec.unmarshalInputCreateProductInput,
+		ec.unmarshalInputCreateUserExperienceInput,
+		ec.unmarshalInputDeleteUserExperienceInput,
 		ec.unmarshalInputGrantConsentInput,
 		ec.unmarshalInputInviteMemberInput,
 		ec.unmarshalInputLoginInput,
+		ec.unmarshalInputModerateUserExperienceInput,
 		ec.unmarshalInputPublishCompliancePolicyInput,
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputRemoveMemberInput,
+		ec.unmarshalInputStartMarketplaceFileImportInput,
+		ec.unmarshalInputStartMarketplaceURLImportInput,
 		ec.unmarshalInputUpdateComplianceProfileInput,
 		ec.unmarshalInputUpdateMemberRoleInput,
+		ec.unmarshalInputUpdateUserExperienceInput,
 		ec.unmarshalInputVerifyDeviceInput,
 		ec.unmarshalInputVerifyLoginMFAInput,
 		ec.unmarshalInputWithdrawConsentInput,
@@ -817,6 +1556,17 @@ func (ec *executionContext) field_Mutation_acceptInvitation_args(ctx context.Con
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_buildDatasetDraft_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNBuildDatasetDraftInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐBuildDatasetDraftInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_confirmMFA_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -832,6 +1582,39 @@ func (ec *executionContext) field_Mutation_createOrganization_args(ctx context.C
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateOrganizationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateOrganizationInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createProduct_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateProductInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateProductInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createUserExperience_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateUserExperienceInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteUserExperience_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNDeleteUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDeleteUserExperienceInput)
 	if err != nil {
 		return nil, err
 	}
@@ -872,6 +1655,17 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_moderateUserExperience_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNModerateUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐModerateUserExperienceInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_publishCompliancePolicyVersion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -905,6 +1699,28 @@ func (ec *executionContext) field_Mutation_removeMember_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_startMarketplaceFileImport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNStartMarketplaceFileImportInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐStartMarketplaceFileImportInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_startMarketplaceURLImport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNStartMarketplaceURLImportInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐStartMarketplaceURLImportInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_switchWorkspace_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -931,6 +1747,17 @@ func (ec *executionContext) field_Mutation_updateOrganizationComplianceProfile_a
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateComplianceProfileInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateComplianceProfileInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserExperience_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateUserExperienceInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1020,6 +1847,65 @@ func (ec *executionContext) field_Query_compliancePolicyVersions_args(ctx contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_datasetEligibilitySummary_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_datasetVersions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_marketplaceImportRuns_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_marketplaceImportStatus_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "importRunId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["importRunId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_organizationMembers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1039,6 +1925,70 @@ func (ec *executionContext) field_Query_organization_args(ctx context.Context, r
 		return nil, err
 	}
 	args["organizationId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_productMarketplaceReviews_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "productId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["productId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_product_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "productId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["productId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_products_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_userExperiences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "productId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["productId"] = arg1
 	return args, nil
 }
 
@@ -1413,6 +2363,531 @@ func (ec *executionContext) fieldContext_Consent_organizationId(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _CreateProductPayload_product(ctx context.Context, field graphql.CollectedField, obj *model.CreateProductPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_CreateProductPayload_product,
+		func(ctx context.Context) (any, error) {
+			return obj.Product, nil
+		},
+		nil,
+		ec.marshalNProduct2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProduct,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_CreateProductPayload_product(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreateProductPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Product_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_Product_organizationId(ctx, field)
+			case "name":
+				return ec.fieldContext_Product_name(ctx, field)
+			case "brand":
+				return ec.fieldContext_Product_brand(ctx, field)
+			case "category":
+				return ec.fieldContext_Product_category(ctx, field)
+			case "description":
+				return ec.fieldContext_Product_description(ctx, field)
+			case "sku":
+				return ec.fieldContext_Product_sku(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Product_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Product_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Product", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CreateProductPayload_deduplicated(ctx context.Context, field graphql.CollectedField, obj *model.CreateProductPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_CreateProductPayload_deduplicated,
+		func(ctx context.Context) (any, error) {
+			return obj.Deduplicated, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_CreateProductPayload_deduplicated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreateProductPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetEligibilitySummary_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.DatasetEligibilitySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetEligibilitySummary_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetEligibilitySummary_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetEligibilitySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetEligibilitySummary_totalRecords(ctx context.Context, field graphql.CollectedField, obj *model.DatasetEligibilitySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetEligibilitySummary_totalRecords,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalRecords, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetEligibilitySummary_totalRecords(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetEligibilitySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetEligibilitySummary_ugcCount(ctx context.Context, field graphql.CollectedField, obj *model.DatasetEligibilitySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetEligibilitySummary_ugcCount,
+		func(ctx context.Context) (any, error) {
+			return obj.UgcCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetEligibilitySummary_ugcCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetEligibilitySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetEligibilitySummary_marketplaceCount(ctx context.Context, field graphql.CollectedField, obj *model.DatasetEligibilitySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetEligibilitySummary_marketplaceCount,
+		func(ctx context.Context) (any, error) {
+			return obj.MarketplaceCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetEligibilitySummary_marketplaceCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetEligibilitySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetEligibilitySummary_eligibilityDistribution(ctx context.Context, field graphql.CollectedField, obj *model.DatasetEligibilitySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetEligibilitySummary_eligibilityDistribution,
+		func(ctx context.Context) (any, error) {
+			return obj.EligibilityDistribution, nil
+		},
+		nil,
+		ec.marshalNEligibilityCount2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEligibilityCountᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetEligibilitySummary_eligibilityDistribution(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetEligibilitySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "eligibility":
+				return ec.fieldContext_EligibilityCount_eligibility(ctx, field)
+			case "count":
+				return ec.fieldContext_EligibilityCount_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EligibilityCount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetEligibilitySummary_sourceDistribution(ctx context.Context, field graphql.CollectedField, obj *model.DatasetEligibilitySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetEligibilitySummary_sourceDistribution,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceDistribution, nil
+		},
+		nil,
+		ec.marshalNSourceCount2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSourceCountᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetEligibilitySummary_sourceDistribution(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetEligibilitySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "recordType":
+				return ec.fieldContext_SourceCount_recordType(ctx, field)
+			case "count":
+				return ec.fieldContext_SourceCount_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SourceCount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetVersion_id(ctx context.Context, field graphql.CollectedField, obj *model.DatasetVersion) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetVersion_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetVersion_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetVersion_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.DatasetVersion) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetVersion_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetVersion_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetVersion_version(ctx context.Context, field graphql.CollectedField, obj *model.DatasetVersion) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetVersion_version,
+		func(ctx context.Context) (any, error) {
+			return obj.Version, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetVersion_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetVersion_status(ctx context.Context, field graphql.CollectedField, obj *model.DatasetVersion) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetVersion_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNDatasetVersionStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersionStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetVersion_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DatasetVersionStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetVersion_normalizerVersion(ctx context.Context, field graphql.CollectedField, obj *model.DatasetVersion) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetVersion_normalizerVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.NormalizerVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetVersion_normalizerVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetVersion_contentHash(ctx context.Context, field graphql.CollectedField, obj *model.DatasetVersion) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetVersion_contentHash,
+		func(ctx context.Context) (any, error) {
+			return obj.ContentHash, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetVersion_contentHash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DatasetVersion_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.DatasetVersion) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DatasetVersion_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DatasetVersion_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DatasetVersion",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EligibilityCount_eligibility(ctx context.Context, field graphql.CollectedField, obj *model.EligibilityCount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EligibilityCount_eligibility,
+		func(ctx context.Context) (any, error) {
+			return obj.Eligibility, nil
+		},
+		nil,
+		ec.marshalNDatasetEligibility2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibility,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EligibilityCount_eligibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EligibilityCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DatasetEligibility does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EligibilityCount_count(ctx context.Context, field graphql.CollectedField, obj *model.EligibilityCount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EligibilityCount_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EligibilityCount_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EligibilityCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LoginPayload_status(ctx context.Context, field graphql.CollectedField, obj *model.LoginPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1531,6 +3006,673 @@ func (ec *executionContext) _MFASetupPayload_otpauthUrl(ctx context.Context, fie
 func (ec *executionContext) fieldContext_MFASetupPayload_otpauthUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MFASetupPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_id(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_source(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_source,
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		ec.marshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MarketplaceSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_sourceUrl(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_sourceUrl,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceURL, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_sourceUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_accessMode(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_accessMode,
+		func(ctx context.Context) (any, error) {
+			return obj.AccessMode, nil
+		},
+		nil,
+		ec.marshalNAccessMode2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccessMode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_accessMode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AccessMode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_status(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNMarketplaceImportStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MarketplaceImportStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_recordsSeen(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_recordsSeen,
+		func(ctx context.Context) (any, error) {
+			return obj.RecordsSeen, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_recordsSeen(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_recordsAccepted(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_recordsAccepted,
+		func(ctx context.Context) (any, error) {
+			return obj.RecordsAccepted, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_recordsAccepted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_recordsRejected(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_recordsRejected,
+		func(ctx context.Context) (any, error) {
+			return obj.RecordsRejected, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_recordsRejected(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_errorCode(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_errorCode,
+		func(ctx context.Context) (any, error) {
+			return obj.ErrorCode, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_errorCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_errorMessage(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_errorMessage,
+		func(ctx context.Context) (any, error) {
+			return obj.ErrorMessage, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_errorMessage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceImportRun_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceImportRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceImportRun_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceImportRun_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceImportRun",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_id(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_productId(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_productId,
+		func(ctx context.Context) (any, error) {
+			return obj.ProductID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_productId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_source(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_source,
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		ec.marshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MarketplaceSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_rating(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_rating,
+		func(ctx context.Context) (any, error) {
+			return obj.Rating, nil
+		},
+		nil,
+		ec.marshalOFloat2ᚖfloat64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_rating(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_reviewText(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_reviewText,
+		func(ctx context.Context) (any, error) {
+			return obj.ReviewText, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_reviewText(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_reviewDate(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_reviewDate,
+		func(ctx context.Context) (any, error) {
+			return obj.ReviewDate, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_reviewDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_language(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_language,
+		func(ctx context.Context) (any, error) {
+			return obj.Language, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_language(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_moderationStatus(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_moderationStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.ModerationStatus, nil
+		},
+		nil,
+		ec.marshalNModerationStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐModerationStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_moderationStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ModerationStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_datasetEligibility(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_datasetEligibility,
+		func(ctx context.Context) (any, error) {
+			return obj.DatasetEligibility, nil
+		},
+		nil,
+		ec.marshalNDatasetEligibility2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibility,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_datasetEligibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DatasetEligibility does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MarketplaceReview_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.MarketplaceReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MarketplaceReview_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MarketplaceReview_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MarketplaceReview",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2345,6 +4487,498 @@ func (ec *executionContext) fieldContext_Mutation_withdrawConsent(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createProduct,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateProduct(ctx, fc.Args["input"].(model.CreateProductInput))
+		},
+		nil,
+		ec.marshalNCreateProductPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateProductPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createProduct(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "product":
+				return ec.fieldContext_CreateProductPayload_product(ctx, field)
+			case "deduplicated":
+				return ec.fieldContext_CreateProductPayload_deduplicated(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CreateProductPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createProduct_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createUserExperience(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createUserExperience,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateUserExperience(ctx, fc.Args["input"].(model.CreateUserExperienceInput))
+		},
+		nil,
+		ec.marshalNUserExperience2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperience,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createUserExperience(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserExperience_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_UserExperience_organizationId(ctx, field)
+			case "productId":
+				return ec.fieldContext_UserExperience_productId(ctx, field)
+			case "userId":
+				return ec.fieldContext_UserExperience_userId(ctx, field)
+			case "usageStatus":
+				return ec.fieldContext_UserExperience_usageStatus(ctx, field)
+			case "satisfactionLevel":
+				return ec.fieldContext_UserExperience_satisfactionLevel(ctx, field)
+			case "rating":
+				return ec.fieldContext_UserExperience_rating(ctx, field)
+			case "issueType":
+				return ec.fieldContext_UserExperience_issueType(ctx, field)
+			case "narrative":
+				return ec.fieldContext_UserExperience_narrative(ctx, field)
+			case "moderationStatus":
+				return ec.fieldContext_UserExperience_moderationStatus(ctx, field)
+			case "qualityStatus":
+				return ec.fieldContext_UserExperience_qualityStatus(ctx, field)
+			case "datasetEligibility":
+				return ec.fieldContext_UserExperience_datasetEligibility(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserExperience_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UserExperience_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserExperience", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createUserExperience_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserExperience(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateUserExperience,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateUserExperience(ctx, fc.Args["input"].(model.UpdateUserExperienceInput))
+		},
+		nil,
+		ec.marshalNUserExperience2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperience,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserExperience(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserExperience_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_UserExperience_organizationId(ctx, field)
+			case "productId":
+				return ec.fieldContext_UserExperience_productId(ctx, field)
+			case "userId":
+				return ec.fieldContext_UserExperience_userId(ctx, field)
+			case "usageStatus":
+				return ec.fieldContext_UserExperience_usageStatus(ctx, field)
+			case "satisfactionLevel":
+				return ec.fieldContext_UserExperience_satisfactionLevel(ctx, field)
+			case "rating":
+				return ec.fieldContext_UserExperience_rating(ctx, field)
+			case "issueType":
+				return ec.fieldContext_UserExperience_issueType(ctx, field)
+			case "narrative":
+				return ec.fieldContext_UserExperience_narrative(ctx, field)
+			case "moderationStatus":
+				return ec.fieldContext_UserExperience_moderationStatus(ctx, field)
+			case "qualityStatus":
+				return ec.fieldContext_UserExperience_qualityStatus(ctx, field)
+			case "datasetEligibility":
+				return ec.fieldContext_UserExperience_datasetEligibility(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserExperience_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UserExperience_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserExperience", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserExperience_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteUserExperience(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteUserExperience,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteUserExperience(ctx, fc.Args["input"].(model.DeleteUserExperienceInput))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteUserExperience(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteUserExperience_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_moderateUserExperience(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_moderateUserExperience,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ModerateUserExperience(ctx, fc.Args["input"].(model.ModerateUserExperienceInput))
+		},
+		nil,
+		ec.marshalNUserExperience2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperience,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_moderateUserExperience(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserExperience_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_UserExperience_organizationId(ctx, field)
+			case "productId":
+				return ec.fieldContext_UserExperience_productId(ctx, field)
+			case "userId":
+				return ec.fieldContext_UserExperience_userId(ctx, field)
+			case "usageStatus":
+				return ec.fieldContext_UserExperience_usageStatus(ctx, field)
+			case "satisfactionLevel":
+				return ec.fieldContext_UserExperience_satisfactionLevel(ctx, field)
+			case "rating":
+				return ec.fieldContext_UserExperience_rating(ctx, field)
+			case "issueType":
+				return ec.fieldContext_UserExperience_issueType(ctx, field)
+			case "narrative":
+				return ec.fieldContext_UserExperience_narrative(ctx, field)
+			case "moderationStatus":
+				return ec.fieldContext_UserExperience_moderationStatus(ctx, field)
+			case "qualityStatus":
+				return ec.fieldContext_UserExperience_qualityStatus(ctx, field)
+			case "datasetEligibility":
+				return ec.fieldContext_UserExperience_datasetEligibility(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserExperience_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UserExperience_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserExperience", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_moderateUserExperience_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_startMarketplaceURLImport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_startMarketplaceURLImport,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().StartMarketplaceURLImport(ctx, fc.Args["input"].(model.StartMarketplaceURLImportInput))
+		},
+		nil,
+		ec.marshalNMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_startMarketplaceURLImport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MarketplaceImportRun_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_MarketplaceImportRun_organizationId(ctx, field)
+			case "source":
+				return ec.fieldContext_MarketplaceImportRun_source(ctx, field)
+			case "sourceUrl":
+				return ec.fieldContext_MarketplaceImportRun_sourceUrl(ctx, field)
+			case "accessMode":
+				return ec.fieldContext_MarketplaceImportRun_accessMode(ctx, field)
+			case "status":
+				return ec.fieldContext_MarketplaceImportRun_status(ctx, field)
+			case "recordsSeen":
+				return ec.fieldContext_MarketplaceImportRun_recordsSeen(ctx, field)
+			case "recordsAccepted":
+				return ec.fieldContext_MarketplaceImportRun_recordsAccepted(ctx, field)
+			case "recordsRejected":
+				return ec.fieldContext_MarketplaceImportRun_recordsRejected(ctx, field)
+			case "errorCode":
+				return ec.fieldContext_MarketplaceImportRun_errorCode(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_MarketplaceImportRun_errorMessage(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MarketplaceImportRun_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MarketplaceImportRun", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_startMarketplaceURLImport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_startMarketplaceFileImport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_startMarketplaceFileImport,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().StartMarketplaceFileImport(ctx, fc.Args["input"].(model.StartMarketplaceFileImportInput))
+		},
+		nil,
+		ec.marshalNMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_startMarketplaceFileImport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MarketplaceImportRun_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_MarketplaceImportRun_organizationId(ctx, field)
+			case "source":
+				return ec.fieldContext_MarketplaceImportRun_source(ctx, field)
+			case "sourceUrl":
+				return ec.fieldContext_MarketplaceImportRun_sourceUrl(ctx, field)
+			case "accessMode":
+				return ec.fieldContext_MarketplaceImportRun_accessMode(ctx, field)
+			case "status":
+				return ec.fieldContext_MarketplaceImportRun_status(ctx, field)
+			case "recordsSeen":
+				return ec.fieldContext_MarketplaceImportRun_recordsSeen(ctx, field)
+			case "recordsAccepted":
+				return ec.fieldContext_MarketplaceImportRun_recordsAccepted(ctx, field)
+			case "recordsRejected":
+				return ec.fieldContext_MarketplaceImportRun_recordsRejected(ctx, field)
+			case "errorCode":
+				return ec.fieldContext_MarketplaceImportRun_errorCode(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_MarketplaceImportRun_errorMessage(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MarketplaceImportRun_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MarketplaceImportRun", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_startMarketplaceFileImport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_buildDatasetDraft(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_buildDatasetDraft,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().BuildDatasetDraft(ctx, fc.Args["input"].(model.BuildDatasetDraftInput))
+		},
+		nil,
+		ec.marshalNDatasetVersion2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersion,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_buildDatasetDraft(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DatasetVersion_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_DatasetVersion_organizationId(ctx, field)
+			case "version":
+				return ec.fieldContext_DatasetVersion_version(ctx, field)
+			case "status":
+				return ec.fieldContext_DatasetVersion_status(ctx, field)
+			case "normalizerVersion":
+				return ec.fieldContext_DatasetVersion_normalizerVersion(ctx, field)
+			case "contentHash":
+				return ec.fieldContext_DatasetVersion_contentHash(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_DatasetVersion_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DatasetVersion", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_buildDatasetDraft_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_id(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2625,6 +5259,433 @@ func (ec *executionContext) _OrganizationMember_invitedAt(ctx context.Context, f
 func (ec *executionContext) fieldContext_OrganizationMember_invitedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OrganizationMember",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_id(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_name(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_brand(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_brand,
+		func(ctx context.Context) (any, error) {
+			return obj.Brand, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_brand(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_category(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_category,
+		func(ctx context.Context) (any, error) {
+			return obj.Category, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_description(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_sku(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_sku,
+		func(ctx context.Context) (any, error) {
+			return obj.Sku, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_sku(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ProductFieldMeta_value(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProductFieldMeta_value,
+		func(ctx context.Context) (any, error) {
+			return obj.Value, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProductFieldMeta_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductFieldMeta",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ProductFieldMeta_missing(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProductFieldMeta_missing,
+		func(ctx context.Context) (any, error) {
+			return obj.Missing, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProductFieldMeta_missing(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductFieldMeta",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ProductFieldMeta_source(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProductFieldMeta_source,
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProductFieldMeta_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductFieldMeta",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ProductFieldMeta_sourceRecordId(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProductFieldMeta_sourceRecordId,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceRecordID, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProductFieldMeta_sourceRecordId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductFieldMeta",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2999,6 +6060,510 @@ func (ec *executionContext) fieldContext_Query_myConsents(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_products(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_products,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Products(ctx, fc.Args["organizationId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNProduct2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_products(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Product_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_Product_organizationId(ctx, field)
+			case "name":
+				return ec.fieldContext_Product_name(ctx, field)
+			case "brand":
+				return ec.fieldContext_Product_brand(ctx, field)
+			case "category":
+				return ec.fieldContext_Product_category(ctx, field)
+			case "description":
+				return ec.fieldContext_Product_description(ctx, field)
+			case "sku":
+				return ec.fieldContext_Product_sku(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Product_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Product_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Product", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_products_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_product(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_product,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Product(ctx, fc.Args["organizationId"].(string), fc.Args["productId"].(string))
+		},
+		nil,
+		ec.marshalOProduct2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProduct,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_product(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Product_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_Product_organizationId(ctx, field)
+			case "name":
+				return ec.fieldContext_Product_name(ctx, field)
+			case "brand":
+				return ec.fieldContext_Product_brand(ctx, field)
+			case "category":
+				return ec.fieldContext_Product_category(ctx, field)
+			case "description":
+				return ec.fieldContext_Product_description(ctx, field)
+			case "sku":
+				return ec.fieldContext_Product_sku(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Product_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Product_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Product", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_product_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_userExperiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_userExperiences,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().UserExperiences(ctx, fc.Args["organizationId"].(string), fc.Args["productId"].(string))
+		},
+		nil,
+		ec.marshalNUserExperience2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperienceᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_userExperiences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserExperience_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_UserExperience_organizationId(ctx, field)
+			case "productId":
+				return ec.fieldContext_UserExperience_productId(ctx, field)
+			case "userId":
+				return ec.fieldContext_UserExperience_userId(ctx, field)
+			case "usageStatus":
+				return ec.fieldContext_UserExperience_usageStatus(ctx, field)
+			case "satisfactionLevel":
+				return ec.fieldContext_UserExperience_satisfactionLevel(ctx, field)
+			case "rating":
+				return ec.fieldContext_UserExperience_rating(ctx, field)
+			case "issueType":
+				return ec.fieldContext_UserExperience_issueType(ctx, field)
+			case "narrative":
+				return ec.fieldContext_UserExperience_narrative(ctx, field)
+			case "moderationStatus":
+				return ec.fieldContext_UserExperience_moderationStatus(ctx, field)
+			case "qualityStatus":
+				return ec.fieldContext_UserExperience_qualityStatus(ctx, field)
+			case "datasetEligibility":
+				return ec.fieldContext_UserExperience_datasetEligibility(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UserExperience_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UserExperience_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserExperience", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_userExperiences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_marketplaceImportRuns(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_marketplaceImportRuns,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MarketplaceImportRuns(ctx, fc.Args["organizationId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNMarketplaceImportRun2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRunᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_marketplaceImportRuns(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MarketplaceImportRun_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_MarketplaceImportRun_organizationId(ctx, field)
+			case "source":
+				return ec.fieldContext_MarketplaceImportRun_source(ctx, field)
+			case "sourceUrl":
+				return ec.fieldContext_MarketplaceImportRun_sourceUrl(ctx, field)
+			case "accessMode":
+				return ec.fieldContext_MarketplaceImportRun_accessMode(ctx, field)
+			case "status":
+				return ec.fieldContext_MarketplaceImportRun_status(ctx, field)
+			case "recordsSeen":
+				return ec.fieldContext_MarketplaceImportRun_recordsSeen(ctx, field)
+			case "recordsAccepted":
+				return ec.fieldContext_MarketplaceImportRun_recordsAccepted(ctx, field)
+			case "recordsRejected":
+				return ec.fieldContext_MarketplaceImportRun_recordsRejected(ctx, field)
+			case "errorCode":
+				return ec.fieldContext_MarketplaceImportRun_errorCode(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_MarketplaceImportRun_errorMessage(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MarketplaceImportRun_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MarketplaceImportRun", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_marketplaceImportRuns_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_datasetVersions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_datasetVersions,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().DatasetVersions(ctx, fc.Args["organizationId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNDatasetVersion2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersionᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_datasetVersions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DatasetVersion_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_DatasetVersion_organizationId(ctx, field)
+			case "version":
+				return ec.fieldContext_DatasetVersion_version(ctx, field)
+			case "status":
+				return ec.fieldContext_DatasetVersion_status(ctx, field)
+			case "normalizerVersion":
+				return ec.fieldContext_DatasetVersion_normalizerVersion(ctx, field)
+			case "contentHash":
+				return ec.fieldContext_DatasetVersion_contentHash(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_DatasetVersion_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DatasetVersion", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_datasetVersions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_productMarketplaceReviews(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_productMarketplaceReviews,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ProductMarketplaceReviews(ctx, fc.Args["organizationId"].(string), fc.Args["productId"].(string))
+		},
+		nil,
+		ec.marshalNMarketplaceReview2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceReviewᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_productMarketplaceReviews(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MarketplaceReview_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_MarketplaceReview_organizationId(ctx, field)
+			case "productId":
+				return ec.fieldContext_MarketplaceReview_productId(ctx, field)
+			case "source":
+				return ec.fieldContext_MarketplaceReview_source(ctx, field)
+			case "rating":
+				return ec.fieldContext_MarketplaceReview_rating(ctx, field)
+			case "reviewText":
+				return ec.fieldContext_MarketplaceReview_reviewText(ctx, field)
+			case "reviewDate":
+				return ec.fieldContext_MarketplaceReview_reviewDate(ctx, field)
+			case "language":
+				return ec.fieldContext_MarketplaceReview_language(ctx, field)
+			case "moderationStatus":
+				return ec.fieldContext_MarketplaceReview_moderationStatus(ctx, field)
+			case "datasetEligibility":
+				return ec.fieldContext_MarketplaceReview_datasetEligibility(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MarketplaceReview_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MarketplaceReview", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_productMarketplaceReviews_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_marketplaceImportStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_marketplaceImportStatus,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MarketplaceImportStatus(ctx, fc.Args["organizationId"].(string), fc.Args["importRunId"].(string))
+		},
+		nil,
+		ec.marshalOMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_marketplaceImportStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_MarketplaceImportRun_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_MarketplaceImportRun_organizationId(ctx, field)
+			case "source":
+				return ec.fieldContext_MarketplaceImportRun_source(ctx, field)
+			case "sourceUrl":
+				return ec.fieldContext_MarketplaceImportRun_sourceUrl(ctx, field)
+			case "accessMode":
+				return ec.fieldContext_MarketplaceImportRun_accessMode(ctx, field)
+			case "status":
+				return ec.fieldContext_MarketplaceImportRun_status(ctx, field)
+			case "recordsSeen":
+				return ec.fieldContext_MarketplaceImportRun_recordsSeen(ctx, field)
+			case "recordsAccepted":
+				return ec.fieldContext_MarketplaceImportRun_recordsAccepted(ctx, field)
+			case "recordsRejected":
+				return ec.fieldContext_MarketplaceImportRun_recordsRejected(ctx, field)
+			case "errorCode":
+				return ec.fieldContext_MarketplaceImportRun_errorCode(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_MarketplaceImportRun_errorMessage(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_MarketplaceImportRun_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MarketplaceImportRun", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_marketplaceImportStatus_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_datasetEligibilitySummary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_datasetEligibilitySummary,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().DatasetEligibilitySummary(ctx, fc.Args["organizationId"].(string))
+		},
+		nil,
+		ec.marshalNDatasetEligibilitySummary2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibilitySummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_datasetEligibilitySummary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organizationId":
+				return ec.fieldContext_DatasetEligibilitySummary_organizationId(ctx, field)
+			case "totalRecords":
+				return ec.fieldContext_DatasetEligibilitySummary_totalRecords(ctx, field)
+			case "ugcCount":
+				return ec.fieldContext_DatasetEligibilitySummary_ugcCount(ctx, field)
+			case "marketplaceCount":
+				return ec.fieldContext_DatasetEligibilitySummary_marketplaceCount(ctx, field)
+			case "eligibilityDistribution":
+				return ec.fieldContext_DatasetEligibilitySummary_eligibilityDistribution(ctx, field)
+			case "sourceDistribution":
+				return ec.fieldContext_DatasetEligibilitySummary_sourceDistribution(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DatasetEligibilitySummary", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_datasetEligibilitySummary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -3131,6 +6696,64 @@ func (ec *executionContext) fieldContext_RegisterPayload_message(_ context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SourceCount_recordType(ctx context.Context, field graphql.CollectedField, obj *model.SourceCount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SourceCount_recordType,
+		func(ctx context.Context) (any, error) {
+			return obj.RecordType, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SourceCount_recordType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SourceCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SourceCount_count(ctx context.Context, field graphql.CollectedField, obj *model.SourceCount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SourceCount_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SourceCount_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SourceCount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3276,6 +6899,412 @@ func (ec *executionContext) fieldContext_User_personalOrgId(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_id(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_productId(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_productId,
+		func(ctx context.Context) (any, error) {
+			return obj.ProductID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_productId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_userId(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_userId,
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_usageStatus(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_usageStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.UsageStatus, nil
+		},
+		nil,
+		ec.marshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_usageStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UsageStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_satisfactionLevel(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_satisfactionLevel,
+		func(ctx context.Context) (any, error) {
+			return obj.SatisfactionLevel, nil
+		},
+		nil,
+		ec.marshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_satisfactionLevel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type SatisfactionLevel does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_rating(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_rating,
+		func(ctx context.Context) (any, error) {
+			return obj.Rating, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_rating(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_issueType(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_issueType,
+		func(ctx context.Context) (any, error) {
+			return obj.IssueType, nil
+		},
+		nil,
+		ec.marshalOIssueType2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐIssueType,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_issueType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IssueType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_narrative(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_narrative,
+		func(ctx context.Context) (any, error) {
+			return obj.Narrative, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_narrative(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_moderationStatus(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_moderationStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.ModerationStatus, nil
+		},
+		nil,
+		ec.marshalNModerationStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐModerationStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_moderationStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ModerationStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_qualityStatus(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_qualityStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.QualityStatus, nil
+		},
+		nil,
+		ec.marshalNQualityStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐQualityStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_qualityStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type QualityStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_datasetEligibility(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_datasetEligibility,
+		func(ctx context.Context) (any, error) {
+			return obj.DatasetEligibility, nil
+		},
+		nil,
+		ec.marshalNDatasetEligibility2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibility,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_datasetEligibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DatasetEligibility does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserExperience_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserExperience_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserExperience_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4843,6 +8872,40 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputBuildDatasetDraftInput(ctx context.Context, obj any) (model.BuildDatasetDraftInput, error) {
+	var it model.BuildDatasetDraftInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "version"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "version":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Version = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputConfirmMFAInput(ctx context.Context, obj any) (model.ConfirmMFAInput, error) {
 	var it model.ConfirmMFAInput
 	asMap := map[string]any{}
@@ -4898,6 +8961,192 @@ func (ec *executionContext) unmarshalInputCreateOrganizationInput(ctx context.Co
 				return it, err
 			}
 			it.ComplianceProfile = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context, obj any) (model.CreateProductInput, error) {
+	var it model.CreateProductInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "name", "brand", "category", "description", "source", "sourceProductId", "sourceUrl", "sku"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "brand":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("brand"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Brand = data
+		case "category":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Category = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "source":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
+			data, err := ec.unmarshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Source = data
+		case "sourceProductId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceProductId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceProductID = data
+		case "sourceUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceURL = data
+		case "sku":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sku"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Sku = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateUserExperienceInput(ctx context.Context, obj any) (model.CreateUserExperienceInput, error) {
+	var it model.CreateUserExperienceInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "productId", "usageStatus", "satisfactionLevel", "rating", "issueType", "narrative"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "productId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProductID = data
+		case "usageStatus":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageStatus"))
+			data, err := ec.unmarshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsageStatus = data
+		case "satisfactionLevel":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("satisfactionLevel"))
+			data, err := ec.unmarshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SatisfactionLevel = data
+		case "rating":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rating"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Rating = data
+		case "issueType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("issueType"))
+			data, err := ec.unmarshalOIssueType2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐIssueType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IssueType = data
+		case "narrative":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("narrative"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Narrative = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeleteUserExperienceInput(ctx context.Context, obj any) (model.DeleteUserExperienceInput, error) {
+	var it model.DeleteUserExperienceInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "experienceId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "experienceId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("experienceId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExperienceID = data
 		}
 	}
 
@@ -5020,6 +9269,54 @@ func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj an
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputModerateUserExperienceInput(ctx context.Context, obj any) (model.ModerateUserExperienceInput, error) {
+	var it model.ModerateUserExperienceInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "experienceId", "moderationStatus", "qualityStatus"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "experienceId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("experienceId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExperienceID = data
+		case "moderationStatus":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("moderationStatus"))
+			data, err := ec.unmarshalNModerationStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐModerationStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModerationStatus = data
+		case "qualityStatus":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("qualityStatus"))
+			data, err := ec.unmarshalOQualityStatus2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐQualityStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QualityStatus = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPublishCompliancePolicyInput(ctx context.Context, obj any) (model.PublishCompliancePolicyInput, error) {
 	var it model.PublishCompliancePolicyInput
 	asMap := map[string]any{}
@@ -5136,6 +9433,102 @@ func (ec *executionContext) unmarshalInputRemoveMemberInput(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputStartMarketplaceFileImportInput(ctx context.Context, obj any) (model.StartMarketplaceFileImportInput, error) {
+	var it model.StartMarketplaceFileImportInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "source", "accessMode", "filename", "contentBase64", "contentType"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "source":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
+			data, err := ec.unmarshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Source = data
+		case "accessMode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessMode"))
+			data, err := ec.unmarshalNAccessMode2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccessMode(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AccessMode = data
+		case "filename":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filename"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Filename = data
+		case "contentBase64":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentBase64"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContentBase64 = data
+		case "contentType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contentType"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContentType = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputStartMarketplaceURLImportInput(ctx context.Context, obj any) (model.StartMarketplaceURLImportInput, error) {
+	var it model.StartMarketplaceURLImportInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "sourceUrl"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "sourceUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceUrl"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceURL = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateComplianceProfileInput(ctx context.Context, obj any) (model.UpdateComplianceProfileInput, error) {
 	var it model.UpdateComplianceProfileInput
 	asMap := map[string]any{}
@@ -5205,6 +9598,75 @@ func (ec *executionContext) unmarshalInputUpdateMemberRoleInput(ctx context.Cont
 				return it, err
 			}
 			it.Role = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateUserExperienceInput(ctx context.Context, obj any) (model.UpdateUserExperienceInput, error) {
+	var it model.UpdateUserExperienceInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "experienceId", "usageStatus", "satisfactionLevel", "rating", "issueType", "narrative"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "experienceId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("experienceId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExperienceID = data
+		case "usageStatus":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageStatus"))
+			data, err := ec.unmarshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UsageStatus = data
+		case "satisfactionLevel":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("satisfactionLevel"))
+			data, err := ec.unmarshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SatisfactionLevel = data
+		case "rating":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rating"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Rating = data
+		case "issueType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("issueType"))
+			data, err := ec.unmarshalOIssueType2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐIssueType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IssueType = data
+		case "narrative":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("narrative"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Narrative = data
 		}
 	}
 
@@ -5435,6 +9897,224 @@ func (ec *executionContext) _Consent(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var createProductPayloadImplementors = []string{"CreateProductPayload"}
+
+func (ec *executionContext) _CreateProductPayload(ctx context.Context, sel ast.SelectionSet, obj *model.CreateProductPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createProductPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CreateProductPayload")
+		case "product":
+			out.Values[i] = ec._CreateProductPayload_product(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deduplicated":
+			out.Values[i] = ec._CreateProductPayload_deduplicated(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var datasetEligibilitySummaryImplementors = []string{"DatasetEligibilitySummary"}
+
+func (ec *executionContext) _DatasetEligibilitySummary(ctx context.Context, sel ast.SelectionSet, obj *model.DatasetEligibilitySummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, datasetEligibilitySummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DatasetEligibilitySummary")
+		case "organizationId":
+			out.Values[i] = ec._DatasetEligibilitySummary_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalRecords":
+			out.Values[i] = ec._DatasetEligibilitySummary_totalRecords(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ugcCount":
+			out.Values[i] = ec._DatasetEligibilitySummary_ugcCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "marketplaceCount":
+			out.Values[i] = ec._DatasetEligibilitySummary_marketplaceCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "eligibilityDistribution":
+			out.Values[i] = ec._DatasetEligibilitySummary_eligibilityDistribution(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceDistribution":
+			out.Values[i] = ec._DatasetEligibilitySummary_sourceDistribution(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var datasetVersionImplementors = []string{"DatasetVersion"}
+
+func (ec *executionContext) _DatasetVersion(ctx context.Context, sel ast.SelectionSet, obj *model.DatasetVersion) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, datasetVersionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DatasetVersion")
+		case "id":
+			out.Values[i] = ec._DatasetVersion_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._DatasetVersion_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._DatasetVersion_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._DatasetVersion_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "normalizerVersion":
+			out.Values[i] = ec._DatasetVersion_normalizerVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contentHash":
+			out.Values[i] = ec._DatasetVersion_contentHash(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._DatasetVersion_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var eligibilityCountImplementors = []string{"EligibilityCount"}
+
+func (ec *executionContext) _EligibilityCount(ctx context.Context, sel ast.SelectionSet, obj *model.EligibilityCount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, eligibilityCountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EligibilityCount")
+		case "eligibility":
+			out.Values[i] = ec._EligibilityCount_eligibility(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._EligibilityCount_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var loginPayloadImplementors = []string{"LoginPayload"}
 
 func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.SelectionSet, obj *model.LoginPayload) graphql.Marshaler {
@@ -5494,6 +10174,174 @@ func (ec *executionContext) _MFASetupPayload(ctx context.Context, sel ast.Select
 			}
 		case "otpauthUrl":
 			out.Values[i] = ec._MFASetupPayload_otpauthUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var marketplaceImportRunImplementors = []string{"MarketplaceImportRun"}
+
+func (ec *executionContext) _MarketplaceImportRun(ctx context.Context, sel ast.SelectionSet, obj *model.MarketplaceImportRun) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, marketplaceImportRunImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MarketplaceImportRun")
+		case "id":
+			out.Values[i] = ec._MarketplaceImportRun_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._MarketplaceImportRun_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._MarketplaceImportRun_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceUrl":
+			out.Values[i] = ec._MarketplaceImportRun_sourceUrl(ctx, field, obj)
+		case "accessMode":
+			out.Values[i] = ec._MarketplaceImportRun_accessMode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._MarketplaceImportRun_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recordsSeen":
+			out.Values[i] = ec._MarketplaceImportRun_recordsSeen(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recordsAccepted":
+			out.Values[i] = ec._MarketplaceImportRun_recordsAccepted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recordsRejected":
+			out.Values[i] = ec._MarketplaceImportRun_recordsRejected(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "errorCode":
+			out.Values[i] = ec._MarketplaceImportRun_errorCode(ctx, field, obj)
+		case "errorMessage":
+			out.Values[i] = ec._MarketplaceImportRun_errorMessage(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._MarketplaceImportRun_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var marketplaceReviewImplementors = []string{"MarketplaceReview"}
+
+func (ec *executionContext) _MarketplaceReview(ctx context.Context, sel ast.SelectionSet, obj *model.MarketplaceReview) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, marketplaceReviewImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MarketplaceReview")
+		case "id":
+			out.Values[i] = ec._MarketplaceReview_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._MarketplaceReview_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "productId":
+			out.Values[i] = ec._MarketplaceReview_productId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._MarketplaceReview_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rating":
+			out.Values[i] = ec._MarketplaceReview_rating(ctx, field, obj)
+		case "reviewText":
+			out.Values[i] = ec._MarketplaceReview_reviewText(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reviewDate":
+			out.Values[i] = ec._MarketplaceReview_reviewDate(ctx, field, obj)
+		case "language":
+			out.Values[i] = ec._MarketplaceReview_language(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "moderationStatus":
+			out.Values[i] = ec._MarketplaceReview_moderationStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "datasetEligibility":
+			out.Values[i] = ec._MarketplaceReview_datasetEligibility(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._MarketplaceReview_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5665,6 +10513,62 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createProduct":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createProduct(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createUserExperience":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createUserExperience(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateUserExperience":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserExperience(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteUserExperience":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteUserExperience(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "moderateUserExperience":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_moderateUserExperience(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startMarketplaceURLImport":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_startMarketplaceURLImport(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startMarketplaceFileImport":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_startMarketplaceFileImport(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "buildDatasetDraft":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_buildDatasetDraft(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5783,6 +10687,130 @@ func (ec *executionContext) _OrganizationMember(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var productImplementors = []string{"Product"}
+
+func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, obj *model.Product) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, productImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Product")
+		case "id":
+			out.Values[i] = ec._Product_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._Product_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Product_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "brand":
+			out.Values[i] = ec._Product_brand(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "category":
+			out.Values[i] = ec._Product_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Product_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sku":
+			out.Values[i] = ec._Product_sku(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Product_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Product_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var productFieldMetaImplementors = []string{"ProductFieldMeta"}
+
+func (ec *executionContext) _ProductFieldMeta(ctx context.Context, sel ast.SelectionSet, obj *model.ProductFieldMeta) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, productFieldMetaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ProductFieldMeta")
+		case "value":
+			out.Values[i] = ec._ProductFieldMeta_value(ctx, field, obj)
+		case "missing":
+			out.Values[i] = ec._ProductFieldMeta_missing(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._ProductFieldMeta_source(ctx, field, obj)
+		case "sourceRecordId":
+			out.Values[i] = ec._ProductFieldMeta_sourceRecordId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5992,6 +11020,176 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "products":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_products(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "product":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_product(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userExperiences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userExperiences(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "marketplaceImportRuns":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_marketplaceImportRuns(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "datasetVersions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_datasetVersions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "productMarketplaceReviews":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_productMarketplaceReviews(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "marketplaceImportStatus":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_marketplaceImportStatus(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "datasetEligibilitySummary":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_datasetEligibilitySummary(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -6062,6 +11260,50 @@ func (ec *executionContext) _RegisterPayload(ctx context.Context, sel ast.Select
 	return out
 }
 
+var sourceCountImplementors = []string{"SourceCount"}
+
+func (ec *executionContext) _SourceCount(ctx context.Context, sel ast.SelectionSet, obj *model.SourceCount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sourceCountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SourceCount")
+		case "recordType":
+			out.Values[i] = ec._SourceCount_recordType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._SourceCount_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var userImplementors = []string{"User"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
@@ -6095,6 +11337,104 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "personalOrgId":
 			out.Values[i] = ec._User_personalOrgId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userExperienceImplementors = []string{"UserExperience"}
+
+func (ec *executionContext) _UserExperience(ctx context.Context, sel ast.SelectionSet, obj *model.UserExperience) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userExperienceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserExperience")
+		case "id":
+			out.Values[i] = ec._UserExperience_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._UserExperience_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "productId":
+			out.Values[i] = ec._UserExperience_productId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userId":
+			out.Values[i] = ec._UserExperience_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "usageStatus":
+			out.Values[i] = ec._UserExperience_usageStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "satisfactionLevel":
+			out.Values[i] = ec._UserExperience_satisfactionLevel(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rating":
+			out.Values[i] = ec._UserExperience_rating(ctx, field, obj)
+		case "issueType":
+			out.Values[i] = ec._UserExperience_issueType(ctx, field, obj)
+		case "narrative":
+			out.Values[i] = ec._UserExperience_narrative(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "moderationStatus":
+			out.Values[i] = ec._UserExperience_moderationStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "qualityStatus":
+			out.Values[i] = ec._UserExperience_qualityStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "datasetEligibility":
+			out.Values[i] = ec._UserExperience_datasetEligibility(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._UserExperience_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._UserExperience_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6510,6 +11850,16 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAccessMode2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccessMode(ctx context.Context, v any) (model.AccessMode, error) {
+	var res model.AccessMode
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAccessMode2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccessMode(ctx context.Context, sel ast.SelectionSet, v model.AccessMode) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6524,6 +11874,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNBuildDatasetDraftInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐBuildDatasetDraftInput(ctx context.Context, v any) (model.BuildDatasetDraftInput, error) {
+	res, err := ec.unmarshalInputBuildDatasetDraftInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNCompliancePolicy2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCompliancePolicy(ctx context.Context, sel ast.SelectionSet, v model.CompliancePolicy) graphql.Marshaler {
@@ -6672,6 +12027,181 @@ func (ec *executionContext) unmarshalNCreateOrganizationInput2githubᚗcomᚋBus
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateProductInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateProductInput(ctx context.Context, v any) (model.CreateProductInput, error) {
+	res, err := ec.unmarshalInputCreateProductInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCreateProductPayload2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateProductPayload(ctx context.Context, sel ast.SelectionSet, v model.CreateProductPayload) graphql.Marshaler {
+	return ec._CreateProductPayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCreateProductPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateProductPayload(ctx context.Context, sel ast.SelectionSet, v *model.CreateProductPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CreateProductPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCreateUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateUserExperienceInput(ctx context.Context, v any) (model.CreateUserExperienceInput, error) {
+	res, err := ec.unmarshalInputCreateUserExperienceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNDatasetEligibility2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibility(ctx context.Context, v any) (model.DatasetEligibility, error) {
+	var res model.DatasetEligibility
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDatasetEligibility2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibility(ctx context.Context, sel ast.SelectionSet, v model.DatasetEligibility) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNDatasetEligibilitySummary2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibilitySummary(ctx context.Context, sel ast.SelectionSet, v model.DatasetEligibilitySummary) graphql.Marshaler {
+	return ec._DatasetEligibilitySummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDatasetEligibilitySummary2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetEligibilitySummary(ctx context.Context, sel ast.SelectionSet, v *model.DatasetEligibilitySummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DatasetEligibilitySummary(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDatasetVersion2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersion(ctx context.Context, sel ast.SelectionSet, v model.DatasetVersion) graphql.Marshaler {
+	return ec._DatasetVersion(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDatasetVersion2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DatasetVersion) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDatasetVersion2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersion(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDatasetVersion2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersion(ctx context.Context, sel ast.SelectionSet, v *model.DatasetVersion) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DatasetVersion(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDatasetVersionStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersionStatus(ctx context.Context, v any) (model.DatasetVersionStatus, error) {
+	var res model.DatasetVersionStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDatasetVersionStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDatasetVersionStatus(ctx context.Context, sel ast.SelectionSet, v model.DatasetVersionStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNDeleteUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDeleteUserExperienceInput(ctx context.Context, v any) (model.DeleteUserExperienceInput, error) {
+	res, err := ec.unmarshalInputDeleteUserExperienceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNEligibilityCount2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEligibilityCountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EligibilityCount) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEligibilityCount2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEligibilityCount(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNEligibilityCount2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEligibilityCount(ctx context.Context, sel ast.SelectionSet, v *model.EligibilityCount) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EligibilityCount(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNGrantConsentInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐGrantConsentInput(ctx context.Context, v any) (model.GrantConsentInput, error) {
 	res, err := ec.unmarshalInputGrantConsentInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6685,6 +12215,22 @@ func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (str
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6739,6 +12285,153 @@ func (ec *executionContext) marshalNMFASetupPayload2ᚖgithubᚗcomᚋBusenuryur
 		return graphql.Null
 	}
 	return ec._MFASetupPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMarketplaceImportRun2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun(ctx context.Context, sel ast.SelectionSet, v model.MarketplaceImportRun) graphql.Marshaler {
+	return ec._MarketplaceImportRun(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMarketplaceImportRun2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRunᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MarketplaceImportRun) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun(ctx context.Context, sel ast.SelectionSet, v *model.MarketplaceImportRun) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MarketplaceImportRun(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMarketplaceImportStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportStatus(ctx context.Context, v any) (model.MarketplaceImportStatus, error) {
+	var res model.MarketplaceImportStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMarketplaceImportStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportStatus(ctx context.Context, sel ast.SelectionSet, v model.MarketplaceImportStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNMarketplaceReview2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceReviewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MarketplaceReview) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMarketplaceReview2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceReview(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMarketplaceReview2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceReview(ctx context.Context, sel ast.SelectionSet, v *model.MarketplaceReview) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MarketplaceReview(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource(ctx context.Context, v any) (model.MarketplaceSource, error) {
+	var res model.MarketplaceSource
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource(ctx context.Context, sel ast.SelectionSet, v model.MarketplaceSource) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNModerateUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐModerateUserExperienceInput(ctx context.Context, v any) (model.ModerateUserExperienceInput, error) {
+	res, err := ec.unmarshalInputModerateUserExperienceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNModerationStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐModerationStatus(ctx context.Context, v any) (model.ModerationStatus, error) {
+	var res model.ModerationStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNModerationStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐModerationStatus(ctx context.Context, sel ast.SelectionSet, v model.ModerationStatus) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNOrgRole2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐOrgRole(ctx context.Context, v any) (model.OrgRole, error) {
@@ -6839,9 +12532,83 @@ func (ec *executionContext) marshalNPolicyStatus2githubᚗcomᚋBusenuryurdakul�
 	return v
 }
 
+func (ec *executionContext) marshalNProduct2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Product) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNProduct2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProduct(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNProduct2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v *model.Product) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Product(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta(ctx context.Context, sel ast.SelectionSet, v *model.ProductFieldMeta) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ProductFieldMeta(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNPublishCompliancePolicyInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐPublishCompliancePolicyInput(ctx context.Context, v any) (model.PublishCompliancePolicyInput, error) {
 	res, err := ec.unmarshalInputPublishCompliancePolicyInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNQualityStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐQualityStatus(ctx context.Context, v any) (model.QualityStatus, error) {
+	var res model.QualityStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNQualityStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐQualityStatus(ctx context.Context, sel ast.SelectionSet, v model.QualityStatus) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNRegisterInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRegisterInput(ctx context.Context, v any) (model.RegisterInput, error) {
@@ -6865,6 +12632,80 @@ func (ec *executionContext) marshalNRegisterPayload2ᚖgithubᚗcomᚋBusenuryur
 
 func (ec *executionContext) unmarshalNRemoveMemberInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRemoveMemberInput(ctx context.Context, v any) (model.RemoveMemberInput, error) {
 	res, err := ec.unmarshalInputRemoveMemberInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel(ctx context.Context, v any) (model.SatisfactionLevel, error) {
+	var res model.SatisfactionLevel
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel(ctx context.Context, sel ast.SelectionSet, v model.SatisfactionLevel) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNSourceCount2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSourceCountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SourceCount) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSourceCount2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSourceCount(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSourceCount2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSourceCount(ctx context.Context, sel ast.SelectionSet, v *model.SourceCount) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SourceCount(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNStartMarketplaceFileImportInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐStartMarketplaceFileImportInput(ctx context.Context, v any) (model.StartMarketplaceFileImportInput, error) {
+	res, err := ec.unmarshalInputStartMarketplaceFileImportInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNStartMarketplaceURLImportInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐStartMarketplaceURLImportInput(ctx context.Context, v any) (model.StartMarketplaceURLImportInput, error) {
+	res, err := ec.unmarshalInputStartMarketplaceURLImportInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -6892,6 +12733,79 @@ func (ec *executionContext) unmarshalNUpdateComplianceProfileInput2githubᚗcom�
 func (ec *executionContext) unmarshalNUpdateMemberRoleInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateMemberRoleInput(ctx context.Context, v any) (model.UpdateMemberRoleInput, error) {
 	res, err := ec.unmarshalInputUpdateMemberRoleInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateUserExperienceInput(ctx context.Context, v any) (model.UpdateUserExperienceInput, error) {
+	res, err := ec.unmarshalInputUpdateUserExperienceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus(ctx context.Context, v any) (model.UsageStatus, error) {
+	var res model.UsageStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus(ctx context.Context, sel ast.SelectionSet, v model.UsageStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNUserExperience2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperience(ctx context.Context, sel ast.SelectionSet, v model.UserExperience) graphql.Marshaler {
+	return ec._UserExperience(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserExperience2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperienceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserExperience) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserExperience2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperience(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUserExperience2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperience(ctx context.Context, sel ast.SelectionSet, v *model.UserExperience) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserExperience(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNVerifyDeviceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐVerifyDeviceInput(ctx context.Context, v any) (model.VerifyDeviceInput, error) {
@@ -7253,6 +13167,23 @@ func (ec *executionContext) marshalOCompliancePolicy2ᚖgithubᚗcomᚋBusenuryu
 	return ec._CompliancePolicy(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel ast.SelectionSet, v *float64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	res := graphql.MarshalFloatContext(*v)
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -7289,11 +13220,57 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
+func (ec *executionContext) unmarshalOIssueType2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐIssueType(ctx context.Context, v any) (*model.IssueType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.IssueType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOIssueType2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐIssueType(ctx context.Context, sel ast.SelectionSet, v *model.IssueType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalOMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun(ctx context.Context, sel ast.SelectionSet, v *model.MarketplaceImportRun) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MarketplaceImportRun(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Organization(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOProduct2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v *model.Product) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Product(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOQualityStatus2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐQualityStatus(ctx context.Context, v any) (*model.QualityStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.QualityStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOQualityStatus2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐQualityStatus(ctx context.Context, sel ast.SelectionSet, v *model.QualityStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

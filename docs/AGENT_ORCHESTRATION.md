@@ -1,6 +1,6 @@
 # Miyuna — Agent Orchestration
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Purpose
@@ -80,7 +80,7 @@ Persist                       ← MongoDB + audit events
 | Tool | Purpose |
 |------|---------|
 | `dataset_validator` | Validate incoming CSV/JSON/manual datasets |
-| `ecommerce_fetcher` | Fetch from authorized e-commerce platforms |
+| `ecommerce_fetcher` | Fetch permitted product URLs (platform API cancelled) |
 | `product_normalizer` | Normalize product fields to canonical schema |
 | `import_planner` | Plan multi-step import strategy |
 | `fetch_policy_checker` | Enforce fetch security policies |

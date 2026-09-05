@@ -20,6 +20,22 @@ type Query {
   compliancePolicyVersions(organizationId: ID!, limit: Int = 20): [CompliancePolicy!]!
   """Current user's consents"""
   myConsents: [Consent!]!
+  """Products in organization — tenant-isolated"""
+  products(organizationId: ID!, limit: Int = 50): [Product!]!
+  """Single product — tenant-isolated"""
+  product(organizationId: ID!, productId: ID!): Product
+  """User experiences for product — tenant-isolated"""
+  userExperiences(organizationId: ID!, productId: ID!): [UserExperience!]!
+  """Marketplace import runs — tenant-isolated"""
+  marketplaceImportRuns(organizationId: ID!, limit: Int = 20): [MarketplaceImportRun!]!
+  """Dataset versions — tenant-isolated"""
+  datasetVersions(organizationId: ID!, limit: Int = 20): [DatasetVersion!]!
+  """Marketplace reviews for product — tenant-isolated"""
+  productMarketplaceReviews(organizationId: ID!, productId: ID!): [MarketplaceReview!]!
+  """Single marketplace import run status"""
+  marketplaceImportStatus(organizationId: ID!, importRunId: ID!): MarketplaceImportRun
+  """Dataset eligibility summary for organization"""
+  datasetEligibilitySummary(organizationId: ID!): DatasetEligibilitySummary!
 }
 
 type Mutation {
@@ -41,6 +57,14 @@ type Mutation {
   publishCompliancePolicyVersion(input: PublishCompliancePolicyInput!): CompliancePolicy!
   grantConsent(input: GrantConsentInput!): Consent!
   withdrawConsent(input: WithdrawConsentInput!): Boolean!
+  createProduct(input: CreateProductInput!): CreateProductPayload!
+  createUserExperience(input: CreateUserExperienceInput!): UserExperience!
+  updateUserExperience(input: UpdateUserExperienceInput!): UserExperience!
+  deleteUserExperience(input: DeleteUserExperienceInput!): Boolean!
+  moderateUserExperience(input: ModerateUserExperienceInput!): UserExperience!
+  startMarketplaceURLImport(input: StartMarketplaceURLImportInput!): MarketplaceImportRun!
+  startMarketplaceFileImport(input: StartMarketplaceFileImportInput!): MarketplaceImportRun!
+  buildDatasetDraft(input: BuildDatasetDraftInput!): DatasetVersion!
 }
 
 input RegisterInput {
@@ -209,4 +233,245 @@ type MFASetupPayload {
 type LoginPayload {
   status: LoginStatus!
   user: User
+}
+
+type ProductFieldMeta {
+  value: String
+  missing: Boolean!
+  source: String
+  sourceRecordId: String
+}
+
+type Product {
+  id: ID!
+  organizationId: ID!
+  name: ProductFieldMeta!
+  brand: ProductFieldMeta!
+  category: ProductFieldMeta!
+  description: ProductFieldMeta!
+  sku: ProductFieldMeta!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type CreateProductPayload {
+  product: Product!
+  deduplicated: Boolean!
+}
+
+type UserExperience {
+  id: ID!
+  organizationId: ID!
+  productId: ID!
+  userId: ID!
+  usageStatus: UsageStatus!
+  satisfactionLevel: SatisfactionLevel!
+  rating: Int
+  issueType: IssueType
+  narrative: String!
+  moderationStatus: ModerationStatus!
+  qualityStatus: QualityStatus!
+  datasetEligibility: DatasetEligibility!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type MarketplaceImportRun {
+  id: ID!
+  organizationId: ID!
+  source: MarketplaceSource!
+  sourceUrl: String
+  accessMode: AccessMode!
+  status: MarketplaceImportStatus!
+  recordsSeen: Int!
+  recordsAccepted: Int!
+  recordsRejected: Int!
+  errorCode: String
+  errorMessage: String
+  createdAt: String!
+}
+
+type DatasetVersion {
+  id: ID!
+  organizationId: ID!
+  version: String!
+  status: DatasetVersionStatus!
+  normalizerVersion: String!
+  contentHash: String
+  createdAt: String!
+}
+
+type MarketplaceReview {
+  id: ID!
+  organizationId: ID!
+  productId: ID!
+  source: MarketplaceSource!
+  rating: Float
+  reviewText: String!
+  reviewDate: String
+  language: String!
+  moderationStatus: ModerationStatus!
+  datasetEligibility: DatasetEligibility!
+  createdAt: String!
+}
+
+type DatasetEligibilitySummary {
+  organizationId: ID!
+  totalRecords: Int!
+  ugcCount: Int!
+  marketplaceCount: Int!
+  eligibilityDistribution: [EligibilityCount!]!
+  sourceDistribution: [SourceCount!]!
+}
+
+type EligibilityCount {
+  eligibility: DatasetEligibility!
+  count: Int!
+}
+
+type SourceCount {
+  recordType: String!
+  count: Int!
+}
+
+enum MarketplaceSource {
+  HEPSIBURADA
+  TRENDYOL
+  AMAZON
+  N11
+  OTHER
+  MIYUNA
+}
+
+enum AccessMode {
+  AUTHORIZED_API
+  PERMITTED_PUBLIC_FETCH
+  LICENSED_DATASET
+  CSV_IMPORT
+  JSON_IMPORT
+  USER_PROVIDED_FILE
+  MANUAL_ENTRY
+}
+
+enum UsageStatus {
+  USING
+  USED
+}
+
+enum SatisfactionLevel {
+  VERY_SATISFIED
+  SATISFIED
+  NEUTRAL
+  UNSATISFIED
+  VERY_UNSATISFIED
+}
+
+enum IssueType {
+  DURABILITY
+  BREAKAGE
+  AGE_SIZE_MISMATCH
+  MATERIAL
+  ODOR
+  PACKAGING
+  USABILITY
+  QUALITY
+  SAFETY_RELATED_OBSERVATION
+  OTHER
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum QualityStatus {
+  PENDING
+  APPROVED
+  LOW_QUALITY
+  REJECTED
+}
+
+enum DatasetEligibility {
+  TRAINING_APPROVED
+  EVAL_ONLY
+  ANALYSIS_ONLY
+  QUARANTINED
+  REJECTED
+}
+
+enum MarketplaceImportStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+  REJECTED_BY_POLICY
+}
+
+enum DatasetVersionStatus {
+  DRAFT
+}
+
+input CreateProductInput {
+  organizationId: ID!
+  name: String!
+  brand: String
+  category: String
+  description: String
+  source: MarketplaceSource!
+  sourceProductId: String!
+  sourceUrl: String
+  sku: String
+}
+
+input CreateUserExperienceInput {
+  organizationId: ID!
+  productId: ID!
+  usageStatus: UsageStatus!
+  satisfactionLevel: SatisfactionLevel!
+  rating: Int
+  issueType: IssueType
+  narrative: String!
+}
+
+input UpdateUserExperienceInput {
+  organizationId: ID!
+  experienceId: ID!
+  usageStatus: UsageStatus!
+  satisfactionLevel: SatisfactionLevel!
+  rating: Int
+  issueType: IssueType
+  narrative: String!
+}
+
+input DeleteUserExperienceInput {
+  organizationId: ID!
+  experienceId: ID!
+}
+
+input ModerateUserExperienceInput {
+  organizationId: ID!
+  experienceId: ID!
+  moderationStatus: ModerationStatus!
+  qualityStatus: QualityStatus
+}
+
+input StartMarketplaceURLImportInput {
+  organizationId: ID!
+  sourceUrl: String!
+}
+
+input StartMarketplaceFileImportInput {
+  organizationId: ID!
+  source: MarketplaceSource!
+  accessMode: AccessMode!
+  filename: String!
+  contentBase64: String!
+  contentType: String!
+}
+
+input BuildDatasetDraftInput {
+  organizationId: ID!
+  version: String!
 }

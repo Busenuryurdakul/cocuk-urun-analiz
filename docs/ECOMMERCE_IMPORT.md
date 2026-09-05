@@ -1,94 +1,30 @@
-# Miyuna — E-Commerce Import
+# Miyuna — Product Data Import
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Supported Input Sources
 
-| Source | v1.0.3 Status |
-|--------|---------------|
-| Authorized Platform API (WooCommerce) | **PRIMARY — real E2E required** |
-| Permitted Product URL | Supported |
+| Source | v1 Status |
+|--------|-----------|
+| Permitted product URL | Supported |
 | CSV upload | Supported |
 | JSON upload | Supported |
 | Manual product entry | Supported |
 
-**Shopify:** OPTIONAL / FUTURE — not mandatory; not implemented in v1.0.3 (CR-004).
+### Platform API integrations — CANCELLED
 
-## 2. WooCommerce Integration (Primary)
+**Shopify, WooCommerce ve diğer mağaza platform API entegrasyonları iptal edildi (2026-09-04).**
 
-**Platform:** WooCommerce REST API (API-first)
+- `SHOPIFY_E2E_STATUS` / platform E2E gate kaldırıldı
+- `EcommerceIntegration` credential modeli **implement edilmez** (v1)
+- Phase 4 marketplace adapter boundaries (Hepsiburada, Trendyol) — **CR-005 IMPLEMENTED (interface/deferred live fetch)**
+- CSV/JSON marketplace review import — **Phase 4 IMPLEMENTED**
 
-**CR-004:** Primary e-commerce integration. Generic ecommerce adapter boundary preserved.
-
-**Credential model:**
-
-```text
-EcommerceIntegration {
-  id: string
-  organizationId: string
-  platform: WOOCOMMERCE
-  storeBaseUrl: string              // authorized store base URL
-  credentialsEncrypted: Binary      // Consumer Key + Consumer Secret; encrypted at rest
-  status: ACTIVE | REVOKED | ERROR
-  createdAt: ISO8601
-  updatedAt: ISO8601
-  revokedAt?: ISO8601
-  lastVerifiedAt?: ISO8601
-}
-```
-
-**Credentials (encrypted, never exposed):**
-
-- Consumer Key
-- Consumer Secret
-
-**Security rules:**
-
-- Encrypted at rest
-- Raw secret **never logged**
-- Raw secret **never returned in GraphQL response**
-- Import calls use `integrationId` only
-- No raw credential input persisted outside encrypted storage
-- Prefer read-only API key permissions for Phase 4
-
-**Real E2E acceptance:**
-
-WooCommerce E2E is **VERIFIED** only if:
-
-1. Real WooCommerce store exists
-2. REST API credentials are valid
-3. Product endpoint is reachable
-4. Real product payload is fetched (not mock)
-5. Product is normalized into Miyuna canonical model
-
-**Minimum acceptance probe:**
-
-```http
-GET {storeBaseUrl}/wp-json/wc/v3/products
-Authorization: Basic (Consumer Key + Consumer Secret)
-```
-
-At least one real/test-store product must be fetched through the actual WooCommerce API.
-
-**Current status:** `WOOCOMMERCE_E2E_STATUS: NOT_VERIFIED` — ecommerce phase blocked until verified.
-
-Do not fake success when credentials or store are unavailable.
-
-## 3. Shopify (Optional / Future)
-
-**v1.0.3:** Not mandatory. Not implemented.
-
-Generic adapter architecture may allow a future Shopify adapter via Change Request; no Shopify code in v1.0.3.
-
-Historical note: v1.0.2 designated Shopify as primary; **CR-004** supersedes that decision.
-
-## 4. Agentic Import Pipeline
+## 2. Agentic Import Pipeline
 
 ```text
-Source
-  ↓
-Adapter                    ← platform-specific (WooCommerce REST)
+Source (URL | CSV | JSON | Manual)
   ↓
 Fetch Policy               ← fetch_policy_checker
   ↓
@@ -96,11 +32,11 @@ Import Planner             ← import_planner
   ↓
 Tool Authorization
   ↓
-Fetch                      ← ecommerce_fetcher
+Fetch / Parse              ← ecommerce_fetcher (permitted URL only) or dataset_validator
   ↓
 Raw Storage                ← S3/MinIO tenant-scoped prefix
   ↓
-review_sampler             ← max 100 reviews (when available)
+review_sampler             ← max 100 reviews (when present in source)
   ↓
 product_normalizer
   ↓
@@ -113,7 +49,7 @@ Quality Check
 Decision: Sufficient | Re-fetch | Insufficient
 ```
 
-## 5. Quality Decision Matrix
+## 3. Quality Decision Matrix
 
 | Decision | Meaning | Action |
 |----------|---------|--------|
@@ -123,83 +59,36 @@ Decision: Sufficient | Re-fetch | Insufficient
 
 Insufficient durumda kullanıcıya explicit failure/insufficient status döner.
 
-## 6. Normalized Product Schema (Canonical)
+## 4. Canonical Product Schema (Phase 4)
+
+Persisted canonical truth: MongoDB collection **`products`**.
 
 Kaynakta olmayan alan uydurulmaz — `missing: true`.
 
-**Canonical fields (unchanged — WooCommerce adapter maps into this model):**
-
-| Field | Notes |
-|-------|-------|
-| name | Product title |
-| brand | |
-| category | |
-| description | |
-| currentPrice | |
-| originalPrice | Regular price when distinct from sale |
-| currency | |
-| seller | Store/vendor when available |
-| rating | Average rating when available |
-| reviewCount | |
-| reviews | Sampled reviews; `missing: true` if unavailable |
-| attributes | Platform-specific attributes |
-| targetAge | |
-| materials | |
-| safetyWarnings | |
-| imageRefs | |
-| stockStatus | |
-| sku | |
-| sourceUrl | Canonical product URL on store |
-| fetchedAt | ISO8601 fetch timestamp |
-
-**Persistence wrapper (MongoDB):**
-
 ```text
-NormalizedProduct {
+Product {
   organizationId: string
-  sourceType: WOOCOMMERCE | URL | CSV | JSON | MANUAL
-  sourceRef: string
-  integrationId?: string
+  name, brand, category, description, targetAge, materials, ...: ProductFieldMeta
+  createdBy, createdAt, updatedAt
+}
 
-  fields: { [fieldName]: { value: any, missing: boolean } }
-
-  reviewSample: ReviewSample        // max 100 when available
-  priceHistory: PriceHistoryEntry[]
-
-  importJobId: string
-  rawStorageRef: string
-  normalizedAt: ISO8601
-  qualityDecision: SUFFICIENT | INSUFFICIENT | REFETCH
+ProductFieldMeta {
+  value: any?,
+  missing: boolean,
+  missingReason: string?,
+  source, sourceRecordId: string?,
+  confidence: number?,
+  extractedAt: Date?
 }
 ```
 
-### WooCommerce field mapping (adapter responsibility)
+`normalized_products` is **not** a competing canonical truth in Phase 4.
 
-WooCommerce REST product fields adapt into canonical fields above. Examples:
+## 5. Review Sampling
 
-- `name` ← WooCommerce `name`
-- `currentPrice` ← `price` / sale price
-- `originalPrice` ← `regular_price` when applicable
-- `sku` ← `sku`
-- `stockStatus` ← `stock_status`
-- `imageRefs` ← `images[].src`
-- `category` ← `categories[].name` (primary or joined)
-- `attributes` ← `attributes[]`
+`review_sampler` (when reviews present in imported data):
 
-Missing source values → `missing: true`. Do not invent data.
-
-## 7. Review Data
-
-Do not assume WooCommerce core product response always contains full review content.
-
-- If review endpoint/API support exists and credentials permit: use adapter + `review_sampler`
-- If unavailable: `reviews = missing`
-- **WooCommerce E2E acceptance does not depend on reviews**
-
-`review_sampler` (when reviews available):
-
-- Maximum **100 reviews** per product (v1.0.3 limit)
-- Sampling strategy: UNRESOLVED — Phase 4 (likely recent + rating distribution)
+- Maximum **100 reviews** per product (v1 limit)
 - Unlimited review collection = OUT OF SCOPE
 
 ```text
@@ -211,7 +100,7 @@ ReviewSample {
 }
 ```
 
-## 8. Price History
+## 6. Price History
 
 `price_history_analyzer` — deterministic analytics:
 
@@ -224,33 +113,26 @@ PriceHistoryEntry {
 }
 ```
 
-Deterministic calculations (not LLM):
-
-- Min/max/avg over period
-- Trend direction
-- Price/performance signal flags
-
-## 9. Fetch Security
+## 7. Fetch Security
 
 Import fetch operations [SECURITY.md](./SECURITY.md) fetch security kurallarına tabidir:
 
 - SSRF protection
 - DNS rebinding prevention
-- Allowed store URL validation (connected/authorized stores only)
+- Allow/deny URL lists (permitted URLs only)
 - Redirect limit
 - Timeout
 - Max response size
 - Tenant quota
 - Rate limit
 - Retry with backoff
-- Credential encryption
-- Response sanitization
+- Input sanitization
 - Malicious content scan
 - Audit logging
 
-**No unrestricted generic crawler.** Only connected/authorized WooCommerce stores are supported.
+**No unrestricted generic crawler.**
 
-## 10. Import Diff
+## 8. Import Diff
 
 `import_diff_generator`:
 
@@ -258,7 +140,7 @@ Import fetch operations [SECURITY.md](./SECURITY.md) fetch security kurallarına
 - Track field-level changes
 - Feed into analysis as Derived Data layer
 
-## 11. Storage Layout
+## 9. Storage Layout
 
 ```text
 s3://{bucket}/{organizationId}/imports/{importJobId}/raw/
@@ -267,33 +149,30 @@ s3://{bucket}/{organizationId}/imports/{importJobId}/normalized/
 
 Tenant-scoped prefixes; cross-tenant access forbidden.
 
-## 12. Acceptance Criteria (E-Commerce)
+## 10. Acceptance Criteria (Product Import)
 
 | Criterion | Required |
 |-----------|----------|
-| Real WooCommerce REST API E2E | YES |
-| At least one real product fetched via API | YES |
-| Product normalized to canonical model | YES |
-| Encrypted credentials | YES |
-| Mock-only acceptance | NO (fails) |
+| CSV / JSON / manual import path | YES |
+| Permitted URL fetch (policy-controlled) | YES |
+| Platform API E2E (Shopify/WooCommerce) | **NO — CANCELLED** |
 | Insufficient → no fake success | YES |
-| Review cap 100 (when reviews available) | YES |
+| Review cap 100 (when reviews in source) | YES |
 | Missing fields explicit | YES |
 | Fetch security controls | YES |
 
-## 13. Related Documents
+## 11. Related Documents
 
 - [SECURITY.md](./SECURITY.md) — fetch security
 - [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md) — persistence
 - [AGENT_ORCHESTRATION.md](./AGENT_ORCHESTRATION.md) — tool pipeline
 - [EVIDENCE_MODEL.md](./EVIDENCE_MODEL.md) — source data layer
 
-## 14. UNRESOLVED
+## 12. UNRESOLVED
 
 | Item | Status |
 |------|--------|
-| Review sampling algorithm | UNRESOLVED — Phase 4 |
-| Re-fetch max attempts | UNRESOLVED — Phase 4 |
-| Permitted URL allowlist management UI | UNRESOLVED — Phase 4 |
-| WooCommerce webhook vs poll strategy | UNRESOLVED — Phase 4 |
-| Shopify adapter (optional/future) | OUT — CR-004; future CR if needed |
+| Review sampling algorithm | UNRESOLVED |
+| Re-fetch max attempts | UNRESOLVED |
+| Permitted URL allowlist management UI | UNRESOLVED |
+| Marketplace dataset import (Hepsiburada/Trendyol vb.) | Future CR |

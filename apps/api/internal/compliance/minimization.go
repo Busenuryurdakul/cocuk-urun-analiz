@@ -17,6 +17,11 @@ var allowedFieldsByOperation = map[string]map[string]bool{
 	"grant_consent": {
 		"purpose": true,
 	},
+	"create_user_experience": {
+		"narrative":         true,
+		"usageStatus":       true,
+		"satisfactionLevel": true,
+	},
 }
 
 func ValidateMinimization(operation string, fields map[string]string) error {

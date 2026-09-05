@@ -4,7 +4,7 @@
 
 > Skoru değil, skorun kanıtını göster.
 
-Architecture source of truth: [`docs/FINAL_MASTER_PROMPT.md`](docs/FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN
+Architecture source of truth: [`docs/FINAL_MASTER_PROMPT.md`](docs/FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN
 
 ## Monorepo layout
 

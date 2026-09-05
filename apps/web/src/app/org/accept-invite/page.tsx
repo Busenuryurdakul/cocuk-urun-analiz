@@ -3,7 +3,7 @@ import AcceptInviteClient from "./accept-invite-client";
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense fallback={<main className="mx-auto px-6 py-16">Yükleniyor…</main>}>
+    <Suspense fallback={<p className="p-16 text-sm text-muted">Yükleniyor…</p>}>
       <AcceptInviteClient />
     </Suspense>
   );

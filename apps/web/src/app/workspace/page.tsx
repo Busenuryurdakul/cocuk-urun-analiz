@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AsyncView } from "@/components/async-view";
+import { AppShell } from "@/components/layout/app-shell";
 import { graphqlRequest } from "@/lib/graphql";
 
 type Workspace = {
@@ -41,35 +42,28 @@ export default function WorkspacePage() {
       });
   }, []);
 
-  async function logout() {
-    await graphqlRequest(`mutation { logout }`);
-    window.location.href = "/auth/login";
-  }
-
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-6 py-16">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-miyuna-600">Miyuna</p>
-          <h1 className="text-2xl font-semibold text-slate-900">Workspace</h1>
-        </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-        >
-          Çıkış
-        </button>
-      </header>
-
+    <AppShell
+      title="Çalışma alanı"
+      kicker="Miyuna"
+      description="Organizasyonlarınız, rolleriniz ve ürün analizine giriş."
+      accountEmail={me?.email}
+      actions={
+        viewState === "success" ? (
+          <Link href="/org/create" className="btn-primary">
+            Organizasyon oluştur
+          </Link>
+        ) : undefined
+      }
+    >
       {viewState === "loading" && <AsyncView state="loading" />}
       {viewState === "unauthorized" && (
         <AsyncView
           state="unauthorized"
           unauthorized={
-            <div className="space-y-3 text-center">
-              <p className="text-sm">Oturum gerekli.</p>
-              <Link href="/auth/login" className="text-miyuna-600 underline">
+            <div className="card space-y-3 text-center">
+              <p className="text-sm text-muted">Oturum gerekli.</p>
+              <Link href="/auth/login" className="btn-primary">
                 Giriş yap
               </Link>
             </div>
@@ -79,35 +73,38 @@ export default function WorkspacePage() {
       {viewState === "error" && <AsyncView state="error" />}
       {viewState === "success" && me && (
         <section className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-6">
-            <h2 className="mb-1 font-medium">Hesap</h2>
-            <p className="text-sm text-slate-600">{me.email}</p>
+          <div className="card">
+            <p className="kicker">Hesap</p>
+            <p className="mt-2 font-display text-2xl">{me.email}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-6">
-            <h2 className="mb-4 font-medium">Workspace&apos;ler</h2>
-            <div className="flex gap-3 pt-2">
-              <Link href="/org/create" className="text-sm text-miyuna-600 underline">
-                Organizasyon oluştur
-              </Link>
-            </div>
+          <div className="card">
+            <h2 className="font-display text-2xl">Çalışma alanları</h2>
             {workspaces.length === 0 ? (
-              <AsyncView state="empty" />
+              <div className="mt-4">
+                <AsyncView state="empty" />
+              </div>
             ) : (
-              <ul className="space-y-3">
+              <ul className="mt-5 space-y-3">
                 {workspaces.map((ws) => (
                   <li
                     key={ws.organizationId}
-                    className="flex items-center justify-between rounded-lg border border-slate-100 px-4 py-3 text-sm"
+                    className="flex flex-col gap-3 rounded-2xl border border-sand bg-cream/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <span>
-                      {ws.name} <span className="text-slate-500">({ws.type})</span>
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{ws.role}</span>
+                    <div>
+                      <p className="font-semibold">{ws.name}</p>
+                      <p className="text-sm text-muted">{ws.type}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="badge-muted">{ws.role}</span>
                       {ws.type === "ORGANIZATION" && (
-                        <Link href={`/org/${ws.organizationId}/members`} className="text-xs text-miyuna-600 underline">
-                          Yönet
-                        </Link>
+                        <>
+                          <Link href={`/org/${ws.organizationId}/products`} className="btn-secondary !px-3 !py-1.5 text-xs">
+                            Ürünler
+                          </Link>
+                          <Link href={`/org/${ws.organizationId}/members`} className="btn-ghost !px-3 !py-1.5 text-xs">
+                            Yönet
+                          </Link>
+                        </>
                       )}
                     </div>
                   </li>
@@ -117,10 +114,6 @@ export default function WorkspacePage() {
           </div>
         </section>
       )}
-
-      <Link href="/" className="text-sm text-slate-500 underline">
-        Ana sayfa
-      </Link>
-    </main>
+    </AppShell>
   );
 }

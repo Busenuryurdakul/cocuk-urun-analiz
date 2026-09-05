@@ -1,6 +1,6 @@
 # Miyuna — Evidence Model
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Purpose
@@ -56,10 +56,10 @@ Evidence {
 
 ```text
 SourceReference {
-  type: ECOMMERCE_API | URL | CSV | JSON | MANUAL | VERIFIED_KNOWLEDGE | DETERMINISTIC_RULE
+  type: MARKETPLACE_REVIEW | URL | CSV | JSON | MANUAL | VERIFIED_KNOWLEDGE | DETERMINISTIC_RULE
   identifier: string           // productId, url, fileId, ruleId
   fetchedAt?: ISO8601
-  integrationId?: string       // for ecommerce sources
+  sourceRef?: string           // URL, file ref, or manual entry id
 }
 ```
 

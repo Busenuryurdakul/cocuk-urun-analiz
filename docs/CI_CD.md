@@ -1,6 +1,6 @@
 # Miyuna — CI/CD Pipeline
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.3 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Pipeline Principles
@@ -58,7 +58,7 @@ Report → PR status check
 | Auth | MFA flow, device verification |
 | Agent | Real AgentRunEvent, no fake progress |
 | LLM | 2 LLM routing, 5 concurrent load test |
-| E-commerce | WooCommerce real E2E (not mock) |
+| Product data import | CSV/JSON/manual + permitted URL (not mock) |
 | Evidence | Claim-evidence validation |
 | Compliance | Engine always-on verification |
 | Security | Tenant escape test |
@@ -82,7 +82,7 @@ Manual prod deploy trigger (REQUIRED)
 Production (via Cloudflare)
 ```
 
-**Auto production deploy: OUT OF SCOPE v1.0.3**
+**Auto production deploy: OUT OF SCOPE v1.0.2**
 
 Production deployment requires explicit manual trigger and approval.
 
@@ -123,7 +123,7 @@ XCS is not a separate CI system; it complements the main pipeline.
 
 Linux Electron: bonus only, not required for v1 acceptance.
 
-## 8. Test Requirements (v1.0.3 Acceptance)
+## 8. Test Requirements (v1.0.2 Acceptance)
 
 Mandatory demonstrable acceptance:
 
@@ -131,7 +131,7 @@ Mandatory demonstrable acceptance:
 - [ ] 2 LLM with worker/reviewer rotation
 - [ ] Evidence-based reports with disclaimer
 - [ ] Security: tenant escape test pass
-- [ ] E-commerce: WooCommerce real E2E
+- [ ] Product import: CSV/JSON/manual + permitted URL validation
 - [ ] Fine-tune eval gate
 - [ ] Admin LLM control center + snapshot demo
 - [ ] KVKK/GDPR compliance engine
