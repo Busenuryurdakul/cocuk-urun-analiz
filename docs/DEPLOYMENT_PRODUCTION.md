@@ -14,11 +14,39 @@ Render private network:
 MongoDB Atlas (external, MONGODB_URI)
 ```
 
-## 1. Render (Backend + LLM + Agent)
+## 1. Render (Backend + Agent) — DEPLOYED (free tier)
 
-> **Billing required:** Render account must have a payment method before applying this Blueprint (Standard LLM + Starter API/agent plans). Validation error: `need_payment_info`. Add billing at [Render Account Settings](https://dashboard.render.com/u/settings#billing).
+| Service | URL | Status |
+|---------|-----|--------|
+| **miyuna-api** | https://miyuna-api.onrender.com | Docker build OK — needs `MONGODB_URI` + Redis env |
+| **miyuna-agent** | https://miyuna-agent.onrender.com | **Live** (`/health` → ok) |
+| **Redis** | Reuse `yuvmi-staging-redis` db `/1` | Free tier limit: 1 KV instance |
 
-### Blueprint
+### Finish API env (required once)
+
+1. Create **MongoDB Atlas M0** (Frankfurt): https://cloud.mongodb.com/
+2. Copy connection string → set `MONGODB_URI`
+3. From Render Dashboard → **yuvmi-staging-redis** → copy **Internal Redis URL** → append `/1` for Miyuna
+4. Run:
+
+```powershell
+$env:MONGODB_URI = 'mongodb+srv://...'
+$env:REDIS_URL = 'redis://red-...:6379/1'
+$env:RENDER_API_SERVICE_ID = 'srv-dae8m7dbedkc73ajnipg'
+$env:RENDER_AGENT_SERVICE_ID = 'srv-dae8k10u01pc73dhddp0'
+$env:HF_TOKEN = 'hf_...'   # optional — Hugging Face LLM
+.\scripts\deploy\configure_render_production.ps1
+```
+
+Service IDs and URLs: `scripts/deploy/production.env.example`
+
+### Paid tier (Ollama LLM on Render)
+
+For self-hosted Ollama (`render.yaml`), add billing: https://dashboard.render.com/u/settings#billing
+
+Free alternative: `render-free.yaml` (Hugging Face Inference API, no Ollama services).
+
+### Legacy Blueprint
 
 1. Push `render.yaml` and Dockerfiles to GitHub (`main` branch).
 2. Open Blueprint:
@@ -58,7 +86,7 @@ Set env vars in [Vercel Dashboard → miyuna-web → Settings → Environment Va
 
 | Env | Value |
 |-----|-------|
-| `NEXT_PUBLIC_API_URL` | `https://api.{domain}/graphql` (or Render URL until custom domain) |
+| `NEXT_PUBLIC_API_URL` | `https://api.{domain}` (or `https://miyuna-api.onrender.com` until custom domain). Do **not** append `/graphql` — the web client adds that path. |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
 
 Redeploy after env changes:
