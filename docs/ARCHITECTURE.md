@@ -45,9 +45,11 @@ Miyuna, çocuk ürünlerini çok kaynaklı toplayan, normalize eden ve agent tab
               │ async import (Redis) · dataset draft metadata         │
               └───────────────────────────┬───────────────────────────┘
                                           ↓
-                                 Agent Orchestrator (Python, internal) ← Phase 5+
+                                 Agent Orchestrator (Python, internal) ← Phase 5 IMPLEMENTED
                                           ↓
-                              LLM-1          LLM-2                         ← Phase 6+
+                              Go internal agent boundary (auth, grants, tools, persist)
+                                          ↓
+                              LLM-1          LLM-2                         ← Phase 6+ DEFERRED
                                           ↓
                            MongoDB / Redis / Object Storage
 ```
@@ -119,10 +121,23 @@ Bu gereksinim Web (Next.js) ve Desktop (Electron) istemcileri için geçerlidir.
 
 **Boundary contracts:**
 
-- **AgentClient:** Go → Python orchestrator IPC/HTTP (internal network)
+- **GraphQL (Phase 5):** `startAgentRun`, `cancelAgentRun`, `agentRun`, `analysisRuns`, `agentRunEvents` — Go RBAC/tenant/compliance/persistence
+- **AgentClient:** Go → Python orchestrator IPC (`/internal/v1/runs/start|cancel`) with shared internal token
+- **Go internal agent API:** Python → Go authoritative tool authorization, execution, events, status, lease (`/internal/agent/v1/*`)
 - **MailService:** Abstract interface; provider swappable at deploy time
 - **StorageClient:** S3-compatible; tenant-scoped prefixes
 - **Security/Audit:** Cross-cutting; all sensitive operations logged
+
+**Phase 5 ownership split:**
+
+| Layer | Owner | Responsibility |
+|-------|-------|----------------|
+| Python `RunManager` | Authoritative lifecycle | Plan, loop, cancel/timeout, heartbeat |
+| Go GraphQL + services | Security boundary | RBAC, tenant, compliance pre-check, persistence |
+| Redis | Ephemeral coordination | Hashed single-use tool grants, run leases |
+| MongoDB | Source of truth | `analysis_runs`, `agent_run_events`, `tool_executions` |
+
+Phase 4 marketplace **import consumer remains Go-only** and is isolated from Phase 5 analysis queue.
 
 ## 6. Multi-Tenancy Model
 
@@ -139,17 +154,18 @@ Tüm data access org-scoped; compound indexes ile tenant isolation. Detay: [MONG
 
 ## 7. Agent Pipeline (Summary)
 
+**Phase 5 (IMPLEMENTED — deterministic, no LLM):**
+
 ```text
-Input
-  → Compliance Pre-Check
-  → Planner
-  → Tool Selection → Tool Authorization → Tool Execution → Observation
-  → [Tool Loop]
-  → Worker LLM → Reviewer LLM
-  → Evidence Assembler → Report Generator
-  → Output Compliance Validation
-  → Persist
+GraphQL startAgentRun
+  → Go compliance pre-check + ConfigSnapshot
+  → Python RunManager (lease claim, heartbeat)
+  → Deterministic planner (available tools only)
+  → Go authorize → Redis grant → Go execute → schema/compliance output validation
+  → agent_run_events + terminal status (single write)
 ```
+
+**Phase 6+ (DEFERRED):** Worker LLM → Reviewer LLM → Evidence → Report Generator
 
 Detay: [AGENT_ORCHESTRATION.md](./AGENT_ORCHESTRATION.md)
 
@@ -202,7 +218,7 @@ DatasetRecord candidates → DatasetVersion (DRAFT metadata only)
 
 **Boundaries:**
 
-- **Phase 5:** Agent orchestrator, Planner, tool loop — NOT in Phase 4
+- **Phase 5 (IMPLEMENTED):** Python authoritative orchestrator; Go GraphQL/security/persistence/tool boundary; Redis grants/leases
 - **Phase 10:** Fine-tune training, dataset publication export — NOT in Phase 4
 - **Live Hepsiburada/Trendyol fetch:** DEFERRED_WITH_REASON until verified authorized/permitted API
 

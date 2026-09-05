@@ -9,9 +9,50 @@ import (
 	"strconv"
 )
 
+type AgentRunEvent struct {
+	ID             string                `json:"id"`
+	OrganizationID string                `json:"organizationId"`
+	AnalysisRunID  string                `json:"analysisRunId"`
+	Sequence       int                   `json:"sequence"`
+	Phase          string                `json:"phase"`
+	ToolName       *string               `json:"toolName,omitempty"`
+	Status         AgentEventStatus      `json:"status"`
+	Metadata       []*EventMetadataEntry `json:"metadata"`
+	TraceID        string                `json:"traceId"`
+	Timestamp      string                `json:"timestamp"`
+}
+
+type AnalysisRun struct {
+	ID                      string            `json:"id"`
+	OrganizationID          string            `json:"organizationId"`
+	ProductID               string            `json:"productId"`
+	MarketplaceImportRunID  *string           `json:"marketplaceImportRunId,omitempty"`
+	ClientRequestID         string            `json:"clientRequestId"`
+	Status                  AnalysisRunStatus `json:"status"`
+	CurrentPhase            *string           `json:"currentPhase,omitempty"`
+	TraceID                 string            `json:"traceId"`
+	ConfigSnapshotID        string            `json:"configSnapshotId"`
+	ToolRegistryVersion     string            `json:"toolRegistryVersion"`
+	ToolPolicyVersion       string            `json:"toolPolicyVersion"`
+	CompliancePolicyVersion string            `json:"compliancePolicyVersion"`
+	PlannerVersion          string            `json:"plannerVersion"`
+	IterationCount          int               `json:"iterationCount"`
+	TerminalError           *string           `json:"terminalError,omitempty"`
+	TerminalReason          *string           `json:"terminalReason,omitempty"`
+	StartedAt               *string           `json:"startedAt,omitempty"`
+	CompletedAt             *string           `json:"completedAt,omitempty"`
+	CreatedAt               string            `json:"createdAt"`
+	UpdatedAt               string            `json:"updatedAt"`
+}
+
 type BuildDatasetDraftInput struct {
 	OrganizationID string `json:"organizationId"`
 	Version        string `json:"version"`
+}
+
+type CancelAgentRunInput struct {
+	OrganizationID string `json:"organizationId"`
+	AnalysisRunID  string `json:"analysisRunId"`
 }
 
 type CompliancePolicy struct {
@@ -94,6 +135,11 @@ type DeleteUserExperienceInput struct {
 type EligibilityCount struct {
 	Eligibility DatasetEligibility `json:"eligibility"`
 	Count       int                `json:"count"`
+}
+
+type EventMetadataEntry struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 type GrantConsentInput struct {
@@ -224,6 +270,13 @@ type RemoveMemberInput struct {
 type SourceCount struct {
 	RecordType string `json:"recordType"`
 	Count      int    `json:"count"`
+}
+
+type StartAgentRunInput struct {
+	OrganizationID         string  `json:"organizationId"`
+	ProductID              string  `json:"productId"`
+	MarketplaceImportRunID *string `json:"marketplaceImportRunId,omitempty"`
+	ClientRequestID        string  `json:"clientRequestId"`
 }
 
 type StartMarketplaceFileImportInput struct {
@@ -368,6 +421,124 @@ func (e *AccessMode) UnmarshalJSON(b []byte) error {
 }
 
 func (e AccessMode) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type AgentEventStatus string
+
+const (
+	AgentEventStatusRunning   AgentEventStatus = "RUNNING"
+	AgentEventStatusCompleted AgentEventStatus = "COMPLETED"
+	AgentEventStatusFailed    AgentEventStatus = "FAILED"
+)
+
+var AllAgentEventStatus = []AgentEventStatus{
+	AgentEventStatusRunning,
+	AgentEventStatusCompleted,
+	AgentEventStatusFailed,
+}
+
+func (e AgentEventStatus) IsValid() bool {
+	switch e {
+	case AgentEventStatusRunning, AgentEventStatusCompleted, AgentEventStatusFailed:
+		return true
+	}
+	return false
+}
+
+func (e AgentEventStatus) String() string {
+	return string(e)
+}
+
+func (e *AgentEventStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AgentEventStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AgentEventStatus", str)
+	}
+	return nil
+}
+
+func (e AgentEventStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AgentEventStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AgentEventStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type AnalysisRunStatus string
+
+const (
+	AnalysisRunStatusPending   AnalysisRunStatus = "PENDING"
+	AnalysisRunStatusRunning   AnalysisRunStatus = "RUNNING"
+	AnalysisRunStatusCompleted AnalysisRunStatus = "COMPLETED"
+	AnalysisRunStatusFailed    AnalysisRunStatus = "FAILED"
+	AnalysisRunStatusRejected  AnalysisRunStatus = "REJECTED"
+)
+
+var AllAnalysisRunStatus = []AnalysisRunStatus{
+	AnalysisRunStatusPending,
+	AnalysisRunStatusRunning,
+	AnalysisRunStatusCompleted,
+	AnalysisRunStatusFailed,
+	AnalysisRunStatusRejected,
+}
+
+func (e AnalysisRunStatus) IsValid() bool {
+	switch e {
+	case AnalysisRunStatusPending, AnalysisRunStatusRunning, AnalysisRunStatusCompleted, AnalysisRunStatusFailed, AnalysisRunStatusRejected:
+		return true
+	}
+	return false
+}
+
+func (e AnalysisRunStatus) String() string {
+	return string(e)
+}
+
+func (e *AnalysisRunStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AnalysisRunStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AnalysisRunStatus", str)
+	}
+	return nil
+}
+
+func (e AnalysisRunStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AnalysisRunStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AnalysisRunStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

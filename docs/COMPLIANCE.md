@@ -128,7 +128,23 @@ Organization {
 
 Personal workspace default profile: **KVKK** (`PERSONAL_DEFAULT_COMPLIANCE_PROFILE`)
 
-## 11. Audit Requirements
+## 11. Phase 5 Analysis Compliance (IMPLEMENTED)
+
+Phase 5 enforces compliance at three verified points for deterministic analysis runs:
+
+| Point | When | Mechanism |
+|-------|------|-----------|
+| Pre-run | `startAgentRun` | Go `Compliance.Engine` + consent check before orchestrator dispatch |
+| Pre-tool | `/internal/agent/v1/tools/authorize` | Registry availability, RBAC, input hash, grant binding |
+| Post-tool | `/internal/agent/v1/tools/execute` | Output schema validation + compliance rejection before observation/event persist |
+
+**Observation/event metadata:** Sensitive keys rejected; oversized metadata blocked (`maxEventMetadataBytes`).
+
+**Provenance:** Cross-tenant `marketplaceImportRunId` references rejected at start.
+
+**Phase 6+ output/report compliance validation:** DEFERRED — not claimed as implemented.
+
+## 12. Audit Requirements
 
 All compliance events logged:
 
@@ -139,14 +155,14 @@ All compliance events logged:
 
 Retention policy: **DEPLOYMENT_POLICY_REQUIRED** — concrete duration defined at deployment/legal policy time, not invented in code.
 
-## 12. Related Documents
+## 13. Related Documents
 
 - [EVIDENCE_MODEL.md](./EVIDENCE_MODEL.md)
 - [SECURITY.md](./SECURITY.md)
 - [AGENT_ORCHESTRATION.md](./AGENT_ORCHESTRATION.md)
 - [LLM_ROUTING.md](./LLM_ROUTING.md) — compliance policy versions in ConfigSnapshot
 
-## 13. UNRESOLVED
+## 14. UNRESOLVED
 
 | Item | Status |
 |------|--------|

@@ -301,46 +301,95 @@ Large raw payloads stored in S3/MinIO; Mongo holds metadata only.
 
 Publication / fine-tune export belongs to later phases (Phase 10).
 
-### analysis_runs — NOT IMPLEMENTED (Phase 5+)
+### analysis_runs — IMPLEMENTED (Phase 5 Agent Core)
 
 ```text
 {
   _id: ObjectId,
   organizationId: ObjectId,
+  createdByUserId: ObjectId,
   productId: ObjectId,
-  configSnapshotId: ObjectId,
+  marketplaceImportRunId: ObjectId?,     // provenance ref only
+  clientRequestId: string,               // idempotent start key
   status: PENDING | RUNNING | COMPLETED | FAILED | REJECTED,
-  workerRuntime: LLM-1 | LLM-2,
-  reviewerRuntime: LLM-1 | LLM-2,
-  runPattern: RUN_A | RUN_B,
-  startedAt: Date,
+  currentPhase: string?,
+  traceId: string,
+  correlationId: string,
+  configSnapshotId: ObjectId,
+  toolRegistryVersion: string,
+  toolPolicyVersion: string,
+  compliancePolicyVersion: string,
+  plannerVersion: string,
+  observationSchemaVersion: string,
+  iterationCount: number,
+  retryCount: number,
+  cancellationRequested: boolean,
+  cancelledByUserId: ObjectId?,
+  recoveryAttempt: number?,
+  leaseOwnerId: string?,
+  lastHeartbeatAt: Date?,
+  terminalError: string?,
+  terminalReason: string?,
+  startedAt: Date?,
   completedAt: Date?,
-  reportId: ObjectId?
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
-**Indexes:** `{ organizationId: 1, status: 1 }`, `{ organizationId: 1, startedAt: -1 }`
+**Indexes:** `{ organizationId: 1, status: 1 }`, `{ organizationId: 1, createdAt: -1 }`, unique `{ organizationId: 1, clientRequestId: 1 }`, `{ status: 1, lastHeartbeatAt: 1 }`
 
-**Invariant:** `workerRuntime != reviewerRuntime`
+**Invariant:** Python orchestrator owns lifecycle; Go persists authoritative state only.
 
-### agent_run_events
+### agent_run_events — IMPLEMENTED (Phase 5)
 
 ```text
 {
   _id: ObjectId,
   organizationId: ObjectId,
   runId: ObjectId,
-  phase: string,
+  sequence: number,                      // monotonic per run
+  phase: RUN_STARTED | COMPLIANCE_PRECHECK | PLAN_CREATED | TOOL_SELECTED |
+         TOOL_EXECUTION_STARTED | TOOL_EXECUTION_COMPLETED | OBSERVATION_CREATED |
+         RUN_COMPLETED | RUN_FAILED | RUN_CANCELLED,
   toolName: string?,
   status: RUNNING | COMPLETED | FAILED,
   metadata: object,
+  traceId: string,
   timestamp: Date
 }
 ```
 
-**Indexes:** `{ organizationId: 1, runId: 1, timestamp: 1 }`
+**Indexes:** unique `{ organizationId: 1, runId: 1, sequence: 1 }`
 
-### reports
+**Invariant:** append-only; no duplicate sequence per run.
+
+### tool_executions — IMPLEMENTED (Phase 5)
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  analysisRunId: ObjectId,
+  toolName: string,
+  toolVersion: string,
+  attempt: number,
+  authorizationDecision: string,
+  inputHash: string,
+  outputHash: string?,
+  grantNonceHash: string?,               // sha256 of grant token, never plaintext
+  status: PENDING | RUNNING | COMPLETED | FAILED | REJECTED | UNAVAILABLE,
+  errorCode: string?,
+  errorClass: string?,
+  startedAt: Date?,
+  completedAt: Date?,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, analysisRunId: 1 }`
+
+### reports — NOT IMPLEMENTED (Phase 6+)
 
 ```text
 {

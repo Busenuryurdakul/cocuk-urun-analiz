@@ -2,6 +2,7 @@ package org_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -19,7 +20,7 @@ func setupOrgTest(t *testing.T) (*org.Service, context.Context) {
 	t.Helper()
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
-		uri = "mongodb://localhost:27017/miyuna_test"
+		uri = fmt.Sprintf("mongodb://localhost:27017/miyuna_org_test_%d", time.Now().UnixNano())
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	t.Cleanup(cancel)
@@ -70,7 +71,7 @@ func TestCreateOrganizationAndLastOwnerProtection(t *testing.T) {
 	svc, ctx := setupOrgTest(t)
 
 	user := &domain.User{
-		Email: "owner@test.local", EmailVerified: true, MFAEnabled: true,
+		Email: fmt.Sprintf("owner-%d@test.local", time.Now().UnixNano()), EmailVerified: true, MFAEnabled: true,
 		PasswordHash: "hash",
 	}
 	if err := svc.Users.Create(ctx, user); err != nil {

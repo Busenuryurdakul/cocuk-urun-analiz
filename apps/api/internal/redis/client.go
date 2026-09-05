@@ -59,6 +59,30 @@ func (c *Client) Del(ctx context.Context, keys ...string) error {
 	return c.rdb.Del(ctx, keys...).Err()
 }
 
+func (c *Client) Get(ctx context.Context, key string) (string, error) {
+	val, err := c.rdb.Get(ctx, key).Result()
+	if err != nil {
+		if err == goredis.Nil {
+			return "", nil
+		}
+		return "", err
+	}
+	return val, nil
+}
+
+func (c *Client) SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error) {
+	ok, err := c.rdb.SetNX(ctx, key, value, ttl).Result()
+	return ok, err
+}
+
+func (c *Client) Eval(ctx context.Context, script string, keys []string, args ...any) (any, error) {
+	return c.rdb.Eval(ctx, script, keys, args...).Result()
+}
+
+func (c *Client) FlushDB(ctx context.Context) error {
+	return c.rdb.FlushDB(ctx).Err()
+}
+
 func (c *Client) LPush(ctx context.Context, key, value string) error {
 	return c.rdb.LPush(ctx, key, value).Err()
 }

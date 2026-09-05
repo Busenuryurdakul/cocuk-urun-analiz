@@ -3,6 +3,8 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const dbName = "miyuna"
+const defaultDBName = "miyuna"
 
 type Client struct {
 	DB *mongo.Database
@@ -25,7 +27,16 @@ func Connect(ctx context.Context, uri string) (*Client, error) {
 	if err := client.Ping(ctx, nil); err != nil {
 		return nil, fmt.Errorf("mongodb ping: %w", err)
 	}
-	return &Client{DB: client.Database(dbName)}, nil
+	return &Client{DB: client.Database(databaseFromURI(uri))}, nil
+}
+
+func databaseFromURI(uri string) string {
+	if u, err := url.Parse(uri); err == nil {
+		if name := strings.TrimPrefix(u.Path, "/"); name != "" {
+			return name
+		}
+	}
+	return defaultDBName
 }
 
 func (c *Client) Ping(ctx context.Context) error {
@@ -102,6 +113,30 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 		{"dataset_versions", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "createdAt", Value: -1}}}},
 	}
 	for _, idx := range phase4Indexes {
+		if _, err := c.DB.Collection(idx.collection).Indexes().CreateOne(ctx, idx.model); err != nil {
+			return fmt.Errorf("index %s: %w", idx.collection, err)
+		}
+	}
+
+	phase5Indexes := []struct {
+		collection string
+		model      mongo.IndexModel
+	}{
+		{"analysis_runs", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "status", Value: 1}}}},
+		{"analysis_runs", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "createdAt", Value: -1}}}},
+		{"analysis_runs", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}, {Key: "clientRequestId", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"analysis_runs", mongo.IndexModel{Keys: bson.D{{Key: "status", Value: 1}, {Key: "lastHeartbeatAt", Value: 1}}}},
+		{"agent_run_events", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}, {Key: "runId", Value: 1}, {Key: "sequence", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"tool_executions", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "analysisRunId", Value: 1}}}},
+		{"config_snapshots", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "publishedAt", Value: -1}}}},
+	}
+	for _, idx := range phase5Indexes {
 		if _, err := c.DB.Collection(idx.collection).Indexes().CreateOne(ctx, idx.model); err != nil {
 			return fmt.Errorf("index %s: %w", idx.collection, err)
 		}
