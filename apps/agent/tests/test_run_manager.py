@@ -25,13 +25,43 @@ def test_run_manager_starts_lifecycle_thread() -> None:
     )
     go_client.execute_tool.return_value = MagicMock(status="OK", payload={})
 
+    llm_client = MagicMock()
+    llm_client.complete.side_effect = [
+        MagicMock(
+            call_id="call-1",
+            content="worker",
+            model_key="careful_analyst",
+            provider_key="primary",
+            fallback_used=False,
+            routing_reason="task=analysis",
+            persona_key="careful_analyst",
+            persona_version="1.0.0",
+            correlation_id="trace-1",
+            input_tokens=1,
+            output_tokens=1,
+        ),
+        MagicMock(
+            call_id="call-2",
+            content="review",
+            model_key="result_analyst",
+            provider_key="secondary",
+            fallback_used=False,
+            routing_reason="task=review",
+            persona_key="result_analyst",
+            persona_version="1.0.0",
+            correlation_id="trace-1",
+            input_tokens=1,
+            output_tokens=1,
+        ),
+    ]
+
     started = threading.Event()
 
     def worker_factory(target):
         started.set()
         return threading.Thread(target=target, daemon=True)
 
-    manager = RunManager(go_client=go_client, _worker_factory=worker_factory)
+    manager = RunManager(go_client=go_client, llm_client=llm_client, _worker_factory=worker_factory)
     manager.start_run(
         StartRunPayload(
             organization_id="org",
@@ -55,7 +85,7 @@ def test_cancel_run_signals_active_worker() -> None:
     def runner() -> None:
         cancel_seen.wait(timeout=2)
 
-    manager = RunManager(go_client=go_client)
+    manager = RunManager(go_client=go_client, llm_client=MagicMock())
     with manager._lock:
         manager._active["run"] = cancel_seen
 

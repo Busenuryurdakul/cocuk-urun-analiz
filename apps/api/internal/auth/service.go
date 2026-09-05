@@ -12,6 +12,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mail"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/tenant"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/turnstile"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,8 +26,9 @@ var (
 )
 
 const (
-	StageMFA    = "MFA"
-	StageDevice = "DEVICE"
+	StageEmailOTP = "EMAIL_OTP"
+	StageMFA      = "MFA"
+	StageDevice   = "DEVICE"
 )
 
 type RegisterResult struct {
@@ -59,6 +61,7 @@ type LoginResult struct {
 type LoginStatus string
 
 const (
+	LoginStatusEmailOTPRequired           LoginStatus = "EMAIL_OTP_REQUIRED"
 	LoginStatusMFASetupRequired           LoginStatus = "MFA_SETUP_REQUIRED"
 	LoginStatusMFARequired                LoginStatus = "MFA_REQUIRED"
 	LoginStatusDeviceVerificationRequired LoginStatus = "DEVICE_VERIFICATION_REQUIRED"
@@ -73,17 +76,20 @@ type Service struct {
 	Sessions     *repository.SessionRepository
 	Rotated      *repository.RotatedRefreshRepository
 	Pending      *repository.PendingAuthRepository
-	EmailVerify  *repository.EmailVerificationRepository
-	DeviceVerify *repository.DeviceVerificationRepository
-	MFASetup     *repository.MFASetupRepository
-	Security     *repository.SecurityEventRepository
-	Mail         mail.Service
-	Tenant       *tenant.Guard
-	BruteForce   *BruteForceGuard
-	JWT          *JWTManager
-	Policy       SecurityPolicy
-	WebBaseURL   string
-	MFAIssuer    string
+	EmailVerify      *repository.EmailVerificationRepository
+	LoginEmailVerify *repository.LoginEmailVerificationRepository
+	DeviceVerify     *repository.DeviceVerificationRepository
+	MFASetup         *repository.MFASetupRepository
+	Security         *repository.SecurityEventRepository
+	Mail             mail.Service
+	Tenant           *tenant.Guard
+	BruteForce       *BruteForceGuard
+	JWT              *JWTManager
+	Policy           SecurityPolicy
+	WebBaseURL       string
+	MFAIssuer        string
+	Activity         *ActivityLogger
+	Turnstile        *turnstile.Verifier
 }
 
 const registerAckMessage = "Kayıt alındı. E-posta adresinize doğrulama bağlantısı gönderildi."
@@ -217,10 +223,12 @@ func (s *Service) sendEmailVerification(ctx context.Context, userID primitive.Ob
 		return err
 	}
 	verifyURL := fmt.Sprintf("%s/auth/verify-email?token=%s", strings.TrimRight(s.WebBaseURL, "/"), token)
+	subject, plain, html := mail.VerificationEmail(verifyURL)
 	return s.Mail.Send(ctx, mail.Message{
-		To:      email,
-		Subject: "Miyuna — e-posta doğrulama",
-		Body:    fmt.Sprintf("E-posta adresinizi doğrulamak için bağlantıyı açın:\n%s", verifyURL),
+		To:       email,
+		Subject:  subject,
+		Body:     plain,
+		HTMLBody: html,
 	})
 }
 
@@ -243,6 +251,13 @@ func (s *Service) VerifyEmail(ctx context.Context, token string) (*MFASetupInfo,
 	if err := s.Users.SetEmailVerified(ctx, ev.UserID); err != nil {
 		return nil, err
 	}
+	uid := ev.UserID
+	_ = s.Security.Record(ctx, domain.SecurityEvent{
+		UserID:    &uid,
+		EventType: domain.EventEmailVerified,
+		Severity:  domain.SeverityInfo,
+		Details:   map[string]string{"stage": "register"},
+	})
 	return s.beginMFASetup(ctx, ev.UserID)
 }
 
@@ -310,8 +325,11 @@ func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) error
 	return s.Users.EnableMFA(ctx, consumed.UserID, consumed.Secret)
 }
 
-func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint string) (*LoginResult, error) {
-	email = strings.TrimSpace(strings.ToLower(email))
+func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResult, error) {
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	if err := s.verifyTurnstile(ctx, req.TurnstileToken); err != nil {
+		return nil, ErrInvalidCredentials
+	}
 	if locked, _ := s.BruteForce.IsLoginLocked(ctx, email); locked {
 		return nil, ErrAccountLocked
 	}
@@ -325,7 +343,7 @@ func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint 
 		return nil, err
 	}
 
-	if !CheckPassword(user.PasswordHash, password) {
+	if !CheckPassword(user.PasswordHash, req.Password) {
 		uid := user.ID
 		_, _ = s.BruteForce.RecordLoginFailure(ctx, email, &uid)
 		_ = s.Security.Record(ctx, domain.SecurityEvent{
@@ -350,42 +368,7 @@ func (s *Service) Login(ctx context.Context, email, password, deviceFingerprint 
 		return &LoginResult{Status: LoginStatusMFASetupRequired, User: user, MFASetup: setup}, nil
 	}
 
-	device := &domain.Device{
-		UserID:            user.ID,
-		DeviceFingerprint: deviceFingerprint,
-		Platform:          domain.DevicePlatformWeb,
-		Verified:          false,
-	}
-	if err := s.Devices.Upsert(ctx, device); err != nil {
-		return nil, err
-	}
-
-	pendingToken, pendingHash, err := NewToken()
-	if err != nil {
-		return nil, err
-	}
-	pending := &domain.PendingAuth{
-		TokenHash:         pendingHash,
-		UserID:            user.ID,
-		DeviceFingerprint: deviceFingerprint,
-		Stage:             StageMFA,
-		ExpiresAt:         time.Now().UTC().Add(s.Policy.PendingAuthTTL),
-	}
-	if err := s.Pending.Create(ctx, pending); err != nil {
-		return nil, err
-	}
-
-	return &LoginResult{
-		Status: LoginStatusMFARequired,
-		User:   user,
-		Pending: &PendingInfo{
-			Token:             pendingToken,
-			UserID:            user.ID,
-			DeviceFingerprint: deviceFingerprint,
-			Stage:             StageMFA,
-			ExpiresAt:         pending.ExpiresAt,
-		},
-	}, nil
+	return s.beginEmailOTPLogin(ctx, user, req)
 }
 
 func (s *Service) VerifyLoginMFA(ctx context.Context, pendingToken, code, deviceFingerprint string) (*LoginResult, error) {
@@ -430,111 +413,11 @@ func (s *Service) VerifyLoginMFA(ctx context.Context, pendingToken, code, device
 	if err != nil {
 		return nil, err
 	}
-	if device.Verified {
-		tokens, err := s.issueAuthTokens(ctx, user, device)
-		if err != nil {
-			return nil, err
-		}
-		return &LoginResult{Status: LoginStatusAuthenticated, User: user, Tokens: tokens}, nil
-	}
-
-	codePlain, codeHash, err := NewNumericCode()
-	if err != nil {
-		return nil, err
-	}
-	dv := &domain.DeviceVerification{
-		UserID:    user.ID,
-		DeviceID:  device.ID,
-		CodeHash:  codeHash,
-		ExpiresAt: time.Now().UTC().Add(s.Policy.DeviceVerifyTTL),
-	}
-	if err := s.DeviceVerify.Create(ctx, dv); err != nil {
-		return nil, err
-	}
-	_ = s.Mail.Send(ctx, mail.Message{
-		To:      user.Email,
-		Subject: "Miyuna — cihaz doğrulama",
-		Body:    fmt.Sprintf("Yeni cihaz doğrulama kodunuz: %s", codePlain),
-	})
-
-	newPendingToken, newPendingHash, err := NewToken()
-	if err != nil {
-		return nil, err
-	}
-	next := &domain.PendingAuth{
-		TokenHash:         newPendingHash,
-		UserID:            user.ID,
-		DeviceFingerprint: deviceFingerprint,
-		Stage:             StageDevice,
-		ExpiresAt:         time.Now().UTC().Add(s.Policy.PendingAuthTTL),
-	}
-	if err := s.Pending.Create(ctx, next); err != nil {
-		return nil, err
-	}
-
-	return &LoginResult{
-		Status: LoginStatusDeviceVerificationRequired,
-		User:   user,
-		Pending: &PendingInfo{
-			Token:             newPendingToken,
-			UserID:            user.ID,
-			DeviceFingerprint: deviceFingerprint,
-			Stage:             StageDevice,
-			ExpiresAt:         next.ExpiresAt,
-		},
-	}, nil
+	return s.completeLogin(ctx, user, device)
 }
 
 func (s *Service) VerifyDevice(ctx context.Context, pendingToken, code, deviceFingerprint string) (*LoginResult, error) {
-	hash := HashToken(pendingToken)
-	pending, err := s.Pending.FindByTokenHash(ctx, hash)
-	if err != nil {
-		return nil, ErrInvalidToken
-	}
-	if pending.DeviceFingerprint != deviceFingerprint || pending.Stage != StageDevice {
-		return nil, ErrInvalidToken
-	}
-
-	device, err := s.Devices.FindByUserAndFingerprint(ctx, pending.UserID, deviceFingerprint)
-	if err != nil {
-		return nil, ErrInvalidToken
-	}
-
-	dv, err := s.DeviceVerify.FindActive(ctx, pending.UserID, device.ID)
-	if err != nil {
-		return nil, ErrInvalidCode
-	}
-
-	if _, err := s.DeviceVerify.ConsumeByUserDeviceAndCode(ctx, pending.UserID, device.ID, HashToken(code)); err != nil {
-		uid := pending.UserID
-		if locked, _ := s.DeviceVerify.IncrementFailedAttempts(ctx, dv.ID, s.Policy.MaxOTPAttempts); locked {
-			_ = s.Security.Record(ctx, domain.SecurityEvent{
-				UserID:    &uid,
-				EventType: domain.EventOTPAttemptLimit,
-				Severity:  domain.SeverityWarning,
-				Details:   map[string]string{"stage": "device_verify"},
-			})
-			return nil, ErrChallengeLocked
-		}
-		_, _ = s.BruteForce.RecordOTPFailure(ctx, "device_verify", dv.ID.Hex(), &uid)
-		return nil, ErrInvalidCode
-	}
-
-	if err := s.Devices.MarkVerified(ctx, device.ID); err != nil {
-		return nil, err
-	}
-	_ = s.Pending.DeleteByTokenHash(ctx, pending.TokenHash)
-	_ = s.BruteForce.ResetOTPFailures(ctx, "device_verify", dv.ID.Hex())
-
-	user, err := s.Users.FindByID(ctx, pending.UserID)
-	if err != nil {
-		return nil, err
-	}
-	tokens, err := s.issueAuthTokens(ctx, user, device)
-	if err != nil {
-		return nil, err
-	}
-	return &LoginResult{Status: LoginStatusAuthenticated, User: user, Tokens: tokens}, nil
+	return s.VerifyLoginEmailOTP(ctx, pendingToken, code, deviceFingerprint)
 }
 
 func (s *Service) GetOrganization(ctx context.Context, userID, organizationID primitive.ObjectID) (*domain.Organization, domain.OrgRole, error) {

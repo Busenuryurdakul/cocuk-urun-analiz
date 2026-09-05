@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { AuthShell } from "@/components/layout/auth-shell";
-import { authErrorMessage, deviceFingerprint, graphqlRequest } from "@/lib/graphql";
+import { authErrorMessage, deviceFingerprintAsync, graphqlRequest } from "@/lib/graphql";
 
 export default function MFAPageClient() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function MFAPageClient() {
     e.preventDefault();
     setState("loading");
     const code = new FormData(e.currentTarget).get("code") as string;
-    const fingerprint = deviceFingerprint();
+    const fingerprint = await deviceFingerprintAsync();
     try {
       if (isVerify) {
         const data = await graphqlRequest<{ verifyLoginMFA: { status: string } }>(
@@ -28,8 +28,8 @@ export default function MFAPageClient() {
           }`,
           { input: { code, deviceFingerprint: fingerprint } },
         );
-        if (data.verifyLoginMFA.status === "DEVICE_VERIFICATION_REQUIRED") {
-          router.push("/auth/device");
+        if (data.verifyLoginMFA.status === "EMAIL_OTP_REQUIRED") {
+          router.push("/auth/email-otp");
         } else {
           router.push("/workspace");
         }

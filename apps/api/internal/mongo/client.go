@@ -72,6 +72,10 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 		{"email_verifications", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 		{"device_verifications", mongo.IndexModel{Keys: bson.D{{Key: "userId", Value: 1}, {Key: "deviceId", Value: 1}}}},
 		{"device_verifications", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
+		{"login_email_verifications", mongo.IndexModel{Keys: bson.D{{Key: "pendingHash", Value: 1}}}},
+		{"login_email_verifications", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
+		{"user_activity_logs", mongo.IndexModel{Keys: bson.D{{Key: "userId", Value: 1}, {Key: "timestamp", Value: -1}}}},
+		{"user_activity_logs", mongo.IndexModel{Keys: bson.D{{Key: "deviceId", Value: 1}, {Key: "timestamp", Value: -1}}}},
 		{"mfa_setup_challenges", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
 		{"mfa_setup_challenges", mongo.IndexModel{Keys: bson.D{{Key: "expiresAt", Value: 1}}, Options: ttl}},
 		{"organization_invitations", mongo.IndexModel{Keys: bson.D{{Key: "tokenHash", Value: 1}}, Options: options.Index().SetUnique(true)}},
@@ -137,6 +141,44 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 		{"config_snapshots", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "publishedAt", Value: -1}}}},
 	}
 	for _, idx := range phase5Indexes {
+		if _, err := c.DB.Collection(idx.collection).Indexes().CreateOne(ctx, idx.model); err != nil {
+			return fmt.Errorf("index %s: %w", idx.collection, err)
+		}
+	}
+
+	phase6Indexes := []struct {
+		collection string
+		model      mongo.IndexModel
+	}{
+		{"llm_providers", mongo.IndexModel{
+			Keys:    bson.D{{Key: "providerKey", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"llm_models", mongo.IndexModel{
+			Keys:    bson.D{{Key: "modelKey", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"llm_models", mongo.IndexModel{Keys: bson.D{{Key: "status", Value: 1}, {Key: "healthStatus", Value: 1}}}},
+		{"llm_routing_policies", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "version", Value: -1}}}},
+		{"llm_routing_policies", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "status", Value: 1}}}},
+		{"llm_personas", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}, {Key: "personaKey", Value: 1}, {Key: "version", Value: -1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"llm_configuration_drafts", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "updatedAt", Value: -1}}}},
+		{"llm_org_settings", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"llm_calls", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "createdAt", Value: -1}}}},
+		{"llm_calls", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "analysisRunId", Value: 1}}}},
+		{"llm_calls", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "idempotencyKey", Value: 1}}}},
+		{"llm_usage_daily", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}, {Key: "date", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+	}
+	for _, idx := range phase6Indexes {
 		if _, err := c.DB.Collection(idx.collection).Indexes().CreateOne(ctx, idx.model); err != nil {
 			return fmt.Errorf("index %s: %w", idx.collection, err)
 		}

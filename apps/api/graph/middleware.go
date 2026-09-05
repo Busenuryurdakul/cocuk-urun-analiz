@@ -18,6 +18,7 @@ func sessionMiddleware(authSvc *auth.Service, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := httpx.WithRequest(r.Context(), r)
 		ctx = httpx.WithResponseWriter(ctx, w)
+		ctx = httpx.WithClientInfo(ctx, httpx.ClientInfoFromRequest(r))
 		if access, ok := cookies.Get(r, cookies.AccessCookie); ok {
 			if tokens, err := authSvc.ValidateAccessToken(ctx, access); err == nil {
 				ctx = httpx.WithSession(ctx, httpx.SessionContext{

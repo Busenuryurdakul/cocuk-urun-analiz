@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -11,7 +12,7 @@ import (
 
 func TestLiveGoPythonRedisMongoE2E(t *testing.T) {
 	h := NewPhase5Harness(t, WithPythonOrchestrator(true))
-	h.App.StartBackgroundWorkers()
+	h.App.StartBackgroundWorkers(context.Background())
 
 	token := h.AccessToken(h.AnalystID, h.OrgID)
 	clientReq := fmt.Sprintf("e2e-%d", time.Now().UnixNano())
@@ -59,6 +60,14 @@ func TestLiveGoPythonRedisMongoE2E(t *testing.T) {
 		time.Sleep(500 * time.Millisecond)
 	}
 	if terminal != "COMPLETED" {
+		qData, qErrs, _ := h.GraphQL(token, `query($orgId: ID!, $runId: ID!) {
+			agentRun(organizationId: $orgId, analysisRunId: $runId) { status currentPhase terminalError terminalReason }
+			agentRunEvents(organizationId: $orgId, analysisRunId: $runId, afterSequence: 0, limit: 100) { sequence phase status metadata { key value } }
+		}`, map[string]any{"orgId": h.OrgID.Hex(), "runId": runID})
+		if len(qErrs) == 0 {
+			t.Logf("debug agentRun: %+v", qData["agentRun"])
+			t.Logf("debug events: %+v", qData["agentRunEvents"])
+		}
 		t.Fatalf("expected COMPLETED terminal state, got %s trace=%s", terminal, traceID)
 	}
 	if lastSeq < 3 {

@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AsyncView } from "@/components/async-view";
+import { ModelRouteStrip } from "@/components/llm/model-route-strip";
+import { RunEventTimeline } from "@/components/llm/run-event-timeline";
 import { graphqlRequest } from "@/lib/graphql";
+import { summarizeRunLlm } from "@/lib/llm-events";
 
 type AnalysisRun = {
   id: string;
@@ -12,6 +15,7 @@ type AnalysisRun = {
   terminalError?: string | null;
   traceId: string;
   clientRequestId: string;
+  productId: string;
   createdAt: string;
   completedAt?: string | null;
 };
@@ -24,6 +28,12 @@ type AgentRunEvent = {
   toolName?: string | null;
   timestamp: string;
   metadata: { key: string; value: string }[];
+};
+
+type OrgLlmContext = {
+  defaultModelKey: string;
+  fallbackModelKey: string;
+  modelNames: Record<string, string>;
 };
 
 const TERMINAL = new Set(["COMPLETED", "FAILED", "REJECTED"]);
@@ -46,11 +56,41 @@ export function AnalysisPanel({
   const [run, setRun] = useState<AnalysisRun | null>(null);
   const [events, setEvents] = useState<AgentRunEvent[]>([]);
   const [afterSequence, setAfterSequence] = useState(0);
+  const [llmContext, setLlmContext] = useState<OrgLlmContext>({
+    defaultModelKey: "careful_analyst",
+    fallbackModelKey: "result_analyst",
+    modelNames: {},
+  });
   const [view, setView] = useState<"idle" | "loading" | "polling" | "error" | "unauthorized">("idle");
   const [actionError, setActionError] = useState("");
   const [starting, setStarting] = useState(false);
   const clientRequestRef = useRef<string>("");
   const pollAttempt = useRef(0);
+
+  const runSummary = useMemo(() => summarizeRunLlm(events), [events]);
+
+  const loadLlmContext = useCallback(async () => {
+    try {
+      const data = await graphqlRequest<{
+        llmOrgSettings: { defaultModelKey: string; fallbackModelKey: string } | null;
+        llmModels: Array<{ modelKey: string; displayName: string }>;
+      }>(
+        `query($id: ID!) {
+          llmOrgSettings(organizationId: $id) { defaultModelKey fallbackModelKey }
+          llmModels(organizationId: $id) { modelKey displayName }
+        }`,
+        { id: orgId },
+      );
+      const names = Object.fromEntries(data.llmModels.map((model) => [model.modelKey, model.displayName]));
+      setLlmContext({
+        defaultModelKey: data.llmOrgSettings?.defaultModelKey ?? "careful_analyst",
+        fallbackModelKey: data.llmOrgSettings?.fallbackModelKey ?? "result_analyst",
+        modelNames: names,
+      });
+    } catch {
+      // Optional context — analysis can proceed without it.
+    }
+  }, [orgId]);
 
   const loadEvents = useCallback(
     async (runId: string, cursor: number) => {
@@ -82,7 +122,7 @@ export function AnalysisPanel({
       const data = await graphqlRequest<{ agentRun: AnalysisRun }>(
         `query($orgId: ID!, $runId: ID!) {
           agentRun(organizationId: $orgId, analysisRunId: $runId) {
-            id status currentPhase terminalReason terminalError traceId clientRequestId createdAt completedAt
+            id status currentPhase terminalReason terminalError traceId clientRequestId productId createdAt completedAt
           }
         }`,
         { orgId, runId },
@@ -92,6 +132,31 @@ export function AnalysisPanel({
     },
     [orgId],
   );
+
+  const hydrateLatestRun = useCallback(async () => {
+    try {
+      const data = await graphqlRequest<{ analysisRuns: AnalysisRun[] }>(
+        `query($orgId: ID!) {
+          analysisRuns(organizationId: $orgId, limit: 20) {
+            id status currentPhase terminalReason traceId clientRequestId productId createdAt completedAt
+          }
+        }`,
+        { orgId },
+      );
+      const latest = data.analysisRuns.find((item) => item.productId === productId);
+      if (!latest) return;
+      setRun(latest);
+      const next = await loadEvents(latest.id, 0);
+      setAfterSequence(next);
+    } catch {
+      // Ignore — user can start a fresh run.
+    }
+  }, [loadEvents, orgId, productId]);
+
+  useEffect(() => {
+    void loadLlmContext();
+    void hydrateLatestRun();
+  }, [hydrateLatestRun, loadLlmContext]);
 
   useEffect(() => {
     if (!run || TERMINAL.has(run.status)) return;
@@ -135,7 +200,7 @@ export function AnalysisPanel({
       const data = await graphqlRequest<{ startAgentRun: AnalysisRun }>(
         `mutation($input: StartAgentRunInput!) {
           startAgentRun(input: $input) {
-            id status currentPhase traceId clientRequestId createdAt
+            id status currentPhase traceId clientRequestId productId createdAt
           }
         }`,
         {
@@ -172,17 +237,32 @@ export function AnalysisPanel({
   }
 
   return (
-    <section className="card space-y-4">
+    <section className="card space-y-5">
       <div>
-        <h2 className="font-display text-2xl">Ürün analizi</h2>
+        <p className="kicker">Agent analizi</p>
+        <h2 className="mt-1 font-display text-2xl">Ürün analizi</h2>
         <p className="mt-1 text-sm text-muted">
-          Import durumundan ayrıdır — bu bölüm canonical ürün üzerindeki Agent analiz koşusunu gösterir.
+          Import durumundan ayrıdır — bu bölüm canonical ürün üzerindeki Agent koşusunu, model yükseltmelerini ve
+          token kullanımını gösterir.
         </p>
       </div>
 
+      <ModelRouteStrip
+        orgId={orgId}
+        defaultModelKey={llmContext.defaultModelKey}
+        fallbackModelKey={llmContext.fallbackModelKey}
+        modelNames={llmContext.modelNames}
+        runSummary={run ? runSummary : null}
+      />
+
       <div className="flex flex-wrap gap-3">
         {canStart && (
-          <button type="button" className="btn-primary" disabled={starting || (run != null && !TERMINAL.has(run.status))} onClick={() => void startAnalysis()}>
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={starting || (run != null && !TERMINAL.has(run.status))}
+            onClick={() => void startAnalysis()}
+          >
             {starting ? "Başlatılıyor…" : "Analizi Başlat"}
           </button>
         )}
@@ -226,6 +306,12 @@ export function AnalysisPanel({
               <dd>{run.terminalReason}</dd>
             </div>
           )}
+          {runSummary.escalated && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Model yükseltme</dt>
+              <dd className="font-semibold text-clay">Ağır modele geçildi</dd>
+            </div>
+          )}
         </dl>
       )}
 
@@ -234,19 +320,7 @@ export function AnalysisPanel({
       {events.length === 0 ? (
         run ? <AsyncView state="empty" empty={<p className="text-sm text-muted">Henüz analiz olayı yok.</p>} /> : null
       ) : (
-        <ol className="space-y-2 border-t border-sand pt-4">
-          {events.map((ev) => (
-            <li key={ev.id} className="rounded-xl bg-cream px-3 py-2 text-xs">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="badge-forest">#{ev.sequence}</span>
-                <span className="font-semibold">{ev.phase}</span>
-                <span className="text-muted">{ev.status}</span>
-                {ev.toolName && <span className="badge-muted">{ev.toolName}</span>}
-              </div>
-              <time className="mt-1 block text-muted">{ev.timestamp}</time>
-            </li>
-          ))}
-        </ol>
+        <RunEventTimeline orgId={orgId} events={events} />
       )}
     </section>
   );

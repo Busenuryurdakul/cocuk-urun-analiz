@@ -42,15 +42,45 @@ type Query {
   analysisRuns(organizationId: ID!, status: AnalysisRunStatus, limit: Int = 20): [AnalysisRun!]!
   """Agent run events — append-only progress"""
   agentRunEvents(organizationId: ID!, analysisRunId: ID!, afterSequence: Int = 0, limit: Int = 100): [AgentRunEvent!]!
+  """LLM providers — platform registry"""
+  llmProviders: [LLMProvider!]!
+  """LLM models available to organization"""
+  llmModels(organizationId: ID!): [LLMModel!]!
+  """Published routing policies"""
+  llmRoutingPolicies(organizationId: ID!, limit: Int = 20): [LLMRoutingPolicy!]!
+  """Published personas"""
+  llmPersonas(organizationId: ID!, limit: Int = 20): [LLMPersona!]!
+  """Active LLM configuration snapshot"""
+  activeLLMConfiguration(organizationId: ID!): LLMConfiguration
+  """LLM configuration drafts"""
+  llmConfigurationDrafts(organizationId: ID!, limit: Int = 20): [LLMConfigurationDraft!]!
+  """LLM usage summary"""
+  llmUsageSummary(organizationId: ID!, fromDate: String!): LLMUsageSummary!
+  """LLM usage dashboard with per-model breakdown and recent calls"""
+  llmUsageDashboard(organizationId: ID!, fromDate: String!, recentLimit: Int = 20): LLMUsageDashboard!
+  """Organization LLM preferences"""
+  llmOrgSettings(organizationId: ID!): LLMOrgSettings
+  """Single LLM call audit record"""
+  llmCall(organizationId: ID!, callId: ID!): LLMCall
+  """LLM model health"""
+  llmHealth(organizationId: ID!): [LLMModelHealth!]!
+  """Active devices for current user"""
+  myDevices: [Device!]!
+  """Activity log for current user"""
+  myActivityLog(limit: Int = 50, cursor: String): [ActivityLogEntry!]!
 }
 
 type Mutation {
   register(input: RegisterInput!): RegisterPayload!
+  resendEmailVerification(input: ResendEmailVerificationInput!): RegisterPayload!
   verifyEmail(token: String!): MFASetupPayload!
   confirmMFA(input: ConfirmMFAInput!): Boolean!
   login(input: LoginInput!): LoginPayload!
+  verifyLoginEmailOTP(input: VerifyLoginEmailOTPInput!): LoginPayload!
+  resendLoginEmailOTP: LoginPayload!
   verifyLoginMFA(input: VerifyLoginMFAInput!): LoginPayload!
   verifyDevice(input: VerifyDeviceInput!): LoginPayload!
+  revokeDevice(deviceId: ID!): Boolean!
   logout: Boolean!
   refreshToken: Boolean!
   switchWorkspace(organizationId: ID!): Boolean!
@@ -73,21 +103,50 @@ type Mutation {
   buildDatasetDraft(input: BuildDatasetDraftInput!): DatasetVersion!
   startAgentRun(input: StartAgentRunInput!): AnalysisRun!
   cancelAgentRun(input: CancelAgentRunInput!): AnalysisRun!
+  createLLMConfigurationDraft(input: CreateLLMConfigurationDraftInput!): LLMConfigurationDraft!
+  validateLLMConfiguration(input: ValidateLLMConfigurationInput!): LLMConfigurationDraft!
+  publishLLMConfiguration(input: PublishLLMConfigurationInput!): LLMConfiguration!
+  rollbackLLMConfiguration(input: RollbackLLMConfigurationInput!): LLMConfiguration!
+  setOrganizationPersona(input: SetOrganizationPersonaInput!): LLMOrgSettings!
+  setOrganizationModels(input: SetOrganizationModelsInput!): LLMOrgSettings!
+  testLLMConfiguration(input: TestLLMConfigurationInput!): LLMTestResult!
 }
 
 input RegisterInput {
   email: String!
   password: String!
+  turnstileToken: String
+}
+
+input ResendEmailVerificationInput {
+  email: String!
+  password: String!
+  turnstileToken: String
 }
 
 input ConfirmMFAInput {
   code: String!
 }
 
+enum ClientPlatform {
+  WEB
+  ELECTRON_WIN
+  ELECTRON_MAC
+}
+
 input LoginInput {
   email: String!
   password: String!
   deviceFingerprint: String!
+  platform: ClientPlatform = WEB
+  appVersion: String
+  turnstileToken: String
+}
+
+input VerifyLoginEmailOTPInput {
+  code: String!
+  deviceFingerprint: String!
+  turnstileToken: String
 }
 
 input VerifyLoginMFAInput {
@@ -223,6 +282,7 @@ enum PolicyStatus {
 }
 
 enum LoginStatus {
+  EMAIL_OTP_REQUIRED
   MFA_SETUP_REQUIRED
   MFA_REQUIRED
   DEVICE_VERIFICATION_REQUIRED
@@ -241,6 +301,27 @@ type MFASetupPayload {
 type LoginPayload {
   status: LoginStatus!
   user: User
+}
+
+type Device {
+  id: ID!
+  platform: ClientPlatform!
+  label: String!
+  userAgent: String
+  ipAddress: String
+  appVersion: String
+  verified: Boolean!
+  lastActiveAt: String!
+  createdAt: String!
+}
+
+type ActivityLogEntry {
+  id: ID!
+  action: String!
+  resourceId: String
+  ipAddress: String
+  userAgent: String
+  timestamp: String!
 }
 
 type ProductFieldMeta {
@@ -574,4 +655,179 @@ enum AgentEventStatus {
   RUNNING
   COMPLETED
   FAILED
+}
+
+type LLMProvider {
+  id: ID!
+  providerKey: String!
+  displayName: String!
+  status: String!
+}
+
+type LLMModel {
+  id: ID!
+  modelKey: String!
+  displayName: String!
+  status: String!
+  healthStatus: String!
+  contextWindowTokens: Int!
+  defaultForPlatform: Boolean!
+  fallbackForPlatform: Boolean!
+  supportedTaskTypes: [String!]!
+}
+
+type LLMRoutingPolicy {
+  id: ID!
+  version: String!
+  status: String!
+  defaultModelKey: String!
+  fallbackModelKey: String!
+  publishedAt: String
+}
+
+type LLMPersona {
+  id: ID!
+  personaKey: String!
+  version: String!
+  status: String!
+  displayName: String!
+}
+
+type LLMConfiguration {
+  id: ID!
+  organizationId: ID
+  routingPolicyVersion: String!
+  personaKey: String!
+  personaVersion: String!
+  defaultModelKey: String!
+  fallbackModelKey: String!
+  publishedAt: String!
+  reason: String!
+}
+
+type LLMConfigurationDraft {
+  id: ID!
+  organizationId: ID!
+  status: String!
+  routingPolicyVersion: String!
+  personaKey: String!
+  personaVersion: String!
+  defaultModelKey: String!
+  fallbackModelKey: String!
+  validationErrors: [String!]!
+  updatedAt: String!
+}
+
+type LLMOrgSettings {
+  organizationId: ID!
+  personaKey: String!
+  defaultModelKey: String!
+  fallbackModelKey: String!
+}
+
+type LLMUsageSummary {
+  callCount: Int!
+  inputTokens: Int!
+  outputTokens: Int!
+  totalTokens: Int!
+  estimatedCostUsd: Float!
+  fallbackCount: Int!
+}
+
+type LLMModelUsage {
+  modelKey: String!
+  displayName: String!
+  callCount: Int!
+  inputTokens: Int!
+  outputTokens: Int!
+  totalTokens: Int!
+  estimatedCostUsd: Float!
+}
+
+type LLMUsageDashboard {
+  summary: LLMUsageSummary!
+  byModel: [LLMModelUsage!]!
+  recentCalls: [LLMCall!]!
+}
+
+type LLMCall {
+  id: ID!
+  organizationId: ID!
+  modelKey: String!
+  personaKey: String!
+  routingReason: String!
+  fallbackUsed: Boolean!
+  inputTokens: Int!
+  outputTokens: Int!
+  latencyMs: Int!
+  status: String!
+  complianceProfile: ComplianceProfile
+  compliancePolicyVersion: String
+  complianceReflexVersion: String
+  safetyResult: String
+  createdAt: String!
+}
+
+type LLMModelHealth {
+  modelKey: String!
+  displayName: String!
+  healthStatus: String!
+  providerKey: String!
+}
+
+type LLMTestResult {
+  callId: ID!
+  modelKey: String!
+  fallbackUsed: Boolean!
+  escalationUsed: Boolean!
+  routingReason: String!
+  personaKey: String!
+  personaVersion: String!
+  contentPreview: String!
+  inputTokens: Int!
+  outputTokens: Int!
+}
+
+input CreateLLMConfigurationDraftInput {
+  organizationId: ID!
+  routingPolicyVersion: String
+  personaKey: String
+  personaVersion: String
+  defaultModelKey: String
+  fallbackModelKey: String
+  reason: String!
+}
+
+input ValidateLLMConfigurationInput {
+  organizationId: ID!
+  draftId: ID!
+}
+
+input PublishLLMConfigurationInput {
+  organizationId: ID!
+  draftId: ID!
+  reason: String!
+}
+
+input RollbackLLMConfigurationInput {
+  organizationId: ID!
+  snapshotId: ID!
+  reason: String!
+}
+
+input SetOrganizationPersonaInput {
+  organizationId: ID!
+  personaKey: String!
+}
+
+input SetOrganizationModelsInput {
+  organizationId: ID!
+  defaultModelKey: String!
+  fallbackModelKey: String!
+}
+
+input TestLLMConfigurationInput {
+  organizationId: ID!
+  personaKey: String
+  prompt: String!
 }

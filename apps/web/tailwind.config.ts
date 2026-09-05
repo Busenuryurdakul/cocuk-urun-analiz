@@ -45,6 +45,11 @@ const config: Config = {
       borderRadius: {
         "2.5xl": "1.25rem",
       },
+      opacity: {
+        12: "0.12",
+        15: "0.15",
+        85: "0.85",
+      },
     },
   },
   plugins: [],

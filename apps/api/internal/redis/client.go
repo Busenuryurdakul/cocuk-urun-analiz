@@ -70,6 +70,14 @@ func (c *Client) Get(ctx context.Context, key string) (string, error) {
 	return val, nil
 }
 
+func (c *Client) Incr(ctx context.Context, key string) error {
+	return c.rdb.Incr(ctx, key).Err()
+}
+
+func (c *Client) Decr(ctx context.Context, key string) error {
+	return c.rdb.Decr(ctx, key).Err()
+}
+
 func (c *Client) SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error) {
 	ok, err := c.rdb.SetNX(ctx, key, value, ttl).Result()
 	return ok, err

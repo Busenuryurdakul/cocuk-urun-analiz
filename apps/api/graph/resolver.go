@@ -6,6 +6,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/llm"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/marketplace"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/org"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/product"
@@ -23,5 +24,6 @@ type Resolver struct {
 	MarketplaceService *marketplace.Service
 	DatasetService     *dataset.Service
 	AgentService       *agent.Service
+	LLMService         *llm.Service
 	CookieOpts         cookies.Options
 }

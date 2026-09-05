@@ -173,7 +173,23 @@ Detay implementasyon Phase fine-tune fazında.
 - [COMPLIANCE.md](./COMPLIANCE.md) — compliance policy versions
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — system topology
 
-## 11. UNRESOLVED
+## 11. Platform Compliance Reflex Layer
+
+Every LLM call through the Go gateway receives a **versioned platform compliance reflex** based on the active compliance scope (KVKK, GDPR, or BOTH):
+
+```text
+Analysis Run → ConfigSnapshot (compliancePolicyVersion)
+  → Agent POST /internal/llm/v1/complete
+    → Enforcer.PreCall (PII redaction + reflex resolve)
+    → Persona system instruction + ComplianceReflexInstruction
+    → Provider call
+    → Enforcer.PostCall (forbidden-claim validation)
+    → LLMCall audit (complianceProfile, policyVersion, reflexVersion, safetyResult)
+```
+
+Reflex registry version: **1.0.0** (`compliance.ComplianceReflexVersion()`). Scope-specific behavior is injected at runtime; persona seeds remain scope-agnostic.
+
+## 12. UNRESOLVED
 
 | Item | Status |
 |------|--------|

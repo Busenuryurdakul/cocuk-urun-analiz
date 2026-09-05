@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AuthShell } from "@/components/layout/auth-shell";
+import { TurnstileWidget, turnstileEnabled } from "@/components/turnstile-widget";
 import {
+  appVersion,
   authErrorMessage,
-  deviceFingerprint,
+  clientPlatform,
+  deviceFingerprintAsync,
   graphqlErrorCode,
   graphqlRequest,
 } from "@/lib/graphql";
 
 type LoginStatus =
+  | "EMAIL_OTP_REQUIRED"
   | "MFA_SETUP_REQUIRED"
   | "MFA_REQUIRED"
   | "DEVICE_VERIFICATION_REQUIRED"
@@ -26,6 +30,7 @@ export default function LoginPage() {
   const [pendingVerify, setPendingVerify] = useState<{ email: string; password: string } | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,7 +38,7 @@ export default function LoginPage() {
     setError("");
     setInfo("");
     setPendingVerify(null);
-    const fingerprint = deviceFingerprint();
+    const fingerprint = await deviceFingerprintAsync();
     try {
       const data = await graphqlRequest<{ login: { status: LoginStatus } }>(
         `mutation Login($input: LoginInput!) {
@@ -44,10 +49,16 @@ export default function LoginPage() {
             email,
             password,
             deviceFingerprint: fingerprint,
+            platform: clientPlatform(),
+            appVersion: appVersion() ?? null,
+            turnstileToken: turnstileToken || null,
           },
         },
       );
       switch (data.login.status) {
+        case "EMAIL_OTP_REQUIRED":
+          router.push("/auth/email-otp");
+          break;
         case "MFA_SETUP_REQUIRED":
           router.push("/auth/mfa");
           break;
@@ -55,7 +66,7 @@ export default function LoginPage() {
           router.push("/auth/mfa?step=verify");
           break;
         case "DEVICE_VERIFICATION_REQUIRED":
-          router.push("/auth/device");
+          router.push("/auth/email-otp");
           break;
         default:
           router.push("/workspace");
@@ -73,15 +84,22 @@ export default function LoginPage() {
   async function onResend() {
     setResending(true);
     setInfo("");
+    const creds = pendingVerify ?? { email, password };
     try {
-      const data = await graphqlRequest<{ register: { message: string } }>(
-        `mutation Register($input: RegisterInput!) {
-          register(input: $input) { message }
+      const data = await graphqlRequest<{ resendEmailVerification: { message: string } }>(
+        `mutation ResendEmailVerification($input: ResendEmailVerificationInput!) {
+          resendEmailVerification(input: $input) { message }
         }`,
-        { input: pendingVerify ?? { email, password } },
+        {
+          input: {
+            email: creds.email,
+            password: creds.password,
+            turnstileToken: turnstileToken || null,
+          },
+        },
       );
       setError("");
-      setInfo(data.register.message);
+      setInfo(data.resendEmailVerification.message);
     } catch (err) {
       setError(authErrorMessage(err, "Doğrulama e-postası gönderilemedi"));
     } finally {
@@ -136,6 +154,9 @@ export default function LoginPage() {
             className="input"
           />
         </label>
+        {turnstileEnabled() && (
+          <TurnstileWidget onToken={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
+        )}
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? "Giriş yapılıyor…" : "Giriş yap"}
         </button>

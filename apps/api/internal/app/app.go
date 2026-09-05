@@ -11,6 +11,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/config"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/llm"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mail"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/marketplace"
 	mongoclient "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mongo"
@@ -21,13 +22,16 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/storage"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/tenant"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/turnstile"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/ugc"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type App struct {
 	Config         config.Config
 	Mongo          *mongoclient.Client
 	Redis          *redis.Client
+	MailQueue      *mail.QueuedService
 	Auth           *auth.Service
 	Org            *org.Service
 	Compliance     *compliance.Engine
@@ -38,8 +42,10 @@ type App struct {
 	Marketplace    *marketplace.Service
 	Dataset        *dataset.Service
 	Agent          *agent.Service
+	LLM            *llm.Service
 	ImportConsumer *marketplace.Consumer
 	AgentInternal  *agent.InternalHandler
+	LLMInternal    *llm.InternalHandler
 	RecoveryWorker *agent.RecoveryWorker
 }
 
@@ -66,7 +72,9 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	rotated := repository.NewRotatedRefreshRepository(db)
 	pending := repository.NewPendingAuthRepository(db)
 	emailVerify := repository.NewEmailVerificationRepository(db)
+	loginEmailVerify := repository.NewLoginEmailVerificationRepository(db)
 	deviceVerify := repository.NewDeviceVerificationRepository(db)
+	activityLogs := repository.NewUserActivityLogRepository(db)
 	mfaSetup := repository.NewMFASetupRepository(db)
 	security := repository.NewSecurityEventRepository(db)
 	invitations := repository.NewInvitationRepository(db)
@@ -87,8 +95,19 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	agentEventsRepo := repository.NewAgentRunEventRepository(db)
 	toolExecutionsRepo := repository.NewToolExecutionRepository(db)
 	configSnapshotsRepo := repository.NewConfigSnapshotRepository(db)
+	llmProvidersRepo := repository.NewLLMProviderRepository(db)
+	llmModelsRepo := repository.NewLLMModelRepository(db)
+	llmRoutingRepo := repository.NewLLMRoutingPolicyRepository(db)
+	llmPersonasRepo := repository.NewLLMPersonaRepository(db)
+	llmDraftsRepo := repository.NewLLMConfigurationDraftRepository(db)
+	llmOrgSettingsRepo := repository.NewLLMOrgSettingsRepository(db)
+	llmCallsRepo := repository.NewLLMCallRepository(db)
+	llmUsageRepo := repository.NewLLMUsageDailyRepository(db)
 
 	if err := compliance.SeedPlatformPolicies(ctx, compliancePolicies); err != nil {
+		return nil, err
+	}
+	if err := llm.SeedPlatformDefaults(ctx, llmProvidersRepo, llmModelsRepo, llmRoutingRepo, llmPersonasRepo, primitive.NilObjectID); err != nil {
 		return nil, err
 	}
 
@@ -109,7 +128,15 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 
 	guard := &tenant.Guard{Members: members, Events: security}
-	mailer := mail.NewSMTP(cfg.MailSMTPHost, cfg.MailSMTPPort, cfg.MailFrom)
+	smtpInner := mail.NewSMTP(mail.SMTPConfig{
+		Host:     cfg.MailSMTPHost,
+		Port:     cfg.MailSMTPPort,
+		From:     cfg.MailFrom,
+		User:     cfg.MailSMTPUser,
+		Password: cfg.MailSMTPPass,
+		UseTLS:   cfg.MailSMTPTLS,
+	})
+	mailer := mail.NewQueuedService(smtpInner, redisClient, cfg.MailQueueEnabled, cfg.MailRetryMax)
 
 	orgSvc := &org.Service{
 		Orgs:        orgs,
@@ -203,6 +230,49 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	})
 	recoveryWorker := agent.NewRecoveryWorker(agentSvc, leaseStore, 30*time.Second)
 
+	mockProvider := &llm.MockProvider{
+		Responses: map[string]string{
+			llm.ModelKeyCareful: "Careful analyst mock response with evidence caveats.",
+			llm.ModelKeyResult:  "Result analyst mock response with concise action items.",
+		},
+	}
+	llmGateway := llm.NewGateway(llm.GatewayDeps{
+		Orgs:        orgs,
+		OrgSettings: llmOrgSettingsRepo,
+		Providers:   llmProvidersRepo,
+		Models:      llmModelsRepo,
+		Routing:     llmRoutingRepo,
+		Personas:    llmPersonasRepo,
+		Calls:       llmCallsRepo,
+		Usage:       llmUsageRepo,
+		Router:      &llm.Router{Redis: redisClient},
+		Enforcer: &llm.Enforcer{
+			Compliance: complianceEngine,
+			PolicyRepo: policyRepo,
+			Snapshots:  configSnapshotsRepo,
+		},
+		Mock:        mockProvider,
+		HTTP:        llm.NewHTTPProvider(cfg.LLMRequestTimeout),
+		UseMock:     cfg.LLMUseMock,
+		MaxRetries:  cfg.LLMMaxRetries,
+		Timeout:     cfg.LLMRequestTimeout,
+	})
+	llmSvc := &llm.Service{
+		Providers:   llmProvidersRepo,
+		Models:      llmModelsRepo,
+		Routing:     llmRoutingRepo,
+		Personas:    llmPersonasRepo,
+		Drafts:      llmDraftsRepo,
+		OrgSettings: llmOrgSettingsRepo,
+		Snapshots:   configSnapshotsRepo,
+		ConfigAudit: configAudit,
+		Calls:       llmCallsRepo,
+		Usage:       llmUsageRepo,
+		Gateway:     llmGateway,
+		Tenant:      guard,
+		Security:    security,
+	}
+
 	policy := auth.SecurityPolicy{
 		MaxOTPAttempts:       cfg.MaxOTPAttempts,
 		LoginMaxAttempts:     cfg.LoginMaxAttempts,
@@ -213,6 +283,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		PendingAuthTTL:       10 * time.Minute,
 		MFASetupTTL:          30 * time.Minute,
 		DeviceVerifyTTL:      15 * time.Minute,
+		LoginEmailOTPTTL:     cfg.LoginEmailOTPTTL,
 	}
 
 	bruteForce := &auth.BruteForceGuard{
@@ -222,27 +293,30 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 
 	authSvc := &auth.Service{
-		Users:        users,
-		Orgs:         orgs,
-		Members:      members,
-		Devices:      devices,
-		Sessions:     sessions,
-		Rotated:      rotated,
-		Pending:      pending,
-		EmailVerify:  emailVerify,
-		DeviceVerify: deviceVerify,
-		MFASetup:     mfaSetup,
-		Security:     security,
-		Mail:         mailer,
-		Tenant:       guard,
-		BruteForce:   bruteForce,
-		JWT:          auth.NewJWTManager(cfg.JWTSecret, cfg.AccessTokenTTL),
-		Policy:       policy,
-		WebBaseURL:   cfg.WebBaseURL,
-		MFAIssuer:    cfg.MFAIssuer,
+		Users:            users,
+		Orgs:             orgs,
+		Members:          members,
+		Devices:          devices,
+		Sessions:         sessions,
+		Rotated:          rotated,
+		Pending:          pending,
+		EmailVerify:      emailVerify,
+		LoginEmailVerify: loginEmailVerify,
+		DeviceVerify:     deviceVerify,
+		MFASetup:         mfaSetup,
+		Security:         security,
+		Mail:             mailer,
+		Tenant:           guard,
+		BruteForce:       bruteForce,
+		JWT:              auth.NewJWTManager(cfg.JWTSecret, cfg.AccessTokenTTL),
+		Policy:           policy,
+		WebBaseURL:       cfg.WebBaseURL,
+		MFAIssuer:        cfg.MFAIssuer,
+		Activity:         &auth.ActivityLogger{Logs: activityLogs},
+		Turnstile:          turnstile.NewVerifier(cfg.TurnstileSecretKey, cfg.TurnstileEnabled),
 	}
 
-	return &App{
+	app := &App{
 		Config:         cfg,
 		Mongo:          mongoClient,
 		Redis:          redisClient,
@@ -256,13 +330,20 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Marketplace:    marketplaceSvc,
 		Dataset:        datasetSvc,
 		Agent:          agentSvc,
+		LLM:            llmSvc,
 		ImportConsumer: importConsumer,
 		AgentInternal: &agent.InternalHandler{
 			Service: agentSvc,
 			Token:   cfg.AgentInternalToken,
 		},
+		LLMInternal: &llm.InternalHandler{
+			Gateway: llmGateway,
+			Token:   cfg.AgentInternalToken,
+		},
 		RecoveryWorker: recoveryWorker,
-	}, nil
+		MailQueue:      mailer,
+	}
+	return app, nil
 }
 
 func (a *App) Ready(ctx context.Context) error {
@@ -280,7 +361,10 @@ func (a *App) CookieOptions() cookies.Options {
 	return opts
 }
 
-func (a *App) StartBackgroundWorkers() {
+func (a *App) StartBackgroundWorkers(ctx context.Context) {
+	if a.MailQueue != nil {
+		a.MailQueue.StartWorker(ctx, 2*time.Second)
+	}
 	if a.ImportConsumer != nil {
 		a.ImportConsumer.Start()
 	}

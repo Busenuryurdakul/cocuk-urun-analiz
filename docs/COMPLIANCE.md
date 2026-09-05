@@ -142,7 +142,14 @@ Phase 5 enforces compliance at three verified points for deterministic analysis 
 
 **Provenance:** Cross-tenant `marketplaceImportRunId` references rejected at start.
 
-**Phase 6+ output/report compliance validation:** DEFERRED — not claimed as implemented.
+**Phase 6 LLM output compliance validation:** IMPLEMENTED — Go LLM Gateway applies platform Compliance Reflex (KVKK/GDPR/BOTH) on every provider call and validates output text before returning results.
+
+| Point | When | Mechanism |
+|-------|------|-----------|
+| LLM pre-call | `Gateway.Complete` | Bypass/injection detection, `compliance.RedactPII`, scope reflex instruction injection |
+| LLM post-call | After provider response | `ValidateOutputText` + compliance audit (`llm_complete_output`) |
+
+**Phase 6+ report/footer compliance validation (non-LLM persist path):** DEFERRED — not claimed as implemented.
 
 ## 12. Audit Requirements
 

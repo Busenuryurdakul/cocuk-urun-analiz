@@ -19,7 +19,15 @@ type Config struct {
 	AllowGraphQLPlayground bool
 	MailSMTPHost           string
 	MailSMTPPort           string
+	MailSMTPUser           string
+	MailSMTPPass           string
+	MailSMTPTLS            bool
 	MailFrom               string
+	MailQueueEnabled       bool
+	MailRetryMax           int
+	TurnstileSecretKey     string
+	TurnstileEnabled       bool
+	LoginEmailOTPTTL       time.Duration
 	WebBaseURL             string
 	MFAIssuer              string
 	CookieSecure           bool
@@ -34,6 +42,9 @@ type Config struct {
 	S3SecretKey            string
 	S3Bucket               string
 	S3ForcePathStyle       bool
+	LLMUseMock             bool
+	LLMRequestTimeout      time.Duration
+	LLMMaxRetries          int
 }
 
 // Load reads configuration from environment with dev defaults.
@@ -50,7 +61,15 @@ func Load() Config {
 		AllowGraphQLPlayground: getEnv("ALLOW_GRAPHQL_PLAYGROUND", "true") == "true",
 		MailSMTPHost:           getEnv("MAIL_SMTP_HOST", "localhost"),
 		MailSMTPPort:           getEnv("MAIL_SMTP_PORT", "1025"),
+		MailSMTPUser:           getEnv("MAIL_SMTP_USER", ""),
+		MailSMTPPass:           getEnv("MAIL_SMTP_PASS", ""),
+		MailSMTPTLS:            getEnv("MAIL_SMTP_TLS", "false") == "true",
 		MailFrom:               getEnv("MAIL_FROM", "noreply@miyuna.local"),
+		MailQueueEnabled:       getEnv("MAIL_QUEUE_ENABLED", "true") == "true",
+		MailRetryMax:           intEnv("MAIL_RETRY_MAX", 3),
+		TurnstileSecretKey:     getEnv("TURNSTILE_SECRET_KEY", ""),
+		TurnstileEnabled:       getEnv("TURNSTILE_ENABLED", "false") == "true",
+		LoginEmailOTPTTL:       durationEnv("LOGIN_EMAIL_OTP_TTL", 10*time.Minute),
 		WebBaseURL:             getEnv("WEB_BASE_URL", "http://localhost:3000"),
 		MFAIssuer:              getEnv("MFA_ISSUER", "Miyuna"),
 		CookieSecure:           getEnv("COOKIE_SECURE", "false") == "true",
@@ -65,6 +84,9 @@ func Load() Config {
 		S3SecretKey:            getEnv("S3_SECRET_KEY", ""),
 		S3Bucket:               getEnv("S3_BUCKET", ""),
 		S3ForcePathStyle:       getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
+		LLMUseMock:             getEnv("LLM_USE_MOCK", "true") == "true",
+		LLMRequestTimeout:      durationEnv("LLM_REQUEST_TIMEOUT", 30*time.Second),
+		LLMMaxRetries:          intEnv("LLM_MAX_RETRIES", 1),
 	}
 }
 

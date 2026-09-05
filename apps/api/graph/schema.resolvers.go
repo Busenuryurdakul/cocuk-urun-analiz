@@ -8,15 +8,18 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/httpx"
+	llmsvc "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/llm"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/marketplace"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/product"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/rbac"
@@ -26,7 +29,22 @@ import (
 
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error) {
+	if err := r.Auth.TurnstileVerify(ctx, ptrStr(input.TurnstileToken)); err != nil {
+		return nil, mapAuthError(auth.ErrInvalidCredentials)
+	}
 	result, err := r.Auth.Register(ctx, input.Email, input.Password)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return &model.RegisterPayload{Message: result.Message}, nil
+}
+
+// ResendEmailVerification is the resolver for the resendEmailVerification field.
+func (r *mutationResolver) ResendEmailVerification(ctx context.Context, input model.ResendEmailVerificationInput) (*model.RegisterPayload, error) {
+	if err := r.Auth.TurnstileVerify(ctx, ptrStr(input.TurnstileToken)); err != nil {
+		return nil, mapAuthError(auth.ErrInvalidCredentials)
+	}
+	result, err := r.Auth.ResendEmailVerification(ctx, input.Email, input.Password)
 	if err != nil {
 		return nil, mapAuthError(err)
 	}
@@ -67,12 +85,29 @@ func (r *mutationResolver) ConfirmMfa(ctx context.Context, input model.ConfirmMF
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginPayload, error) {
-	result, err := r.Auth.Login(ctx, input.Email, input.Password, input.DeviceFingerprint)
+	result, err := r.Auth.Login(ctx, auth.LoginRequest{
+		Email:             input.Email,
+		Password:          input.Password,
+		DeviceFingerprint: input.DeviceFingerprint,
+		Platform:          toDomainPlatform(input.Platform),
+		AppVersion:        ptrStr(input.AppVersion),
+		TurnstileToken:    ptrStr(input.TurnstileToken),
+	})
 	if err != nil {
 		return nil, mapAuthError(err)
 	}
 	applyLoginCookies(ctx, r.CookieOpts, result)
 	return toModelLoginPayload(result), nil
+}
+
+// VerifyLoginEmailOtp is the resolver for the verifyLoginEmailOTP field.
+func (r *mutationResolver) VerifyLoginEmailOtp(ctx context.Context, input model.VerifyLoginEmailOTPInput) (*model.LoginPayload, error) {
+	panic(fmt.Errorf("not implemented: VerifyLoginEmailOtp - verifyLoginEmailOTP"))
+}
+
+// ResendLoginEmailOtp is the resolver for the resendLoginEmailOTP field.
+func (r *mutationResolver) ResendLoginEmailOtp(ctx context.Context) (*model.LoginPayload, error) {
+	panic(fmt.Errorf("not implemented: ResendLoginEmailOtp - resendLoginEmailOTP"))
 }
 
 // VerifyLoginMfa is the resolver for the verifyLoginMFA field.
@@ -109,6 +144,26 @@ func (r *mutationResolver) VerifyDevice(ctx context.Context, input model.VerifyD
 	}
 	applyLoginCookies(ctx, r.CookieOpts, result)
 	return toModelLoginPayload(result), nil
+}
+
+// RevokeDevice is the resolver for the revokeDevice field.
+func (r *mutationResolver) RevokeDevice(ctx context.Context, deviceID string) (bool, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", errUnauthorized)
+	}
+	userID, err := parseObjectID(session.UserID)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", errUnauthorized)
+	}
+	devID, err := parseObjectID(deviceID)
+	if err != nil {
+		return false, gqlError("INVALID_TOKEN", err)
+	}
+	if err := r.Auth.RevokeDevice(ctx, userID, devID); err != nil {
+		return false, mapAuthError(err)
+	}
+	return true, nil
 }
 
 // Logout is the resolver for the logout field.
@@ -639,6 +694,171 @@ func (r *mutationResolver) CancelAgentRun(ctx context.Context, input model.Cance
 	return toModelAnalysisRun(run), nil
 }
 
+// CreateLLMConfigurationDraft is the resolver for the createLLMConfigurationDraft field.
+func (r *mutationResolver) CreateLLMConfigurationDraft(ctx context.Context, input model.CreateLLMConfigurationDraftInput) (*model.LLMConfigurationDraft, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	draftInput := llmsvc.DraftInput{
+		OrganizationID: &orgID,
+		Reason:         input.Reason,
+	}
+	if input.RoutingPolicyVersion != nil {
+		draftInput.RoutingPolicyVersion = *input.RoutingPolicyVersion
+	}
+	if input.PersonaKey != nil {
+		draftInput.PersonaKey = *input.PersonaKey
+	}
+	if input.PersonaVersion != nil {
+		draftInput.PersonaVersion = *input.PersonaVersion
+	}
+	if input.DefaultModelKey != nil {
+		draftInput.DefaultModelKey = *input.DefaultModelKey
+	}
+	if input.FallbackModelKey != nil {
+		draftInput.FallbackModelKey = *input.FallbackModelKey
+	}
+	draft, err := r.LLMService.CreateDraft(ctx, actorID, draftInput)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMConfigurationDraft(draft), nil
+}
+
+// ValidateLLMConfiguration is the resolver for the validateLLMConfiguration field.
+func (r *mutationResolver) ValidateLLMConfiguration(ctx context.Context, input model.ValidateLLMConfigurationInput) (*model.LLMConfigurationDraft, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	draftID, err := parseObjectID(input.DraftID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	draft, err := r.LLMService.ValidateDraft(ctx, actorID, orgID, draftID)
+	if err != nil && !errors.Is(err, llmsvc.ErrPublishValidation) {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMConfigurationDraft(draft), nil
+}
+
+// PublishLLMConfiguration is the resolver for the publishLLMConfiguration field.
+func (r *mutationResolver) PublishLLMConfiguration(ctx context.Context, input model.PublishLLMConfigurationInput) (*model.LLMConfiguration, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	draftID, err := parseObjectID(input.DraftID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	snap, err := r.LLMService.PublishDraft(ctx, actorID, orgID, draftID, input.Reason)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMConfiguration(snap), nil
+}
+
+// RollbackLLMConfiguration is the resolver for the rollbackLLMConfiguration field.
+func (r *mutationResolver) RollbackLLMConfiguration(ctx context.Context, input model.RollbackLLMConfigurationInput) (*model.LLMConfiguration, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	snapshotID, err := parseObjectID(input.SnapshotID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	snap, err := r.LLMService.RollbackConfiguration(ctx, actorID, orgID, snapshotID, input.Reason)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMConfiguration(snap), nil
+}
+
+// SetOrganizationPersona is the resolver for the setOrganizationPersona field.
+func (r *mutationResolver) SetOrganizationPersona(ctx context.Context, input model.SetOrganizationPersonaInput) (*model.LLMOrgSettings, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	settings, err := r.LLMService.SetOrganizationPersona(ctx, actorID, orgID, input.PersonaKey)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMOrgSettings(settings), nil
+}
+
+// SetOrganizationModels is the resolver for the setOrganizationModels field.
+func (r *mutationResolver) SetOrganizationModels(ctx context.Context, input model.SetOrganizationModelsInput) (*model.LLMOrgSettings, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	settings, err := r.LLMService.SetOrganizationModels(ctx, actorID, orgID, input.DefaultModelKey, input.FallbackModelKey)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMOrgSettings(settings), nil
+}
+
+// TestLLMConfiguration is the resolver for the testLLMConfiguration field.
+func (r *mutationResolver) TestLLMConfiguration(ctx context.Context, input model.TestLLMConfigurationInput) (*model.LLMTestResult, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	personaKey := ""
+	if input.PersonaKey != nil {
+		personaKey = *input.PersonaKey
+	}
+	resp, err := r.LLMService.TestConfiguration(ctx, actorID, orgID, personaKey, input.Prompt)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return &model.LLMTestResult{
+		CallID:         resp.CallID,
+		ModelKey:       resp.ModelKey,
+		FallbackUsed:   resp.FallbackUsed,
+		EscalationUsed: resp.EscalationUsed,
+		RoutingReason:  resp.RoutingReason,
+		PersonaKey:     resp.PersonaKey,
+		PersonaVersion: resp.PersonaVersion,
+		ContentPreview: previewContent(resp.Content),
+		InputTokens:    resp.InputTokens,
+		OutputTokens:   resp.OutputTokens,
+	}, nil
+}
+
 // Health returns GraphQL layer health.
 func (r *queryResolver) Health(ctx context.Context) (string, error) {
 	return "ok", nil
@@ -1040,6 +1260,272 @@ func (r *queryResolver) AgentRunEvents(ctx context.Context, organizationID strin
 		return nil, mapPhase5Error(err)
 	}
 	return toModelAgentRunEvents(events), nil
+}
+
+// LlmProviders is the resolver for the llmProviders field.
+func (r *queryResolver) LlmProviders(ctx context.Context) ([]*model.LLMProvider, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	items, err := r.LLMService.ListProviders(ctx, actorID, nil)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMProviders(items), nil
+}
+
+// LlmModels is the resolver for the llmModels field.
+func (r *queryResolver) LlmModels(ctx context.Context, organizationID string) ([]*model.LLMModel, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	items, err := r.LLMService.ListModels(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMModels(items), nil
+}
+
+// LlmRoutingPolicies is the resolver for the llmRoutingPolicies field.
+func (r *queryResolver) LlmRoutingPolicies(ctx context.Context, organizationID string, limit *int) ([]*model.LLMRoutingPolicy, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	lim := int64(20)
+	if limit != nil {
+		lim = int64(*limit)
+	}
+	items, err := r.LLMService.ListRoutingPolicies(ctx, actorID, orgID, lim)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMRoutingPolicies(items), nil
+}
+
+// LlmPersonas is the resolver for the llmPersonas field.
+func (r *queryResolver) LlmPersonas(ctx context.Context, organizationID string, limit *int) ([]*model.LLMPersona, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	lim := int64(20)
+	if limit != nil {
+		lim = int64(*limit)
+	}
+	items, err := r.LLMService.ListPersonas(ctx, actorID, orgID, lim)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMPersonas(items), nil
+}
+
+// ActiveLLMConfiguration is the resolver for the activeLLMConfiguration field.
+func (r *queryResolver) ActiveLLMConfiguration(ctx context.Context, organizationID string) (*model.LLMConfiguration, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	snap, err := r.LLMService.ActiveConfiguration(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMConfiguration(snap), nil
+}
+
+// LlmConfigurationDrafts is the resolver for the llmConfigurationDrafts field.
+func (r *queryResolver) LlmConfigurationDrafts(ctx context.Context, organizationID string, limit *int) ([]*model.LLMConfigurationDraft, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	lim := int64(20)
+	if limit != nil {
+		lim = int64(*limit)
+	}
+	items, err := r.LLMService.ListConfigurationDrafts(ctx, actorID, orgID, lim)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	out := make([]*model.LLMConfigurationDraft, 0, len(items))
+	for i := range items {
+		out = append(out, toModelLLMConfigurationDraft(&items[i]))
+	}
+	return out, nil
+}
+
+// LlmUsageSummary is the resolver for the llmUsageSummary field.
+func (r *queryResolver) LlmUsageSummary(ctx context.Context, organizationID string, fromDate string) (*model.LLMUsageSummary, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	callCount, inputTokens, outputTokens, cost, err := r.LLMService.UsageSummary(ctx, actorID, orgID, fromDate)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return &model.LLMUsageSummary{
+		CallCount:        callCount,
+		InputTokens:      inputTokens,
+		OutputTokens:     outputTokens,
+		TotalTokens:      inputTokens + outputTokens,
+		EstimatedCostUsd: cost,
+		FallbackCount:    0,
+	}, nil
+}
+
+// LlmUsageDashboard is the resolver for the llmUsageDashboard field.
+func (r *queryResolver) LlmUsageDashboard(ctx context.Context, organizationID string, fromDate string, recentLimit *int) (*model.LLMUsageDashboard, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	limit := 20
+	if recentLimit != nil {
+		limit = *recentLimit
+	}
+	dashboard, err := r.LLMService.UsageDashboard(ctx, actorID, orgID, fromDate, limit)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMUsageDashboard(dashboard), nil
+}
+
+// LlmOrgSettings is the resolver for the llmOrgSettings field.
+func (r *queryResolver) LlmOrgSettings(ctx context.Context, organizationID string) (*model.LLMOrgSettings, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	settings, err := r.LLMService.GetOrgSettings(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMOrgSettings(settings), nil
+}
+
+// LlmCall is the resolver for the llmCall field.
+func (r *queryResolver) LlmCall(ctx context.Context, organizationID string, callID string) (*model.LLMCall, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	id, err := parseObjectID(callID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	call, err := r.LLMService.GetCall(ctx, actorID, orgID, id)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMCall(call), nil
+}
+
+// LlmHealth is the resolver for the llmHealth field.
+func (r *queryResolver) LlmHealth(ctx context.Context, organizationID string) ([]*model.LLMModelHealth, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	items, err := r.LLMService.Health(ctx, actorID, orgID)
+	if err != nil {
+		return nil, mapPhase6Error(err)
+	}
+	return toModelLLMHealth(items), nil
+}
+
+// MyDevices is the resolver for the myDevices field.
+func (r *queryResolver) MyDevices(ctx context.Context) ([]*model.Device, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	userID, err := parseObjectID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+	devices, err := r.Auth.ListDevices(ctx, userID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	out := make([]*model.Device, 0, len(devices))
+	for _, d := range devices {
+		dev := d
+		out = append(out, toModelDevice(dev))
+	}
+	return out, nil
+}
+
+// MyActivityLog is the resolver for the myActivityLog field.
+func (r *queryResolver) MyActivityLog(ctx context.Context, limit *int, cursor *string) ([]*model.ActivityLogEntry, error) {
+	session, err := requireSession(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	userID, err := parseObjectID(session.UserID)
+	if err != nil {
+		return nil, err
+	}
+	lim := 50
+	if limit != nil {
+		lim = *limit
+	}
+	cur := ""
+	if cursor != nil {
+		cur = *cursor
+	}
+	entries, err := r.Auth.ListActivityLog(ctx, userID, lim, cur)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	out := make([]*model.ActivityLogEntry, 0, len(entries))
+	for _, e := range entries {
+		entry := e
+		out = append(out, toModelActivityLog(entry))
+	}
+	return out, nil
 }
 
 // Mutation returns MutationResolver implementation.

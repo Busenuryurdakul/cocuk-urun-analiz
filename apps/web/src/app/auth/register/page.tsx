@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { AuthShell } from "@/components/layout/auth-shell";
+import { TurnstileWidget, turnstileEnabled } from "@/components/turnstile-widget";
 import { authErrorMessage, graphqlRequest } from "@/lib/graphql";
 
 export default function RegisterPage() {
@@ -10,6 +11,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,6 +27,7 @@ export default function RegisterPage() {
           input: {
             email: String(form.get("email")),
             password: String(form.get("password")),
+            turnstileToken: turnstileToken || null,
           },
         },
       );
@@ -48,7 +51,7 @@ export default function RegisterPage() {
       {success ? (
         <div className="alert-success space-y-3">
           <p>{message}</p>
-          <p>Giriş yapmadan önce e-postanızdaki doğrulama bağlantısını açmanız gerekir.</p>
+          <p>E-postanızdaki doğrulama bağlantısına tıklayın. Bağlantı 24 saat geçerlidir.</p>
           <Link className="inline-block font-semibold text-forest underline underline-offset-4" href="/auth/login">
             Doğruladıktan sonra giriş yap
           </Link>
@@ -63,6 +66,9 @@ export default function RegisterPage() {
             Şifre (min. 8 karakter)
             <input name="password" type="password" minLength={8} required className="input" />
           </label>
+          {turnstileEnabled() && (
+            <TurnstileWidget onToken={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
+          )}
           <button type="submit" disabled={loading} className="btn-primary w-full">
             {loading ? "Kaydediliyor…" : "Kayıt ol"}
           </button>

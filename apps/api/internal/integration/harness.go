@@ -118,6 +118,7 @@ func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 		WebBaseURL:           "http://localhost:3000",
 		AccessTokenTTL:       15 * time.Minute,
 		RefreshTokenTTL:      time.Hour,
+		LLMUseMock:           true,
 	}
 
 	application, err := app.New(ctx, appCfg)
@@ -198,6 +199,9 @@ func (h *Phase5Harness) startHTTPServer(t *testing.T) {
 	r := chi.NewRouter()
 	if h.App.AgentInternal != nil {
 		h.App.AgentInternal.Register(r)
+	}
+	if h.App.LLMInternal != nil {
+		h.App.LLMInternal.Register(r)
 	}
 	r.Handle("/graphql", graph.NewHandler(resolver, h.App.Auth))
 

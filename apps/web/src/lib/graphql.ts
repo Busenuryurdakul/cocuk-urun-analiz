@@ -42,6 +42,72 @@ export function authErrorMessage(err: unknown, fallback = "İşlem başarısız"
   return fallback;
 }
 
+type MiyunaDesktop = {
+  platform: string;
+  getDeviceFingerprint: () => Promise<string>;
+  getAppVersion: () => string;
+  setRefreshToken?: (token: string) => Promise<boolean>;
+  getRefreshToken?: () => Promise<string | null>;
+  clearTokens?: () => Promise<boolean>;
+  onDeepLink?: (callback: (url: string) => void) => void;
+  minimize?: () => void;
+  maximize?: () => void;
+  close?: () => void;
+};
+
+declare global {
+  interface Window {
+    miyunaDesktop?: MiyunaDesktop;
+  }
+}
+
+export function isDesktopClient(): boolean {
+  return typeof window !== "undefined" && Boolean(window.miyunaDesktop);
+}
+
+export function clientPlatform(): "WEB" | "ELECTRON_WIN" | "ELECTRON_MAC" {
+  if (typeof window === "undefined") {
+    return "WEB";
+  }
+  const platform = window.miyunaDesktop?.platform;
+  if (platform === "win32") return "ELECTRON_WIN";
+  if (platform === "darwin") return "ELECTRON_MAC";
+  return "WEB";
+}
+
+let desktopFingerprintPromise: Promise<string> | null = null;
+
+export async function deviceFingerprintAsync(): Promise<string> {
+  if (typeof window === "undefined") {
+    return "server";
+  }
+  if (window.miyunaDesktop?.getDeviceFingerprint) {
+    if (!desktopFingerprintPromise) {
+      desktopFingerprintPromise = window.miyunaDesktop.getDeviceFingerprint();
+    }
+    return desktopFingerprintPromise;
+  }
+  return deviceFingerprint();
+}
+
+export function deviceFingerprint(): string {
+  if (typeof window === "undefined") {
+    return "server";
+  }
+  const key = "miyuna_device_fp";
+  const existing = window.localStorage.getItem(key);
+  if (existing) {
+    return existing;
+  }
+  const fp = crypto.randomUUID();
+  window.localStorage.setItem(key, fp);
+  return fp;
+}
+
+export function appVersion(): string | undefined {
+  return window.miyunaDesktop?.getAppVersion?.();
+}
+
 export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, unknown>,
@@ -66,18 +132,4 @@ export async function graphqlRequest<T>(
     throw new Error("GraphQL yanıtı boş");
   }
   return payload.data;
-}
-
-export function deviceFingerprint(): string {
-  if (typeof window === "undefined") {
-    return "server";
-  }
-  const key = "miyuna_device_fp";
-  const existing = window.localStorage.getItem(key);
-  if (existing) {
-    return existing;
-  }
-  const fp = crypto.randomUUID();
-  window.localStorage.setItem(key, fp);
-  return fp;
 }

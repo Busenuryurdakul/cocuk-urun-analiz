@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ConfigSnapshotRepository struct {
@@ -31,6 +32,25 @@ func (r *ConfigSnapshotRepository) Create(ctx context.Context, snap *domain.Conf
 func (r *ConfigSnapshotRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*domain.ConfigSnapshot, error) {
 	var snap domain.ConfigSnapshot
 	err := r.col.FindOne(ctx, bson.M{"_id": id}).Decode(&snap)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &snap, nil
+}
+
+func (r *ConfigSnapshotRepository) FindLatestPublished(ctx context.Context, orgID *primitive.ObjectID, kind string) (*domain.ConfigSnapshot, error) {
+	filter := bson.M{"snapshotKind": kind}
+	if orgID != nil {
+		filter["organizationId"] = orgID
+	} else {
+		filter["organizationId"] = nil
+	}
+	opts := options.FindOne().SetSort(bson.D{{Key: "publishedAt", Value: -1}})
+	var snap domain.ConfigSnapshot
+	err := r.col.FindOne(ctx, filter, opts).Decode(&snap)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, ErrNotFound

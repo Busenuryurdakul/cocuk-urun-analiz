@@ -34,6 +34,7 @@ export function AppShell({
 
   const items = [
     { href: "/workspace", label: "Çalışma alanı", match: (p: string) => p === "/workspace" },
+    { href: "/settings/security", label: "Güvenlik", match: (p: string) => p.startsWith("/settings") },
     ...(orgId
       ? [
           {
@@ -50,6 +51,11 @@ export function AppShell({
             href: `/org/${orgId}/compliance`,
             label: "Uyumluluk",
             match: (p: string) => p.includes("/compliance"),
+          },
+          {
+            href: `/org/${orgId}/llm`,
+            label: "LLM",
+            match: (p: string) => p.includes("/llm"),
           },
         ]
       : []),

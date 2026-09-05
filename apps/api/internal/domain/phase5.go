@@ -35,6 +35,11 @@ const (
 	AgentPhaseRunCompleted           = "RUN_COMPLETED"
 	AgentPhaseRunFailed              = "RUN_FAILED"
 	AgentPhaseRunCancelled           = "RUN_CANCELLED"
+	AgentPhaseLLMRequested           = "LLM_REQUESTED"
+	AgentPhaseLLMCompleted           = "LLM_COMPLETED"
+	AgentPhaseLLMFailed              = "LLM_FAILED"
+	AgentPhaseLLMFallbackUsed        = "LLM_FALLBACK_USED"
+	AgentPhaseLLMEscalated           = "LLM_ESCALATED"
 )
 
 type ToolExecutionStatus string
@@ -123,6 +128,11 @@ type ConfigSnapshot struct {
 	CompliancePolicyVersion  string              `bson:"compliancePolicyVersion"`
 	PlannerVersion           string              `bson:"plannerVersion"`
 	ObservationSchemaVersion string              `bson:"observationSchemaVersion"`
+	LLMRoutingPolicyVersion  string              `bson:"llmRoutingPolicyVersion,omitempty"`
+	LLMPersonaKey            string              `bson:"llmPersonaKey,omitempty"`
+	LLMPersonaVersion        string              `bson:"llmPersonaVersion,omitempty"`
+	DefaultModelKey          string              `bson:"defaultModelKey,omitempty"`
+	FallbackModelKey         string              `bson:"fallbackModelKey,omitempty"`
 	RuntimeConfig            map[string]any      `bson:"runtimeConfig,omitempty"`
 	PublishedBy              primitive.ObjectID  `bson:"publishedBy"`
 	PublishedAt              time.Time           `bson:"publishedAt"`

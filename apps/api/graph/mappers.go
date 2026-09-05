@@ -100,6 +100,8 @@ func toModelUser(u *domain.User) *model.User {
 
 func toModelLoginStatus(status auth.LoginStatus) model.LoginStatus {
 	switch status {
+	case auth.LoginStatusEmailOTPRequired:
+		return model.LoginStatusEmailOtpRequired
 	case auth.LoginStatusMFASetupRequired:
 		return model.LoginStatusMfaSetupRequired
 	case auth.LoginStatusMFARequired:
@@ -155,7 +157,7 @@ func applyLoginCookies(ctx context.Context, opts cookies.Options, result *auth.L
 		applyAuthCookies(ctx, opts, result.Tokens)
 		cookies.Clear(w, cookies.PendingCookie, opts)
 		cookies.Clear(w, cookies.SetupCookie, opts)
-	case auth.LoginStatusMFARequired, auth.LoginStatusDeviceVerificationRequired:
+	case auth.LoginStatusMFARequired, auth.LoginStatusDeviceVerificationRequired, auth.LoginStatusEmailOTPRequired:
 		if result.Pending != nil {
 			cookies.Set(w, cookies.PendingCookie, result.Pending.Token, result.Pending.ExpiresAt, opts)
 		}
@@ -176,6 +178,63 @@ func applyMFASetupCookie(ctx context.Context, opts cookies.Options, setup *auth.
 
 func parseObjectID(id string) (primitive.ObjectID, error) {
 	return primitive.ObjectIDFromHex(id)
+}
+
+func ptrStr(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
+}
+
+func toDomainPlatform(p *model.ClientPlatform) domain.DevicePlatform {
+	if p == nil {
+		return domain.DevicePlatformWeb
+	}
+	switch *p {
+	case model.ClientPlatformElectronWin:
+		return domain.DevicePlatformElectronWin
+	case model.ClientPlatformElectronMac:
+		return domain.DevicePlatformElectronMac
+	default:
+		return domain.DevicePlatformWeb
+	}
+}
+
+func toModelDevice(d domain.Device) *model.Device {
+	return &model.Device{
+		ID:           d.ID.Hex(),
+		Platform:     toModelPlatform(d.Platform),
+		Label:        d.Label,
+		UserAgent:    strPtr(d.UserAgent),
+		IPAddress:    strPtr(d.IPAddress),
+		AppVersion:   strPtr(d.AppVersion),
+		Verified:     d.Verified,
+		LastActiveAt: d.LastActiveAt.Format(time.RFC3339),
+		CreatedAt:    d.CreatedAt.Format(time.RFC3339),
+	}
+}
+
+func toModelPlatform(p domain.DevicePlatform) model.ClientPlatform {
+	switch p {
+	case domain.DevicePlatformElectronWin:
+		return model.ClientPlatformElectronWin
+	case domain.DevicePlatformElectronMac:
+		return model.ClientPlatformElectronMac
+	default:
+		return model.ClientPlatformWeb
+	}
+}
+
+func toModelActivityLog(e domain.UserActivityLog) *model.ActivityLogEntry {
+	return &model.ActivityLogEntry{
+		ID:         e.ID.Hex(),
+		Action:     e.Action,
+		ResourceID: strPtr(e.ResourceID),
+		IPAddress:  strPtr(e.IPAddress),
+		UserAgent:  strPtr(e.UserAgent),
+		Timestamp:  e.Timestamp.Format(time.RFC3339),
+	}
 }
 
 func toModelOrgType(t domain.OrgType) model.OrgType {

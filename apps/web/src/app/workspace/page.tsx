@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
+import { UsagePanel, type UsageDashboardData } from "@/components/llm/usage-panel";
+import { ProductCardMeta } from "@/components/product-fields";
 import { graphqlRequest } from "@/lib/graphql";
+import { PRODUCT_FIELD_SELECTION, type Product } from "@/lib/product";
+import { monthStartIsoDate } from "@/lib/llm-events";
 
 type Workspace = {
   organizationId: string;
@@ -22,15 +26,40 @@ export default function WorkspacePage() {
   const [viewState, setViewState] = useState<"loading" | "unauthorized" | "success" | "error">("loading");
   const [me, setMe] = useState<Me | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productOrgId, setProductOrgId] = useState<string | null>(null);
+  const [llmUsage, setLlmUsage] = useState<UsageDashboardData | null>(null);
 
   useEffect(() => {
     graphqlRequest<{ me: Me; myWorkspaces: Workspace[] }>(`{
       me { id email }
       myWorkspaces { organizationId name type role }
     }`)
-      .then((data) => {
+      .then(async (data) => {
         setMe(data.me);
         setWorkspaces(data.myWorkspaces);
+        const org = data.myWorkspaces.find((ws) => ws.type === "ORGANIZATION") ?? data.myWorkspaces[0];
+        if (org) {
+          const [productResult, usageResult] = await Promise.all([
+            graphqlRequest<{ products: Product[] }>(
+              `query($id: ID!) { products(organizationId: $id, limit: 8) { ${PRODUCT_FIELD_SELECTION} } }`,
+              { id: org.organizationId },
+            ),
+            graphqlRequest<{ llmUsageDashboard: UsageDashboardData }>(
+              `query($id: ID!, $fromDate: String!) {
+                llmUsageDashboard(organizationId: $id, fromDate: $fromDate, recentLimit: 5) {
+                  summary { callCount inputTokens outputTokens totalTokens estimatedCostUsd fallbackCount }
+                  byModel { modelKey displayName callCount inputTokens outputTokens totalTokens estimatedCostUsd }
+                  recentCalls { id modelKey personaKey routingReason fallbackUsed inputTokens outputTokens latencyMs status createdAt }
+                }
+              }`,
+              { id: org.organizationId, fromDate: monthStartIsoDate() },
+            ).catch(() => null),
+          ]);
+          setProductOrgId(org.organizationId);
+          setProducts(productResult.products);
+          if (usageResult) setLlmUsage(usageResult.llmUsageDashboard);
+        }
         setViewState("success");
       })
       .catch((err) => {
@@ -101,6 +130,9 @@ export default function WorkspacePage() {
                           <Link href={`/org/${ws.organizationId}/products`} className="btn-secondary !px-3 !py-1.5 text-xs">
                             Ürünler
                           </Link>
+                          <Link href={`/org/${ws.organizationId}/llm`} className="btn-ghost !px-3 !py-1.5 text-xs">
+                            LLM
+                          </Link>
                           <Link href={`/org/${ws.organizationId}/members`} className="btn-ghost !px-3 !py-1.5 text-xs">
                             Yönet
                           </Link>
@@ -112,6 +144,39 @@ export default function WorkspacePage() {
               </ul>
             )}
           </div>
+          {productOrgId && llmUsage && (
+            <div className="card">
+              <UsagePanel orgId={productOrgId} usage={llmUsage} compact title="LLM kullanım özeti" />
+            </div>
+          )}
+          {productOrgId && (
+            <div className="card">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-display text-2xl">Veritabanındaki ürünler</h2>
+                <Link href={`/org/${productOrgId}/products`} className="btn-ghost !px-3 !py-1.5 text-xs">
+                  Tümünü gör
+                </Link>
+              </div>
+              {products.length === 0 ? (
+                <div className="mt-4">
+                  <AsyncView state="empty" />
+                </div>
+              ) : (
+                <ul className="mt-5 grid gap-3">
+                  {products.map((product) => (
+                    <li key={product.id}>
+                      <Link
+                        href={`/org/${productOrgId}/products/${product.id}`}
+                        className="block rounded-2xl border border-sand bg-cream/60 px-4 py-4 transition hover:bg-paper"
+                      >
+                        <ProductCardMeta product={product} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </section>
       )}
     </AppShell>

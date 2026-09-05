@@ -36,12 +36,8 @@ func setupAuthService(t *testing.T) (*Service, func()) {
 
 	db := mongo.DB
 	security := repository.NewSecurityEventRepository(db)
-	policy := SecurityPolicy{
-		MaxOTPAttempts:   5,
-		LoginMaxAttempts: 5,
-		AccessTokenTTL:   15 * time.Minute,
-		RefreshTokenTTL:  time.Hour,
-	}
+	policy := DefaultSecurityPolicy()
+	policy.RefreshTokenTTL = time.Hour
 	svc := &Service{
 		Users:        repository.NewUserRepository(db),
 		Orgs:         repository.NewOrganizationRepository(db),
@@ -51,7 +47,8 @@ func setupAuthService(t *testing.T) (*Service, func()) {
 		Rotated:      repository.NewRotatedRefreshRepository(db),
 		Pending:      repository.NewPendingAuthRepository(db),
 		EmailVerify:  repository.NewEmailVerificationRepository(db),
-		DeviceVerify: repository.NewDeviceVerificationRepository(db),
+		LoginEmailVerify: repository.NewLoginEmailVerificationRepository(db),
+		DeviceVerify:     repository.NewDeviceVerificationRepository(db),
 		MFASetup:     repository.NewMFASetupRepository(db),
 		Security:     security,
 		BruteForce:   &BruteForceGuard{Redis: rc, Policy: policy, Security: security},

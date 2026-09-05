@@ -95,6 +95,14 @@ func (r *SessionRepository) RevokeFamily(ctx context.Context, familyID primitive
 	return err
 }
 
+func (r *SessionRepository) RevokeByDeviceID(ctx context.Context, deviceID primitive.ObjectID) error {
+	_, err := r.col.UpdateMany(ctx, bson.M{"deviceId": deviceID, "revoked": false}, bson.M{"$set": bson.M{
+		"revoked":   true,
+		"updatedAt": time.Now().UTC(),
+	}})
+	return err
+}
+
 type RotatedRefreshRepository struct {
 	col *mongo.Collection
 }

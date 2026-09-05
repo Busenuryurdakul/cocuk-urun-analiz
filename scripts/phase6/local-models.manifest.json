@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "runtime": {
+    "primaryBaseUrl": "http://127.0.0.1:11434/v1",
+    "secondaryBaseUrl": "http://127.0.0.1:11434/v1",
+    "apiKeyEnv": "LOCAL_LLM_API_KEY"
+  },
+  "localWeights": [
+    {
+      "path": "models/Qwen3-0.6B",
+      "displayName": "Qwen3-0.6B",
+      "preferredRoles": ["primary", "worker", "careful_analyst"]
+    }
+  ],
+  "bindings": {
+    "primaryModel": "qwen2.5:0.5b",
+    "secondaryModel": "llama3.2:latest",
+    "notes": "Fast model for analysis start; heavy model for review and escalated long tasks."
+  },
+  "ollamaHints": [
+    {
+      "weightsPath": "models/Qwen3-0.6B",
+      "suggestedName": "miyuna-qwen3-0.6b",
+      "modelfileLines": [
+        "FROM ./models/Qwen3-0.6B",
+        "TEMPLATE \"\"\"{{ .System }}\\n{{ .Prompt }}\"\"\"",
+        "PARAMETER temperature 0.2"
+      ]
+    }
+  ]
+}
