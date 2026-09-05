@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+type BuildDatasetDraftInput struct {
+	OrganizationID string `json:"organizationId"`
+	Version        string `json:"version"`
+}
+
 type CompliancePolicy struct {
 	Profile     ComplianceProfile `json:"profile"`
 	Version     string            `json:"version"`
@@ -33,6 +38,62 @@ type Consent struct {
 type CreateOrganizationInput struct {
 	Name              string            `json:"name"`
 	ComplianceProfile ComplianceProfile `json:"complianceProfile"`
+}
+
+type CreateProductInput struct {
+	OrganizationID  string            `json:"organizationId"`
+	Name            string            `json:"name"`
+	Brand           *string           `json:"brand,omitempty"`
+	Category        *string           `json:"category,omitempty"`
+	Description     *string           `json:"description,omitempty"`
+	Source          MarketplaceSource `json:"source"`
+	SourceProductID string            `json:"sourceProductId"`
+	SourceURL       *string           `json:"sourceUrl,omitempty"`
+	Sku             *string           `json:"sku,omitempty"`
+}
+
+type CreateProductPayload struct {
+	Product      *Product `json:"product"`
+	Deduplicated bool     `json:"deduplicated"`
+}
+
+type CreateUserExperienceInput struct {
+	OrganizationID    string            `json:"organizationId"`
+	ProductID         string            `json:"productId"`
+	UsageStatus       UsageStatus       `json:"usageStatus"`
+	SatisfactionLevel SatisfactionLevel `json:"satisfactionLevel"`
+	Rating            *int              `json:"rating,omitempty"`
+	IssueType         *IssueType        `json:"issueType,omitempty"`
+	Narrative         string            `json:"narrative"`
+}
+
+type DatasetEligibilitySummary struct {
+	OrganizationID          string              `json:"organizationId"`
+	TotalRecords            int                 `json:"totalRecords"`
+	UgcCount                int                 `json:"ugcCount"`
+	MarketplaceCount        int                 `json:"marketplaceCount"`
+	EligibilityDistribution []*EligibilityCount `json:"eligibilityDistribution"`
+	SourceDistribution      []*SourceCount      `json:"sourceDistribution"`
+}
+
+type DatasetVersion struct {
+	ID                string               `json:"id"`
+	OrganizationID    string               `json:"organizationId"`
+	Version           string               `json:"version"`
+	Status            DatasetVersionStatus `json:"status"`
+	NormalizerVersion string               `json:"normalizerVersion"`
+	ContentHash       *string              `json:"contentHash,omitempty"`
+	CreatedAt         string               `json:"createdAt"`
+}
+
+type DeleteUserExperienceInput struct {
+	OrganizationID string `json:"organizationId"`
+	ExperienceID   string `json:"experienceId"`
+}
+
+type EligibilityCount struct {
+	Eligibility DatasetEligibility `json:"eligibility"`
+	Count       int                `json:"count"`
 }
 
 type GrantConsentInput struct {
@@ -62,6 +123,42 @@ type MFASetupPayload struct {
 	OtpauthURL string `json:"otpauthUrl"`
 }
 
+type MarketplaceImportRun struct {
+	ID              string                  `json:"id"`
+	OrganizationID  string                  `json:"organizationId"`
+	Source          MarketplaceSource       `json:"source"`
+	SourceURL       *string                 `json:"sourceUrl,omitempty"`
+	AccessMode      AccessMode              `json:"accessMode"`
+	Status          MarketplaceImportStatus `json:"status"`
+	RecordsSeen     int                     `json:"recordsSeen"`
+	RecordsAccepted int                     `json:"recordsAccepted"`
+	RecordsRejected int                     `json:"recordsRejected"`
+	ErrorCode       *string                 `json:"errorCode,omitempty"`
+	ErrorMessage    *string                 `json:"errorMessage,omitempty"`
+	CreatedAt       string                  `json:"createdAt"`
+}
+
+type MarketplaceReview struct {
+	ID                 string             `json:"id"`
+	OrganizationID     string             `json:"organizationId"`
+	ProductID          string             `json:"productId"`
+	Source             MarketplaceSource  `json:"source"`
+	Rating             *float64           `json:"rating,omitempty"`
+	ReviewText         string             `json:"reviewText"`
+	ReviewDate         *string            `json:"reviewDate,omitempty"`
+	Language           string             `json:"language"`
+	ModerationStatus   ModerationStatus   `json:"moderationStatus"`
+	DatasetEligibility DatasetEligibility `json:"datasetEligibility"`
+	CreatedAt          string             `json:"createdAt"`
+}
+
+type ModerateUserExperienceInput struct {
+	OrganizationID   string           `json:"organizationId"`
+	ExperienceID     string           `json:"experienceId"`
+	ModerationStatus ModerationStatus `json:"moderationStatus"`
+	QualityStatus    *QualityStatus   `json:"qualityStatus,omitempty"`
+}
+
 type Mutation struct {
 }
 
@@ -79,6 +176,25 @@ type OrganizationMember struct {
 	Role      OrgRole `json:"role"`
 	JoinedAt  string  `json:"joinedAt"`
 	InvitedAt string  `json:"invitedAt"`
+}
+
+type Product struct {
+	ID             string            `json:"id"`
+	OrganizationID string            `json:"organizationId"`
+	Name           *ProductFieldMeta `json:"name"`
+	Brand          *ProductFieldMeta `json:"brand"`
+	Category       *ProductFieldMeta `json:"category"`
+	Description    *ProductFieldMeta `json:"description"`
+	Sku            *ProductFieldMeta `json:"sku"`
+	CreatedAt      string            `json:"createdAt"`
+	UpdatedAt      string            `json:"updatedAt"`
+}
+
+type ProductFieldMeta struct {
+	Value          *string `json:"value,omitempty"`
+	Missing        bool    `json:"missing"`
+	Source         *string `json:"source,omitempty"`
+	SourceRecordID *string `json:"sourceRecordId,omitempty"`
 }
 
 type PublishCompliancePolicyInput struct {
@@ -105,6 +221,25 @@ type RemoveMemberInput struct {
 	UserID         string `json:"userId"`
 }
 
+type SourceCount struct {
+	RecordType string `json:"recordType"`
+	Count      int    `json:"count"`
+}
+
+type StartMarketplaceFileImportInput struct {
+	OrganizationID string            `json:"organizationId"`
+	Source         MarketplaceSource `json:"source"`
+	AccessMode     AccessMode        `json:"accessMode"`
+	Filename       string            `json:"filename"`
+	ContentBase64  string            `json:"contentBase64"`
+	ContentType    string            `json:"contentType"`
+}
+
+type StartMarketplaceURLImportInput struct {
+	OrganizationID string `json:"organizationId"`
+	SourceURL      string `json:"sourceUrl"`
+}
+
 type UpdateComplianceProfileInput struct {
 	OrganizationID    string            `json:"organizationId"`
 	ComplianceProfile ComplianceProfile `json:"complianceProfile"`
@@ -116,12 +251,39 @@ type UpdateMemberRoleInput struct {
 	Role           OrgRole `json:"role"`
 }
 
+type UpdateUserExperienceInput struct {
+	OrganizationID    string            `json:"organizationId"`
+	ExperienceID      string            `json:"experienceId"`
+	UsageStatus       UsageStatus       `json:"usageStatus"`
+	SatisfactionLevel SatisfactionLevel `json:"satisfactionLevel"`
+	Rating            *int              `json:"rating,omitempty"`
+	IssueType         *IssueType        `json:"issueType,omitempty"`
+	Narrative         string            `json:"narrative"`
+}
+
 type User struct {
 	ID            string `json:"id"`
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"emailVerified"`
 	MfaEnabled    bool   `json:"mfaEnabled"`
 	PersonalOrgID string `json:"personalOrgId"`
+}
+
+type UserExperience struct {
+	ID                 string             `json:"id"`
+	OrganizationID     string             `json:"organizationId"`
+	ProductID          string             `json:"productId"`
+	UserID             string             `json:"userId"`
+	UsageStatus        UsageStatus        `json:"usageStatus"`
+	SatisfactionLevel  SatisfactionLevel  `json:"satisfactionLevel"`
+	Rating             *int               `json:"rating,omitempty"`
+	IssueType          *IssueType         `json:"issueType,omitempty"`
+	Narrative          string             `json:"narrative"`
+	ModerationStatus   ModerationStatus   `json:"moderationStatus"`
+	QualityStatus      QualityStatus      `json:"qualityStatus"`
+	DatasetEligibility DatasetEligibility `json:"datasetEligibility"`
+	CreatedAt          string             `json:"createdAt"`
+	UpdatedAt          string             `json:"updatedAt"`
 }
 
 type VerifyDeviceInput struct {
@@ -144,6 +306,71 @@ type Workspace struct {
 	Name           string  `json:"name"`
 	Type           OrgType `json:"type"`
 	Role           OrgRole `json:"role"`
+}
+
+type AccessMode string
+
+const (
+	AccessModeAuthorizedAPI        AccessMode = "AUTHORIZED_API"
+	AccessModePermittedPublicFetch AccessMode = "PERMITTED_PUBLIC_FETCH"
+	AccessModeLicensedDataset      AccessMode = "LICENSED_DATASET"
+	AccessModeCSVImport            AccessMode = "CSV_IMPORT"
+	AccessModeJSONImport           AccessMode = "JSON_IMPORT"
+	AccessModeUserProvidedFile     AccessMode = "USER_PROVIDED_FILE"
+	AccessModeManualEntry          AccessMode = "MANUAL_ENTRY"
+)
+
+var AllAccessMode = []AccessMode{
+	AccessModeAuthorizedAPI,
+	AccessModePermittedPublicFetch,
+	AccessModeLicensedDataset,
+	AccessModeCSVImport,
+	AccessModeJSONImport,
+	AccessModeUserProvidedFile,
+	AccessModeManualEntry,
+}
+
+func (e AccessMode) IsValid() bool {
+	switch e {
+	case AccessModeAuthorizedAPI, AccessModePermittedPublicFetch, AccessModeLicensedDataset, AccessModeCSVImport, AccessModeJSONImport, AccessModeUserProvidedFile, AccessModeManualEntry:
+		return true
+	}
+	return false
+}
+
+func (e AccessMode) String() string {
+	return string(e)
+}
+
+func (e *AccessMode) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AccessMode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AccessMode", str)
+	}
+	return nil
+}
+
+func (e AccessMode) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AccessMode) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AccessMode) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type ComplianceProfile string
@@ -260,6 +487,191 @@ func (e ConsentPurpose) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+type DatasetEligibility string
+
+const (
+	DatasetEligibilityTrainingApproved DatasetEligibility = "TRAINING_APPROVED"
+	DatasetEligibilityEvalOnly         DatasetEligibility = "EVAL_ONLY"
+	DatasetEligibilityAnalysisOnly     DatasetEligibility = "ANALYSIS_ONLY"
+	DatasetEligibilityQuarantined      DatasetEligibility = "QUARANTINED"
+	DatasetEligibilityRejected         DatasetEligibility = "REJECTED"
+)
+
+var AllDatasetEligibility = []DatasetEligibility{
+	DatasetEligibilityTrainingApproved,
+	DatasetEligibilityEvalOnly,
+	DatasetEligibilityAnalysisOnly,
+	DatasetEligibilityQuarantined,
+	DatasetEligibilityRejected,
+}
+
+func (e DatasetEligibility) IsValid() bool {
+	switch e {
+	case DatasetEligibilityTrainingApproved, DatasetEligibilityEvalOnly, DatasetEligibilityAnalysisOnly, DatasetEligibilityQuarantined, DatasetEligibilityRejected:
+		return true
+	}
+	return false
+}
+
+func (e DatasetEligibility) String() string {
+	return string(e)
+}
+
+func (e *DatasetEligibility) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DatasetEligibility(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DatasetEligibility", str)
+	}
+	return nil
+}
+
+func (e DatasetEligibility) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *DatasetEligibility) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e DatasetEligibility) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type DatasetVersionStatus string
+
+const (
+	DatasetVersionStatusDraft DatasetVersionStatus = "DRAFT"
+)
+
+var AllDatasetVersionStatus = []DatasetVersionStatus{
+	DatasetVersionStatusDraft,
+}
+
+func (e DatasetVersionStatus) IsValid() bool {
+	switch e {
+	case DatasetVersionStatusDraft:
+		return true
+	}
+	return false
+}
+
+func (e DatasetVersionStatus) String() string {
+	return string(e)
+}
+
+func (e *DatasetVersionStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DatasetVersionStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DatasetVersionStatus", str)
+	}
+	return nil
+}
+
+func (e DatasetVersionStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *DatasetVersionStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e DatasetVersionStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type IssueType string
+
+const (
+	IssueTypeDurability               IssueType = "DURABILITY"
+	IssueTypeBreakage                 IssueType = "BREAKAGE"
+	IssueTypeAgeSizeMismatch          IssueType = "AGE_SIZE_MISMATCH"
+	IssueTypeMaterial                 IssueType = "MATERIAL"
+	IssueTypeOdor                     IssueType = "ODOR"
+	IssueTypePackaging                IssueType = "PACKAGING"
+	IssueTypeUsability                IssueType = "USABILITY"
+	IssueTypeQuality                  IssueType = "QUALITY"
+	IssueTypeSafetyRelatedObservation IssueType = "SAFETY_RELATED_OBSERVATION"
+	IssueTypeOther                    IssueType = "OTHER"
+)
+
+var AllIssueType = []IssueType{
+	IssueTypeDurability,
+	IssueTypeBreakage,
+	IssueTypeAgeSizeMismatch,
+	IssueTypeMaterial,
+	IssueTypeOdor,
+	IssueTypePackaging,
+	IssueTypeUsability,
+	IssueTypeQuality,
+	IssueTypeSafetyRelatedObservation,
+	IssueTypeOther,
+}
+
+func (e IssueType) IsValid() bool {
+	switch e {
+	case IssueTypeDurability, IssueTypeBreakage, IssueTypeAgeSizeMismatch, IssueTypeMaterial, IssueTypeOdor, IssueTypePackaging, IssueTypeUsability, IssueTypeQuality, IssueTypeSafetyRelatedObservation, IssueTypeOther:
+		return true
+	}
+	return false
+}
+
+func (e IssueType) String() string {
+	return string(e)
+}
+
+func (e *IssueType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = IssueType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid IssueType", str)
+	}
+	return nil
+}
+
+func (e IssueType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *IssueType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e IssueType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
 type LoginStatus string
 
 const (
@@ -314,6 +726,189 @@ func (e *LoginStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e LoginStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type MarketplaceImportStatus string
+
+const (
+	MarketplaceImportStatusPending          MarketplaceImportStatus = "PENDING"
+	MarketplaceImportStatusRunning          MarketplaceImportStatus = "RUNNING"
+	MarketplaceImportStatusSucceeded        MarketplaceImportStatus = "SUCCEEDED"
+	MarketplaceImportStatusPartial          MarketplaceImportStatus = "PARTIAL"
+	MarketplaceImportStatusFailed           MarketplaceImportStatus = "FAILED"
+	MarketplaceImportStatusRejectedByPolicy MarketplaceImportStatus = "REJECTED_BY_POLICY"
+)
+
+var AllMarketplaceImportStatus = []MarketplaceImportStatus{
+	MarketplaceImportStatusPending,
+	MarketplaceImportStatusRunning,
+	MarketplaceImportStatusSucceeded,
+	MarketplaceImportStatusPartial,
+	MarketplaceImportStatusFailed,
+	MarketplaceImportStatusRejectedByPolicy,
+}
+
+func (e MarketplaceImportStatus) IsValid() bool {
+	switch e {
+	case MarketplaceImportStatusPending, MarketplaceImportStatusRunning, MarketplaceImportStatusSucceeded, MarketplaceImportStatusPartial, MarketplaceImportStatusFailed, MarketplaceImportStatusRejectedByPolicy:
+		return true
+	}
+	return false
+}
+
+func (e MarketplaceImportStatus) String() string {
+	return string(e)
+}
+
+func (e *MarketplaceImportStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MarketplaceImportStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MarketplaceImportStatus", str)
+	}
+	return nil
+}
+
+func (e MarketplaceImportStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *MarketplaceImportStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e MarketplaceImportStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type MarketplaceSource string
+
+const (
+	MarketplaceSourceHepsiburada MarketplaceSource = "HEPSIBURADA"
+	MarketplaceSourceTrendyol    MarketplaceSource = "TRENDYOL"
+	MarketplaceSourceAmazon      MarketplaceSource = "AMAZON"
+	MarketplaceSourceN11         MarketplaceSource = "N11"
+	MarketplaceSourceOther       MarketplaceSource = "OTHER"
+	MarketplaceSourceMiyuna      MarketplaceSource = "MIYUNA"
+)
+
+var AllMarketplaceSource = []MarketplaceSource{
+	MarketplaceSourceHepsiburada,
+	MarketplaceSourceTrendyol,
+	MarketplaceSourceAmazon,
+	MarketplaceSourceN11,
+	MarketplaceSourceOther,
+	MarketplaceSourceMiyuna,
+}
+
+func (e MarketplaceSource) IsValid() bool {
+	switch e {
+	case MarketplaceSourceHepsiburada, MarketplaceSourceTrendyol, MarketplaceSourceAmazon, MarketplaceSourceN11, MarketplaceSourceOther, MarketplaceSourceMiyuna:
+		return true
+	}
+	return false
+}
+
+func (e MarketplaceSource) String() string {
+	return string(e)
+}
+
+func (e *MarketplaceSource) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MarketplaceSource(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MarketplaceSource", str)
+	}
+	return nil
+}
+
+func (e MarketplaceSource) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *MarketplaceSource) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e MarketplaceSource) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ModerationStatus string
+
+const (
+	ModerationStatusPending  ModerationStatus = "PENDING"
+	ModerationStatusApproved ModerationStatus = "APPROVED"
+	ModerationStatusRejected ModerationStatus = "REJECTED"
+)
+
+var AllModerationStatus = []ModerationStatus{
+	ModerationStatusPending,
+	ModerationStatusApproved,
+	ModerationStatusRejected,
+}
+
+func (e ModerationStatus) IsValid() bool {
+	switch e {
+	case ModerationStatusPending, ModerationStatusApproved, ModerationStatusRejected:
+		return true
+	}
+	return false
+}
+
+func (e ModerationStatus) String() string {
+	return string(e)
+}
+
+func (e *ModerationStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ModerationStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ModerationStatus", str)
+	}
+	return nil
+}
+
+func (e ModerationStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ModerationStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ModerationStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
@@ -485,6 +1080,181 @@ func (e *PolicyStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e PolicyStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type QualityStatus string
+
+const (
+	QualityStatusPending    QualityStatus = "PENDING"
+	QualityStatusApproved   QualityStatus = "APPROVED"
+	QualityStatusLowQuality QualityStatus = "LOW_QUALITY"
+	QualityStatusRejected   QualityStatus = "REJECTED"
+)
+
+var AllQualityStatus = []QualityStatus{
+	QualityStatusPending,
+	QualityStatusApproved,
+	QualityStatusLowQuality,
+	QualityStatusRejected,
+}
+
+func (e QualityStatus) IsValid() bool {
+	switch e {
+	case QualityStatusPending, QualityStatusApproved, QualityStatusLowQuality, QualityStatusRejected:
+		return true
+	}
+	return false
+}
+
+func (e QualityStatus) String() string {
+	return string(e)
+}
+
+func (e *QualityStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = QualityStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid QualityStatus", str)
+	}
+	return nil
+}
+
+func (e QualityStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *QualityStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e QualityStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SatisfactionLevel string
+
+const (
+	SatisfactionLevelVerySatisfied   SatisfactionLevel = "VERY_SATISFIED"
+	SatisfactionLevelSatisfied       SatisfactionLevel = "SATISFIED"
+	SatisfactionLevelNeutral         SatisfactionLevel = "NEUTRAL"
+	SatisfactionLevelUnsatisfied     SatisfactionLevel = "UNSATISFIED"
+	SatisfactionLevelVeryUnsatisfied SatisfactionLevel = "VERY_UNSATISFIED"
+)
+
+var AllSatisfactionLevel = []SatisfactionLevel{
+	SatisfactionLevelVerySatisfied,
+	SatisfactionLevelSatisfied,
+	SatisfactionLevelNeutral,
+	SatisfactionLevelUnsatisfied,
+	SatisfactionLevelVeryUnsatisfied,
+}
+
+func (e SatisfactionLevel) IsValid() bool {
+	switch e {
+	case SatisfactionLevelVerySatisfied, SatisfactionLevelSatisfied, SatisfactionLevelNeutral, SatisfactionLevelUnsatisfied, SatisfactionLevelVeryUnsatisfied:
+		return true
+	}
+	return false
+}
+
+func (e SatisfactionLevel) String() string {
+	return string(e)
+}
+
+func (e *SatisfactionLevel) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SatisfactionLevel(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SatisfactionLevel", str)
+	}
+	return nil
+}
+
+func (e SatisfactionLevel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SatisfactionLevel) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SatisfactionLevel) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type UsageStatus string
+
+const (
+	UsageStatusUsing UsageStatus = "USING"
+	UsageStatusUsed  UsageStatus = "USED"
+)
+
+var AllUsageStatus = []UsageStatus{
+	UsageStatusUsing,
+	UsageStatusUsed,
+}
+
+func (e UsageStatus) IsValid() bool {
+	switch e {
+	case UsageStatusUsing, UsageStatusUsed:
+		return true
+	}
+	return false
+}
+
+func (e UsageStatus) String() string {
+	return string(e)
+}
+
+func (e *UsageStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UsageStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UsageStatus", str)
+	}
+	return nil
+}
+
+func (e UsageStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *UsageStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e UsageStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

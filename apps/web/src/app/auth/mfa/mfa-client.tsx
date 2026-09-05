@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AsyncView } from "@/components/async-view";
-import { deviceFingerprint, graphqlRequest } from "@/lib/graphql";
+import { AuthShell } from "@/components/layout/auth-shell";
+import { authErrorMessage, deviceFingerprint, graphqlRequest } from "@/lib/graphql";
 
 export default function MFAPageClient() {
   const router = useRouter();
@@ -39,32 +40,32 @@ export default function MFAPageClient() {
         router.push("/auth/login");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "MFA doğrulama başarısız");
+      setError(authErrorMessage(err, "MFA doğrulama başarısız"));
       setState("error");
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">{isVerify ? "MFA doğrulama" : "MFA kurulumu"}</h1>
+    <AuthShell
+      title={isVerify ? "MFA doğrulama" : "MFA kurulumu"}
+      subtitle="Authenticator uygulamanızdaki 6 haneli kodu girin."
+    >
       {state === "loading" && <AsyncView state="loading" />}
-      {state === "error" && (
-        <AsyncView state="error" error={<p className="text-sm text-red-800">{error}</p>} />
-      )}
+      {state === "error" && <AsyncView state="error" error={<p className="alert-error">{error}</p>} />}
       {state === "idle" && (
-        <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
-          <label className="block text-sm">
+        <form onSubmit={onSubmit} className="card space-y-4">
+          <label className="label">
             Authenticator kodu
-            <input name="code" required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
+            <input name="code" required className="input" autoComplete="one-time-code" />
           </label>
-          <button type="submit" className="w-full rounded-md bg-miyuna-600 px-4 py-2 text-sm text-white">
+          <button type="submit" className="btn-primary w-full">
             Doğrula
           </button>
         </form>
       )}
-      <Link href="/auth/login" className="text-sm underline">
+      <Link href="/auth/login" className="link-quiet">
         Giriş sayfası
       </Link>
-    </main>
+    </AuthShell>
   );
 }

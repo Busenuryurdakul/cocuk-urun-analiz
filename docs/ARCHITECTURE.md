@@ -1,6 +1,6 @@
 # Miyuna — High-Level Architecture
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Overview
@@ -19,7 +19,7 @@ Miyuna, çocuk ürünlerini çok kaynaklı toplayan, normalize eden ve agent tab
 | Evidence-first | Ciddi iddialar kanıt olmadan kesin dil kullanamaz |
 | Compliance always-on | Engine kapatılamaz; policy profilleri versioned |
 | No LLM internet | External fetch yalnızca Tool Registry + Authorization Chain |
-| Product data import | URL/CSV/JSON/manual; platform API cancelled |
+| Product data import | URL/CSV/JSON/manual + marketplace adapters (Phase 4); platform store API cancelled |
 | Defense in depth | Cloudflare → Application → Agent → Outbound |
 
 ## 3. System Topology
@@ -37,11 +37,17 @@ Miyuna, çocuk ürünlerini çok kaynaklı toplayan, normalize eden ve agent tab
          Next.js Web                Go GraphQL API
        app.{domain}               api.{domain}/graphql
                                           ↓
-                             Auth / MFA / RBAC / Tenant
+                                 Auth / MFA / RBAC / Tenant
                                           ↓
-                                 Agent Orchestrator (Python, internal)
+              ┌───────────────────────────┴───────────────────────────┐
+              │ Phase 4 Data Layer (IMPLEMENTED)                      │
+              │ products · mappings · UGC · marketplace reviews       │
+              │ async import (Redis) · dataset draft metadata         │
+              └───────────────────────────┬───────────────────────────┘
                                           ↓
-                              LLM-1          LLM-2
+                                 Agent Orchestrator (Python, internal) ← Phase 5+
+                                          ↓
+                              LLM-1          LLM-2                         ← Phase 6+
                                           ↓
                            MongoDB / Redis / Object Storage
 ```
@@ -168,24 +174,62 @@ Electron: second active desktop session blocked; same device rehydrate OK.
 
 Detay: [SECURITY.md](./SECURITY.md)
 
-## 10. Data Flow — E-Commerce Import
+## 10. Data Flow — Phase 4 Marketplace + UGC Foundation (IMPLEMENTED)
+
+```text
+Sources: Hepsiburada | Trendyol | CSV | JSON | Manual | Miyuna UGC Portal
+  ↓
+MarketplaceAdapter (source detection + policy)
+  ↓
+Fetch Policy / SSRF guard
+  ↓
+Async Import Request → MarketplaceImportRun (PENDING)
+  ↓
+Redis Queue → Go API consumer (in-process, not separate worker)
+  ↓
+Fetch or Parse (live marketplace fetch DEFERRED pending authorized API)
+  ↓
+Raw Storage (S3/MinIO via StorageClient) + raw_source_payloads metadata
+  ↓
+Canonical Normalization (single pipeline)
+  ↓
+Deduplication · PII · Provenance · License/Rights · DatasetEligibility
+  ↓
+Persist: products | product_source_mappings | marketplace_reviews | user_experiences
+  ↓
+DatasetRecord candidates → DatasetVersion (DRAFT metadata only)
+```
+
+**Boundaries:**
+
+- **Phase 5:** Agent orchestrator, Planner, tool loop — NOT in Phase 4
+- **Phase 10:** Fine-tune training, dataset publication export — NOT in Phase 4
+- **Live Hepsiburada/Trendyol fetch:** DEFERRED_WITH_REASON until verified authorized/permitted API
+
+Portal UI (Next.js): products list/create/detail, Miyuna experience form, separated marketplace review view.
+
+Detay: [ECOMMERCE_IMPORT.md](./ECOMMERCE_IMPORT.md), [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md)
+
+## 11. Data Flow — Future Agentic Import (Phase 5+)
 
 ```text
 Source → Adapter → Fetch Policy → Import Planner → Tool Auth → Fetch
-  → Raw Storage → review_sampler → normalize → validate → price_history
-  → Quality Check → Decision (Sufficient / Re-fetch / Insufficient)
+  ↓
+Raw Storage → review_sampler → normalize → validate → price_history
+  ↓
+Quality Check → Decision (Sufficient / Re-fetch / Insufficient)
+  ↓
+Agent Pipeline (Planner → Worker LLM → Reviewer LLM → Evidence)
 ```
 
-Detay: [ECOMMERCE_IMPORT.md](./ECOMMERCE_IMPORT.md)
-
-## 11. Observability
+## 12. Observability
 
 - Gerçek `AgentRunEvent` stream (fake progress yasak)
 - Structured audit logs (Security/Audit boundary)
 - Config snapshot correlation per analysis run
 - Health/readiness endpoints
 
-## 12. Production Requirements
+## 13. Production Requirements
 
 - Public traffic **must** pass through Cloudflare
 - Real domain access in production
@@ -195,7 +239,7 @@ Detay: [ECOMMERCE_IMPORT.md](./ECOMMERCE_IMPORT.md)
 
 Detay: [CLOUDFLARE.md](./CLOUDFLARE.md), [CI_CD.md](./CI_CD.md)
 
-## 13. Related Documents
+## 14. Related Documents
 
 | Document | Scope |
 |----------|-------|
@@ -203,14 +247,14 @@ Detay: [CLOUDFLARE.md](./CLOUDFLARE.md), [CI_CD.md](./CI_CD.md)
 | [LLM_ROUTING.md](./LLM_ROUTING.md) | Automatic routing + manual control center |
 | [COMPLIANCE.md](./COMPLIANCE.md) | KVKK/GDPR engine |
 | [EVIDENCE_MODEL.md](./EVIDENCE_MODEL.md) | Claims, evidence, verification |
-| [ECOMMERCE_IMPORT.md](./ECOMMERCE_IMPORT.md) | Product import pipeline (platform API cancelled) |
+| [ECOMMERCE_IMPORT.md](./ECOMMERCE_IMPORT.md) | Marketplace/CSV/JSON import + UGC (platform store API cancelled) |
 | [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md) | Collections, indexes, tenancy |
 | [SECURITY.md](./SECURITY.md) | Auth, fetch security, defense in depth |
 | [CLOUDFLARE.md](./CLOUDFLARE.md) | Edge configuration |
 | [CI_CD.md](./CI_CD.md) | Pipeline, deploy gates |
 | [SCOPE.md](./SCOPE.md) | IN/OUT scope, CR registry |
 
-## 14. UNRESOLVED
+## 15. UNRESOLVED
 
 | Item | Status |
 |------|--------|

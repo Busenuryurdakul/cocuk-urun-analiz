@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Miyuna Gold Pilot Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #666;
+      --border: #ddd;
+      --accent: #2563eb;
+      --danger: #b91c1c;
+      --ok: #166534;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    header {
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 8px;
+    }
+    .meta, .stats, .note {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      margin: 12px 0;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .progress-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .review-text {
+      white-space: pre-wrap;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 120px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    label {
+      display: block;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    select, textarea {
+      width: 100%;
+      font: inherit;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    .rule-box {
+      font-family: ui-monospace, monospace;
+      font-size: 0.9rem;
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    button {
+      font: inherit;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .complete {
+      border: 2px solid var(--ok);
+      color: var(--ok);
+      font-weight: 700;
+      padding: 16px;
+      border-radius: 10px;
+      background: #ecfdf5;
+      margin-top: 16px;
+    }
+    .commands {
+      font-family: ui-monospace, monospace;
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.8rem;
+    }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .filter-bar button.active {
+      background: #eef2ff;
+      border-color: var(--accent);
+    }
+    .ai-box {
+      font-family: ui-monospace, monospace;
+      font-size: 0.9rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .bulk-box {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.92rem;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .bulk-warning {
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 12px 0;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+    .sample-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+    .sample-list li { margin-bottom: 8px; }
+    .dist-table {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Miyuna Gold Dataset Pilot — Manual Review</h1>
+      <div class="meta">Local-only curation helper. AI suggestions are pre-review only — not human validation.</div>
+      <div class="error" id="staleWarning" style="display:none; margin-top: 8px;"></div>
+      <div class="stats" id="stats"></div>
+      <div class="filter-bar" id="filterBar"></div>
+    </header>
+
+    <div class="card" id="safeBulkCard">
+      <h2>Safe Bulk Candidates</h2>
+      <div class="bulk-warning" id="bulkWarning">Bulk approval is a reviewer action. Review samples before confirming.</div>
+      <div class="bulk-box" id="bulkSummary">Loading safe bulk summary…</div>
+      <div class="actions">
+        <button class="primary" id="approveSafeBulkBtn">Approve Safe Candidates</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="progress-title" id="progressTitle">Loading…</div>
+      <div class="meta">ASIN / sourceProductId: <strong id="asin">—</strong></div>
+      <div class="meta">Rating: <strong id="rating">—</strong></div>
+      <div class="meta">Status: <span class="status-pill" id="status">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Original review text</h2>
+      <div class="review-text" id="reviewText"></div>
+    </div>
+
+    <div class="card">
+      <h2>Rule pre-labels</h2>
+      <div class="rule-box" id="ruleLabels"></div>
+      <div class="meta" id="domainBox" style="margin-top: 12px; display: none;"></div>
+      <p class="note">
+        safetyRelatedObservation indicates that a review contains a potentially safety-related observation.
+        It is NOT a product safety verdict.
+      </p>
+    </div>
+
+    <div class="card" id="aiCard" style="display:none;">
+      <h2>AI suggestion (pre-review)</h2>
+      <div class="ai-box" id="aiLabels"></div>
+      <div class="meta" id="aiMeta" style="margin-top: 8px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Manual labels</h2>
+      <div class="grid">
+        <div>
+          <label for="manual_sentiment">sentiment</label>
+          <select id="manual_sentiment"></select>
+        </div>
+        <div>
+          <label for="manual_issueType">issueType</label>
+          <select id="manual_issueType"></select>
+        </div>
+        <div>
+          <label for="manual_safetyRelatedObservation">safetyRelatedObservation</label>
+          <select id="manual_safetyRelatedObservation"></select>
+        </div>
+        <div>
+          <label for="manual_qualitySignal">qualitySignal</label>
+          <select id="manual_qualitySignal"></select>
+        </div>
+      </div>
+      <div style="margin-top: 12px;">
+        <label for="reviewerNotes">reviewerNotes (optional)</label>
+        <textarea id="reviewerNotes"></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="approveAiBtn">Approve AI Suggestion (A)</button>
+      <button id="approveBtn">Approve Rule Suggestion</button>
+      <button class="primary" id="saveBtn">Save Manual Changes (S)</button>
+      <button class="danger" id="rejectBtn">Reject Record (R)</button>
+      <button id="prevBtn">Previous (←)</button>
+      <button id="nextBtn">Next (→)</button>
+    </div>
+    <div class="error" id="error"></div>
+    <div id="completeBox"></div>
+  </div>
+
+  <script>
+    let state = null;
+
+    const els = {
+      stats: document.getElementById("stats"),
+      progressTitle: document.getElementById("progressTitle"),
+      asin: document.getElementById("asin"),
+      rating: document.getElementById("rating"),
+      status: document.getElementById("status"),
+      reviewText: document.getElementById("reviewText"),
+      ruleLabels: document.getElementById("ruleLabels"),
+      domainBox: document.getElementById("domainBox"),
+      aiCard: document.getElementById("aiCard"),
+      aiLabels: document.getElementById("aiLabels"),
+      aiMeta: document.getElementById("aiMeta"),
+      filterBar: document.getElementById("filterBar"),
+      safeBulkCard: document.getElementById("safeBulkCard"),
+      bulkSummary: document.getElementById("bulkSummary"),
+      bulkWarning: document.getElementById("bulkWarning"),
+      approveSafeBulkBtn: document.getElementById("approveSafeBulkBtn"),
+      manual_sentiment: document.getElementById("manual_sentiment"),
+      manual_issueType: document.getElementById("manual_issueType"),
+      manual_safetyRelatedObservation: document.getElementById("manual_safetyRelatedObservation"),
+      manual_qualitySignal: document.getElementById("manual_qualitySignal"),
+      reviewerNotes: document.getElementById("reviewerNotes"),
+      approveAiBtn: document.getElementById("approveAiBtn"),
+      approveBtn: document.getElementById("approveBtn"),
+      saveBtn: document.getElementById("saveBtn"),
+      rejectBtn: document.getElementById("rejectBtn"),
+      prevBtn: document.getElementById("prevBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      error: document.getElementById("error"),
+      staleWarning: document.getElementById("staleWarning"),
+      completeBox: document.getElementById("completeBox"),
+    };
+
+    function fillSelect(select, options, value) {
+      select.innerHTML = "";
+      for (const option of options) {
+        const node = document.createElement("option");
+        node.value = option;
+        node.textContent = option;
+        select.appendChild(node);
+      }
+      select.value = value;
+    }
+
+    function renderRecord(record) {
+      if (!record || !state?.enums) return;
+      els.progressTitle.textContent = `Review progress: ${record.position} / ${record.total}`;
+      els.asin.textContent = record.sourceProductId;
+      els.rating.textContent = record.rating;
+      els.status.textContent = record.labelReviewStatus;
+      els.reviewText.textContent = record.reviewText;
+      const rule = record.rulePrelabels;
+      els.ruleLabels.textContent =
+        `sentiment: ${rule.sentiment}\n` +
+        `issueType: ${rule.issueType}\n` +
+        `safetyRelatedObservation: ${rule.safetyRelatedObservation}\n` +
+        `qualitySignal: ${rule.qualitySignal}`;
+      if (record.domain && record.domain.domainRelevant) {
+        els.domainBox.style.display = "block";
+        els.domainBox.innerHTML =
+          `<strong>Domain:</strong> ${record.domain.domainRelevant}` +
+          (record.domain.domainCategory ? ` · ${record.domain.domainCategory}` : "") +
+          `<br><strong>Reason:</strong> ${record.domain.domainReason || "—"}`;
+      } else {
+        els.domainBox.style.display = "none";
+        els.domainBox.innerHTML = "";
+      }
+      if (record.aiSuggestion) {
+        els.aiCard.style.display = "block";
+        const ai = record.aiSuggestion;
+        els.aiLabels.textContent =
+          `sentiment: ${ai.sentiment}\n` +
+          `issueType: ${ai.issueType}\n` +
+          `safetyRelatedObservation: ${ai.safetyRelatedObservation}\n` +
+          `qualitySignal: ${ai.qualitySignal}`;
+        els.aiMeta.textContent =
+          `Confidence: ${record.aiReviewConfidence || "—"} · ` +
+          `${record.aiRuleRelation || "—"} · ${record.aiReviewReason || ""}`;
+        els.approveAiBtn.disabled = record.labelReviewStatus !== "PENDING_HUMAN_REVIEW";
+      } else {
+        els.aiCard.style.display = "none";
+        els.approveAiBtn.disabled = true;
+      }
+      fillSelect(els.manual_sentiment, state.enums.sentiment, record.manualLabels.sentiment);
+      fillSelect(els.manual_issueType, state.enums.issueType, record.manualLabels.issueType);
+      fillSelect(
+        els.manual_safetyRelatedObservation,
+        state.enums.safetyRelatedObservation,
+        record.manualLabels.safetyRelatedObservation
+      );
+      fillSelect(els.manual_qualitySignal, state.enums.qualitySignal, record.manualLabels.qualitySignal);
+      els.reviewerNotes.value = record.reviewerNotes || "";
+      els.prevBtn.disabled = record.index <= 0;
+      els.nextBtn.disabled = record.index >= record.total - 1;
+    }
+
+    function renderProgress(progress) {
+      els.stats.innerHTML =
+        `<span>Reviewed: <strong>${progress.reviewed}</strong></span>` +
+        `<span>Pending: <strong>${progress.pending}</strong></span>` +
+        `<span>Rejected: <strong>${progress.rejected}</strong></span>` +
+        `<span>Progress: <strong>${progress.progressPercent}%</strong></span>`;
+    }
+
+    function renderComplete(completion) {
+      if (!completion) {
+        els.completeBox.innerHTML = "";
+        return;
+      }
+      els.completeBox.innerHTML =
+        `<div class="complete">${completion.message}</div>` +
+        `<div class="commands">Run next:<br>${completion.commands.map(c => `<div>${c}</div>`).join("")}</div>`;
+    }
+
+    function renderFilters(payload) {
+      const counts = payload.filterCounts || {};
+      const filters = [
+        ["ALL_PENDING", "All Pending"],
+        ["SAFE_BULK_CANDIDATES", "Safe Bulk Candidates"],
+        ["LOW_MEDIUM_CONFIDENCE", "Low/Medium Confidence"],
+        ["AI_RULE_DISAGREEMENTS", "AI/Rule Disagreements"],
+        ["SAFETY_OBSERVATIONS", "Safety Observations"],
+        ["OTHER_CHILD_PRODUCT", "Other Child Product"],
+      ];
+      els.filterBar.innerHTML = "";
+      for (const [key, label] of filters) {
+        const btn = document.createElement("button");
+        btn.textContent = `${label} (${counts[key] || 0})`;
+        if ((payload.activeFilter || "ALL_PENDING") === key) btn.classList.add("active");
+        btn.addEventListener("click", () => setFilter(key));
+        els.filterBar.appendChild(btn);
+      }
+    }
+
+    function renderStaleWarning(payload) {
+      const pending = payload.progress?.pending || 0;
+      const allPendingCount = payload.filterCounts?.ALL_PENDING;
+      const aiLoaded = payload.aiSuggestionsLoaded;
+      const staleApi = payload.apiVersion !== 2;
+      const missingFilters = pending > 0 && (allPendingCount === undefined || allPendingCount === 0);
+      const missingAi = pending > 0 && aiLoaded === 0 && !payload.record?.aiSuggestion;
+      if (staleApi || missingFilters || missingAi) {
+        els.staleWarning.style.display = "block";
+        els.staleWarning.textContent =
+          "Stale review helper server detected. Stop the old process (Ctrl+C) and restart: python run_review_helper.py";
+      } else {
+        els.staleWarning.style.display = "none";
+        els.staleWarning.textContent = "";
+      }
+    }
+
+    function renderSafeBulk(payload) {
+      const bulk = payload.safeBulk || {};
+      const queues = payload.queueCounts || {};
+      els.bulkWarning.textContent = bulk.warning || "Bulk approval is a reviewer action. Review samples before confirming.";
+      const sentiment = Object.entries(bulk.sentimentDistribution || {})
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(" · ") || "—";
+      const issueType = Object.entries(bulk.issueTypeDistribution || {})
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(" · ") || "—";
+      const samples = (bulk.samples || [])
+        .map(sample =>
+          `<li><strong>${sample.goldRecordId}</strong> (${sample.sourceProductId}, ${sample.rating}★) · ` +
+          `${sample.aiSuggestion.sentiment}/${sample.aiSuggestion.issueType} · ` +
+          `${sample.domainCategory || "—"}<br>${sample.reviewTextPreview}…</li>`
+        )
+        .join("");
+      els.bulkSummary.innerHTML =
+        `<div><strong>Candidate count:</strong> ${bulk.count || 0}</div>` +
+        `<div class="dist-table"><strong>Sentiment:</strong> ${sentiment}</div>` +
+        `<div class="dist-table"><strong>Issue type:</strong> ${issueType}</div>` +
+        `<div class="dist-table"><strong>Queues:</strong> ` +
+        `Low/Medium ${queues.LOW_MEDIUM || 0} · Safety ${queues.SAFETY || 0} · ` +
+        `Disagreements ${queues.AI_RULE_DISAGREEMENTS || 0} · Needs manual ${queues.NEEDS_MANUAL_REVIEW || 0}</div>` +
+        `<ul class="sample-list">${samples || "<li>No safe bulk candidates right now.</li>"}</ul>`;
+      els.approveSafeBulkBtn.disabled = !(bulk.count > 0);
+    }
+
+    function applyState(payload) {
+      if (!payload) return;
+      state = {
+        ...(state || {}),
+        ...payload,
+        filterCounts: payload.filterCounts || state?.filterCounts || {},
+        enums: payload.enums || state?.enums || {},
+        activeFilter: payload.activeFilter || state?.activeFilter || "ALL_PENDING",
+        progress: payload.progress || state?.progress,
+        record: payload.record || state?.record,
+      };
+      if (!state.progress || !state.record) {
+        els.error.textContent = "Incomplete review state from server — restart the review helper.";
+        return;
+      }
+      renderProgress(state.progress);
+      renderStaleWarning(state);
+      renderFilters(state);
+      renderSafeBulk(state);
+      renderRecord(state.record);
+      renderComplete(state.completion || null);
+    }
+
+    async function setFilter(filter) {
+      els.error.textContent = "";
+      const response = await fetch("/api/filter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filter }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "filter failed");
+      applyState(payload);
+    }
+
+    async function loadState(index) {
+      els.error.textContent = "";
+      const url = index === undefined ? "/api/state" : `/api/state?index=${index}`;
+      const response = await fetch(url);
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "request failed");
+      applyState(payload);
+    }
+
+    function currentManualLabels() {
+      return {
+        sentiment: els.manual_sentiment.value,
+        issueType: els.manual_issueType.value,
+        safetyRelatedObservation: els.manual_safetyRelatedObservation.value,
+        qualitySignal: els.manual_qualitySignal.value,
+      };
+    }
+
+    async function postAction(action) {
+      els.error.textContent = "";
+      const body = {
+        action,
+        index: state.record.index,
+        reviewerNotes: els.reviewerNotes.value.trim() || null,
+      };
+      if (action === "save" || action === "reject") {
+        body.manualLabels = currentManualLabels();
+      }
+      const response = await fetch("/api/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "action failed");
+      applyState(payload.state || payload);
+    }
+
+    async function approveSafeBulk() {
+      const bulk = state?.safeBulk;
+      if (!bulk || bulk.count <= 0) return;
+      const message =
+        `Approve ${bulk.count} safe bulk candidate(s)?\n\n` +
+        "This copies AI suggestions into manual labels and marks them HUMAN_REVIEWED.\n" +
+        "Excluded records will not be changed.";
+      if (!window.confirm(message)) return;
+      els.error.textContent = "";
+      const response = await fetch("/api/bulk-approve-safe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmed: true, expectedCount: bulk.count }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "bulk approval failed");
+      applyState(payload);
+    }
+
+    els.approveSafeBulkBtn.addEventListener("click", () => approveSafeBulk().catch(err => els.error.textContent = err.message));
+    els.approveAiBtn.addEventListener("click", () => postAction("approve_ai").catch(err => els.error.textContent = err.message));
+    els.approveBtn.addEventListener("click", () => postAction("approve").catch(err => els.error.textContent = err.message));
+    els.saveBtn.addEventListener("click", () => postAction("save").catch(err => els.error.textContent = err.message));
+    els.rejectBtn.addEventListener("click", () => postAction("reject").catch(err => els.error.textContent = err.message));
+    els.prevBtn.addEventListener("click", () => loadState(state.record.index - 1).catch(err => els.error.textContent = err.message));
+    els.nextBtn.addEventListener("click", () => loadState(state.record.index + 1).catch(err => els.error.textContent = err.message));
+
+    function isEditableFocused() {
+      const active = document.activeElement;
+      if (!active) return false;
+      const tag = active.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || active.isContentEditable;
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (!state || isEditableFocused()) return;
+      const key = event.key;
+      if (key === "a" || key === "A") {
+        event.preventDefault();
+        postAction("approve_ai").catch(err => els.error.textContent = err.message);
+      } else if (key === "s" || key === "S") {
+        event.preventDefault();
+        postAction("save").catch(err => els.error.textContent = err.message);
+      } else if (key === "r" || key === "R") {
+        event.preventDefault();
+        postAction("reject").catch(err => els.error.textContent = err.message);
+      } else if (key === "ArrowRight") {
+        event.preventDefault();
+        loadState(state.record.index + 1).catch(err => els.error.textContent = err.message);
+      } else if (key === "ArrowLeft") {
+        event.preventDefault();
+        loadState(state.record.index - 1).catch(err => els.error.textContent = err.message);
+      }
+    });
+
+    loadState().catch(err => els.error.textContent = err.message);
+  </script>
+</body>
+</html>

@@ -107,6 +107,8 @@ func (s *Service) Register(ctx context.Context, email, password string) (*Regist
 	if err := s.Users.Create(ctx, user); err != nil {
 		if errors.Is(err, repository.ErrDuplicate) {
 			// Non-enumerating response: same message, no error.
+			// Unverified accounts get a fresh link so a lost mail does not block login.
+			s.resendIfUnverified(ctx, email)
 			return &RegisterResult{Message: registerAckMessage}, nil
 		}
 		return nil, err
@@ -142,6 +144,63 @@ func (s *Service) Register(ctx context.Context, email, password string) (*Regist
 	}
 
 	return &RegisterResult{Message: registerAckMessage}, nil
+}
+
+func (s *Service) ResendEmailVerification(ctx context.Context, email, password string) (*RegisterResult, error) {
+	email = strings.TrimSpace(strings.ToLower(email))
+	ack := &RegisterResult{Message: registerAckMessage}
+	if email == "" || len(password) < 8 {
+		return ack, nil
+	}
+	if s.emailResendBlocked(ctx, email) {
+		return ack, nil
+	}
+
+	user, err := s.Users.FindByEmail(ctx, email)
+	if err != nil {
+		return ack, nil
+	}
+	if !CheckPassword(user.PasswordHash, password) {
+		s.recordEmailResend(ctx, email, &user.ID)
+		return ack, nil
+	}
+	if user.EmailVerified {
+		return ack, nil
+	}
+	if s.recordEmailResend(ctx, email, &user.ID) {
+		return ack, nil
+	}
+	if err := s.sendEmailVerification(ctx, user.ID, email); err != nil {
+		return nil, err
+	}
+	return ack, nil
+}
+
+func (s *Service) resendIfUnverified(ctx context.Context, email string) {
+	user, err := s.Users.FindByEmail(ctx, email)
+	if err != nil || user.EmailVerified {
+		return
+	}
+	if s.emailResendBlocked(ctx, email) || s.recordEmailResend(ctx, email, &user.ID) {
+		return
+	}
+	_ = s.sendEmailVerification(ctx, user.ID, email)
+}
+
+func (s *Service) emailResendBlocked(ctx context.Context, email string) bool {
+	if s.BruteForce == nil {
+		return false
+	}
+	blocked, _ := s.BruteForce.IsOTPBlocked(ctx, "email_resend", email)
+	return blocked
+}
+
+func (s *Service) recordEmailResend(ctx context.Context, email string, userID *primitive.ObjectID) bool {
+	if s.BruteForce == nil {
+		return false
+	}
+	locked, _ := s.BruteForce.RecordOTPFailure(ctx, "email_resend", email, userID)
+	return locked
 }
 
 func (s *Service) sendEmailVerification(ctx context.Context, userID primitive.ObjectID, email string) error {

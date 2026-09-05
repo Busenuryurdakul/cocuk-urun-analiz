@@ -1,6 +1,6 @@
 # Miyuna — MongoDB Schema
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Design Principles
@@ -19,9 +19,15 @@ User
   └── Organization Memberships[]
         └── Organization (organizationId)
               ├── Members[] (role: OWNER | ADMIN | ANALYST | VIEWER)
-              ├── Products[]
-              ├── ImportJobs[]
-              ├── AnalysisRuns[]
+              ├── Products[]                  ← canonical `products`
+              ├── ProductSourceMappings[]
+              ├── UserExperiences[]
+              ├── MarketplaceReviews[]
+              ├── MarketplaceImportRuns[]
+              ├── RawSourcePayloads[]
+              ├── DatasetRecords[]
+              ├── DatasetVersions[]           ← DRAFT only (Phase 4)
+              ├── AnalysisRuns[]              ← Phase 5+ (not implemented)
               └── ConfigSnapshots[]
 ```
 
@@ -79,44 +85,223 @@ User
 
 Platform store API (Shopify, WooCommerce) iptal edildi (2026-09-04). Bu koleksiyon v1'de **implement edilmez**.
 
-### import_jobs
+### import_jobs — NOT IMPLEMENTED (future agent import lifecycle)
+
+Legacy/future agentic import run tracking. Phase 4 uses `marketplace_import_runs` for async marketplace/CSV/JSON imports.
+
+### normalized_products — SUPERSEDED (do not use as canonical truth)
+
+**Phase 4 canonical product truth is `products` only.**
+
+Historical schema reference only. Normalization output persists to `products`; there is no competing canonical product collection in Phase 4.
+
+### products — Phase 4 canonical product truth
 
 ```text
 {
   _id: ObjectId,
   organizationId: ObjectId,
-  sourceType: URL | CSV | JSON | MANUAL,
-  sourceRef: string,
-  status: PENDING | RUNNING | SUFFICIENT | INSUFFICIENT | FAILED,
-  rawStorageRef: string,
-  qualityDecision: SUFFICIENT | INSUFFICIENT | REFETCH,
+  name: ProductFieldMeta,
+  brand: ProductFieldMeta,
+  category: ProductFieldMeta,
+  description: ProductFieldMeta,
+  targetAge: ProductFieldMeta,
+  materials: ProductFieldMeta,
+  safetyWarnings: ProductFieldMeta,
+  currentPrice: ProductFieldMeta,
+  originalPrice: ProductFieldMeta,
+  currency: ProductFieldMeta,
+  seller: ProductFieldMeta,
+  rating: ProductFieldMeta,
+  reviewCount: ProductFieldMeta,
+  attributes: ProductFieldMeta,
+  imageRefs: ProductFieldMeta,
+  stockStatus: ProductFieldMeta,
+  sku: ProductFieldMeta,
   createdBy: ObjectId,
   createdAt: Date,
-  completedAt: Date?
+  updatedAt: Date
 }
 ```
 
-**Indexes:** `{ organizationId: 1, status: 1 }`, `{ organizationId: 1, createdAt: -1 }`
+**Indexes:** `{ organizationId: 1, createdAt: -1 }`
 
-### normalized_products
+### product_source_mappings — Phase 4
+
+Maps one canonical product to external marketplace/source identities.
 
 ```text
 {
   _id: ObjectId,
   organizationId: ObjectId,
-  importJobId: ObjectId,
-  sourceType: string,
-  sourceRef: string,
-  fields: { [fieldName]: { value: any, missing: boolean } },
-  reviewSample: { totalAvailable: number, sampled: number, reviews: [] },
-  priceHistory: [{ recordedAt: Date, price: number, currency: string }],
-  normalizedAt: Date
+  productId: ObjectId,
+  source: HEPSIBURADA | TRENDYOL | AMAZON | N11 | OTHER | MIYUNA,
+  sourceProductId: string,
+  sourceUrl: string?,
+  gtin, ean, upc, sku, brand, model: string?,
+  matchStatus: VERIFIED | PARTIAL | UNVERIFIED,
+  matchMethod: IDENTIFIER | EXPLICIT | MANUAL | FUZZY_CANDIDATE,
+  confidence: number?,
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
-**Indexes:** `{ organizationId: 1, sourceRef: 1 }`, `{ organizationId: 1, importJobId: 1 }`
+**Indexes:** `{ organizationId: 1, source: 1, sourceProductId: 1 }` unique
 
-### analysis_runs
+### user_experiences — Phase 4 Miyuna UGC
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  productId: ObjectId,
+  userId: ObjectId,
+  usageStatus: USING | USED,
+  satisfactionLevel: VERY_SATISFIED | SATISFIED | NEUTRAL | UNSATISFIED | VERY_UNSATISFIED,
+  rating: number?,
+  issueType: DURABILITY | BREAKAGE | ... | OTHER?,
+  narrative: string,
+  marketplaceUrl: string?,
+  sourceType: MIYUNA_UGC,
+  consentRecordId: ObjectId,
+  piiStatus: CLEAN | REDACTED | QUARANTINED,
+  moderationStatus: PENDING | APPROVED | REJECTED,   // default PENDING
+  qualityStatus: PENDING | APPROVED | LOW_QUALITY | REJECTED,
+  datasetEligibility: TRAINING_APPROVED | EVAL_ONLY | ANALYSIS_ONLY | QUARANTINED | REJECTED,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, productId: 1 }`
+
+### marketplace_reviews — Phase 4
+
+Persisted marketplace review records (collection name in code: `marketplace_reviews`).
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  productId: ObjectId,
+  productSourceMappingId: ObjectId?,
+  sourceType: MARKETPLACE_REVIEW,
+  source: HEPSIBURADA | TRENDYOL | AMAZON | N11 | OTHER,
+  sourceUrl: string,
+  sourceProductId: string,
+  sourceReviewId: string?,
+  rating: number?,
+  reviewText: string,
+  reviewDate: Date?,
+  fetchedAt: Date,
+  language: TR | EN | UNKNOWN,
+  fingerprint: string,
+  piiStatus, moderationStatus, spamStatus, duplicateStatus, qualityStatus,
+  provenanceStatus: VERIFIED | PARTIAL | UNKNOWN | REJECTED,
+  licenseStatus: APPROVED | RESTRICTED | UNKNOWN | REJECTED,
+  usageRightsStatus: APPROVED | RESTRICTED | UNKNOWN | REJECTED,
+  datasetEligibility,
+  rawStorageRef: string?,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, fingerprint: 1 }` unique
+
+**Note:** Marketplace reviews are never auto `TRAINING_APPROVED`.
+
+### marketplace_import_runs — Phase 4 async import lifecycle
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  requestedBy: ObjectId,
+  source: HEPSIBURADA | TRENDYOL | ...,
+  sourceUrl: string?,
+  accessMode: AUTHORIZED_API | PERMITTED_PUBLIC_FETCH | CSV_IMPORT | JSON_IMPORT | ...,
+  status: PENDING | RUNNING | SUCCEEDED | PARTIAL | FAILED | REJECTED_BY_POLICY,
+  importRef: string?,
+  startedAt: Date?,
+  finishedAt: Date?,
+  recordsSeen, recordsAccepted, recordsRejected, recordsQuarantined: number,
+  errorCode, errorMessage: string?,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, createdAt: -1 }`
+
+Consumer runs inside Go API process (Redis queue); separate worker binary is out of scope for Phase 4.
+
+### raw_source_payloads — Phase 4
+
+Large raw payloads stored in S3/MinIO; Mongo holds metadata only.
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  importRunId: ObjectId?,
+  source, sourceUrl, fetchMode,
+  fetchedAt: Date,
+  contentType: string,
+  contentHash: string,
+  objectStorageRef: string,
+  sizeBytes: number,
+  status: string,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, importRunId: 1 }`
+
+### dataset_records — Phase 4
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  recordType: MARKETPLACE_REVIEW | MIYUNA_UGC | PRODUCT | OFFICIAL_SOURCE | OTHER,
+  sourceRecordId: ObjectId,
+  productId: ObjectId?,
+  normalizedPayload: object?,
+  datasetEligibility,
+  provenanceStatus, licenseStatus, usageRightsStatus, qualityStatus, piiStatus,
+  datasetVersionId: ObjectId?,
+  split: TRAIN | VALIDATION | HELD_OUT_EVAL?,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, datasetEligibility: 1 }`, `{ organizationId: 1, datasetVersionId: 1 }`
+
+**Invariant:** `HELD_OUT_EVAL` must never enter training selection.
+
+### dataset_versions — Phase 4 DRAFT metadata only
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  version: string,
+  status: DRAFT,                         // publication workflow NOT Phase 4
+  sourceCounts, sourceDistribution, categoryDistribution?,
+  languageDistribution?, eligibilityDistribution: object,
+  normalizerVersion, piiPolicyVersion, licensePolicyVersion: string,
+  contentHash: string?,
+  createdBy: ObjectId,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, createdAt: -1 }`
+
+Publication / fine-tune export belongs to later phases (Phase 10).
+
+### analysis_runs — NOT IMPLEMENTED (Phase 5+)
 
 ```text
 {

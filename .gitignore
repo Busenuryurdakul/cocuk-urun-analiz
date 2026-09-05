@@ -47,6 +47,30 @@ coverage/
 .coverage
 htmlcov/
 .pytest_cache/
+**/.pytest_cache/
 
-# gqlgen generated (tracked in Phase 1 scaffold)
-# apps/api/graph/generated.go
+# Amazon Baby generated outputs (large / local artifacts)
+scripts/amazon_baby/output/miyuna_amazon_baby_import.jsonl
+scripts/amazon_baby/output/*.jsonl
+scripts/amazon_baby/gold/miyuna_gold_pilot_*_reviewed.csv
+scripts/amazon_baby/gold/miyuna_gold_pilot_*_reviewed.jsonl
+scripts/amazon_baby/gold/miyuna_gold_pilot_approved.jsonl
+scripts/amazon_baby/gold/miyuna_gold_pilot_ai_assisted_finalized.csv
+scripts/amazon_baby/gold/miyuna_gold_pilot_ai_assisted_finalized.jsonl
+scripts/amazon_baby/gold/miyuna_gold_pilot_100_ai_prereview.jsonl
+scripts/amazon_baby/gold/review_helper/**/*.bak
+scripts/amazon_baby/gold/**/*.backup
+
+# Stale Phase 4 workflow reports (superseded by final provenance + docs/AMAZON_BABY_DATASET.md)
+scripts/amazon_baby/gold/MIYUNA_GOLD_DATASET_PILOT_REPORT.md
+scripts/amazon_baby/gold/AI_ASSISTED_GOLD_PREREVIEW_REPORT.md
+scripts/amazon_baby/gold/review_helper/GOLD_REVIEW_HELPER_REPORT.md
+scripts/amazon_baby/output/_e2e_report.json
+scripts/amazon_baby/output/_e2e_import_subset.jsonl
+
+# Local API binaries
+apps/api/miyuna-api.exe
+apps/api/miyuna-api.exe~
+
+# Next.js (apps/web)
+apps/web/.next/

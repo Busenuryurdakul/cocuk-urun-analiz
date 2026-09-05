@@ -2,6 +2,142 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ink: #1a1916;
+  --muted: #4f4942;
+  --cream: #f8f5f0;
+  --paper: #fffdf9;
+  --sand: #ebe4da;
+  --forest: #1e4d45;
+  --forest-deep: #14352f;
+  --clay: #c45c26;
+  --titlebar: 36px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-cream text-ink antialiased;
+  background-image:
+    radial-gradient(1200px 560px at 8% -10%, rgba(30, 77, 69, 0.045), transparent 60%),
+    radial-gradient(1000px 520px at 108% 0%, rgba(196, 92, 38, 0.03), transparent 55%),
+    linear-gradient(180deg, #faf8f4 0%, #f8f5f0 48%, #f6f2ec 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+::selection {
+  background: #dce8e3;
+  color: #14352f;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold tracking-tight text-paper shadow-sm transition hover:bg-forest-deep disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-clay px-5 py-2.5 text-sm font-semibold tracking-tight text-paper shadow-sm transition hover:bg-clay-deep disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-sand bg-paper px-5 py-2.5 text-sm font-semibold tracking-tight text-ink transition hover:border-forest/30 hover:bg-forest-soft disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold tracking-tight text-muted transition hover:bg-sand hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-semibold tracking-tight text-red-800 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .input {
+    @apply mt-1.5 w-full rounded-xl border border-sand bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-forest/40 focus:ring-4 focus:ring-forest/10;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-ink;
+  }
+
+  .card {
+    @apply rounded-2.5xl border border-sand/90 bg-paper p-6 shadow-card;
+  }
+
+  .kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-forest-mid;
+  }
+
+  .display {
+    @apply font-display font-medium tracking-tight text-ink;
+  }
+
+  .link-quiet {
+    @apply text-sm text-muted underline decoration-sand underline-offset-4 transition hover:text-forest;
+  }
+
+  .alert {
+    @apply rounded-2xl border px-4 py-3 text-sm;
+  }
+
+  .alert-error {
+    @apply alert border-red-200 bg-red-50 text-red-900;
+  }
+
+  .alert-success {
+    @apply alert border-emerald-200 bg-emerald-50 text-emerald-950;
+  }
+
+  .alert-warn {
+    @apply alert border-amber-200 bg-amber-50 text-amber-950;
+  }
+
+  .alert-info {
+    @apply alert border-forest/20 bg-forest-soft text-forest-deep;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+  }
+
+  .badge-forest {
+    @apply badge bg-forest-soft text-forest-deep;
+  }
+
+  .badge-clay {
+    @apply badge bg-clay-soft text-clay-deep;
+  }
+
+  .badge-muted {
+    @apply badge bg-sand/80 text-muted;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-paper/85 transition hover:bg-white/10 hover:text-paper;
+  }
+
+  .nav-item-active {
+    @apply flex items-center gap-2.5 rounded-xl bg-white/10 px-3 py-2 text-sm text-paper transition;
+  }
+}
+
+.desktop-drag {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.desktop-no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+html[data-platform="electron"] body {
+  padding-top: var(--titlebar);
+}
+
+html[data-platform="electron"] .desktop-titlebar {
+  display: flex;
 }

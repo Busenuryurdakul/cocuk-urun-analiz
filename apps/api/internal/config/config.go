@@ -26,6 +26,11 @@ type Config struct {
 	MaxOTPAttempts         int
 	LoginMaxAttempts       int
 	LoginLockoutDuration   time.Duration
+	S3Endpoint             string
+	S3AccessKey            string
+	S3SecretKey            string
+	S3Bucket               string
+	S3ForcePathStyle       bool
 }
 
 // Load reads configuration from environment with dev defaults.
@@ -49,6 +54,11 @@ func Load() Config {
 		MaxOTPAttempts:         intEnv("MAX_OTP_ATTEMPTS", 5),
 		LoginMaxAttempts:       intEnv("LOGIN_MAX_ATTEMPTS", 5),
 		LoginLockoutDuration:   durationEnv("LOGIN_LOCKOUT_DURATION", 15*time.Minute),
+		S3Endpoint:             getEnv("S3_ENDPOINT", ""),
+		S3AccessKey:            getEnv("S3_ACCESS_KEY", ""),
+		S3SecretKey:            getEnv("S3_SECRET_KEY", ""),
+		S3Bucket:               getEnv("S3_BUCKET", ""),
+		S3ForcePathStyle:       getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
 	}
 }
 

@@ -9,23 +9,34 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/config"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mail"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/marketplace"
 	mongoclient "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mongo"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/org"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/product"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/queue"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/redis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/storage"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/tenant"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/ugc"
 )
 
 type App struct {
-	Config     config.Config
-	Mongo      *mongoclient.Client
-	Redis      *redis.Client
-	Auth       *auth.Service
-	Org        *org.Service
-	Compliance *compliance.Engine
-	Consent    *compliance.ConsentService
-	PolicyRepo *compliance.PolicyRepository
+	Config         config.Config
+	Mongo          *mongoclient.Client
+	Redis          *redis.Client
+	Auth           *auth.Service
+	Org            *org.Service
+	Compliance     *compliance.Engine
+	Consent        *compliance.ConsentService
+	PolicyRepo     *compliance.PolicyRepository
+	Products       *product.Service
+	UGC            *ugc.Service
+	Marketplace    *marketplace.Service
+	Dataset        *dataset.Service
+	ImportConsumer *marketplace.Consumer
 }
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
@@ -59,6 +70,15 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	consents := repository.NewConsentRepository(db)
 	complianceEvents := repository.NewComplianceEventRepository(db)
 	configAudit := repository.NewConfigAuditRepository(db)
+
+	productsRepo := repository.NewProductRepository(db)
+	mappingsRepo := repository.NewProductSourceMappingRepository(db)
+	uxRepo := repository.NewUserExperienceRepository(db)
+	reviewsRepo := repository.NewMarketplaceReviewRepository(db)
+	importRunsRepo := repository.NewMarketplaceImportRunRepository(db)
+	rawPayloadRepo := repository.NewRawSourcePayloadRepository(db)
+	datasetRecordsRepo := repository.NewDatasetRecordRepository(db)
+	datasetVersionsRepo := repository.NewDatasetVersionRepository(db)
 
 	if err := compliance.SeedPlatformPolicies(ctx, compliancePolicies); err != nil {
 		return nil, err
@@ -98,6 +118,51 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		PolicyRepo:  policyRepo,
 		WebBaseURL:  cfg.WebBaseURL,
 	}
+
+	productSvc := &product.Service{
+		Products: productsRepo,
+		Mappings: mappingsRepo,
+		Security: security,
+		Tenant:   guard,
+	}
+
+	ugcSvc := &ugc.Service{
+		Experiences: uxRepo,
+		Products:    productsRepo,
+		Consent:     consentSvc,
+		Security:    security,
+		Tenant:      guard,
+	}
+
+	datasetSvc := &dataset.Service{
+		Records:  datasetRecordsRepo,
+		Versions: datasetVersionsRepo,
+		Security: security,
+		Tenant:   guard,
+	}
+
+	var s3Client *storage.S3Client
+	if cfg.S3Endpoint != "" && cfg.S3Bucket != "" {
+		s3Client, err = storage.NewS3Client(cfg)
+		if err != nil {
+			log.Printf("s3 client disabled: %v", err)
+		}
+	}
+
+	importQueue := &queue.ImportQueue{Redis: redisClient}
+	marketplaceSvc := &marketplace.Service{
+		Runs:           importRunsRepo,
+		Reviews:        reviewsRepo,
+		Raw:            rawPayloadRepo,
+		Products:       productSvc,
+		DatasetRecords: datasetRecordsRepo,
+		Registry:       marketplace.DefaultRegistry(),
+		Queue:          importQueue,
+		Storage:        s3Client,
+		Security:       security,
+		Tenant:         guard,
+	}
+	importConsumer := marketplace.NewConsumer(marketplaceSvc, 2*time.Second)
 
 	policy := auth.SecurityPolicy{
 		MaxOTPAttempts:       cfg.MaxOTPAttempts,
@@ -139,14 +204,19 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 
 	return &App{
-		Config:     cfg,
-		Mongo:      mongoClient,
-		Redis:      redisClient,
-		Auth:       authSvc,
-		Org:        orgSvc,
-		Compliance: complianceEngine,
-		Consent:    consentSvc,
-		PolicyRepo: policyRepo,
+		Config:         cfg,
+		Mongo:          mongoClient,
+		Redis:          redisClient,
+		Auth:           authSvc,
+		Org:            orgSvc,
+		Compliance:     complianceEngine,
+		Consent:        consentSvc,
+		PolicyRepo:     policyRepo,
+		Products:       productSvc,
+		UGC:            ugcSvc,
+		Marketplace:    marketplaceSvc,
+		Dataset:        datasetSvc,
+		ImportConsumer: importConsumer,
 	}, nil
 }
 
@@ -165,7 +235,16 @@ func (a *App) CookieOptions() cookies.Options {
 	return opts
 }
 
+func (a *App) StartBackgroundWorkers() {
+	if a.ImportConsumer != nil {
+		a.ImportConsumer.Start()
+	}
+}
+
 func (a *App) Shutdown(ctx context.Context) {
+	if a.ImportConsumer != nil {
+		a.ImportConsumer.Stop(ctx)
+	}
 	if err := a.Mongo.Disconnect(ctx); err != nil {
 		log.Printf("mongodb disconnect: %v", err)
 	}

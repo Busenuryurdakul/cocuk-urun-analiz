@@ -58,3 +58,21 @@ func (c *Client) Exists(ctx context.Context, key string) (bool, error) {
 func (c *Client) Del(ctx context.Context, keys ...string) error {
 	return c.rdb.Del(ctx, keys...).Err()
 }
+
+func (c *Client) LPush(ctx context.Context, key, value string) error {
+	return c.rdb.LPush(ctx, key, value).Err()
+}
+
+func (c *Client) BRPop(ctx context.Context, key string, timeout time.Duration) (string, error) {
+	res, err := c.rdb.BRPop(ctx, timeout, key).Result()
+	if err != nil {
+		if err == goredis.Nil {
+			return "", nil
+		}
+		return "", err
+	}
+	if len(res) < 2 {
+		return "", nil
+	}
+	return res[1], nil
+}

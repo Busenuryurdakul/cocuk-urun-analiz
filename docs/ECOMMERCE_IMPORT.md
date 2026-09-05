@@ -1,6 +1,6 @@
 # Miyuna — Product Data Import
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Supported Input Sources
@@ -18,8 +18,8 @@
 
 - `SHOPIFY_E2E_STATUS` / platform E2E gate kaldırıldı
 - `EcommerceIntegration` credential modeli **implement edilmez** (v1)
-- Phase 4 platform adapter işi yok
-- Gelecekte marketplace/pazaryeri verisi ayrı Change Request ile değerlendirilir
+- Phase 4 marketplace adapter boundaries (Hepsiburada, Trendyol) — **CR-005 IMPLEMENTED (interface/deferred live fetch)**
+- CSV/JSON marketplace review import — **Phase 4 IMPLEMENTED**
 
 ## 2. Agentic Import Pipeline
 
@@ -59,36 +59,30 @@ Decision: Sufficient | Re-fetch | Insufficient
 
 Insufficient durumda kullanıcıya explicit failure/insufficient status döner.
 
-## 4. Normalized Product Schema
+## 4. Canonical Product Schema (Phase 4)
+
+Persisted canonical truth: MongoDB collection **`products`**.
 
 Kaynakta olmayan alan uydurulmaz — `missing: true`.
 
 ```text
-NormalizedProduct {
+Product {
   organizationId: string
-  sourceType: URL | CSV | JSON | MANUAL
-  sourceRef: string
+  name, brand, category, description, targetAge, materials, ...: ProductFieldMeta
+  createdBy, createdAt, updatedAt
+}
 
-  title: ProductField
-  description: ProductField
-  brand: ProductField
-  category: ProductField
-  targetAgeGroup: ProductField
-  materials: ProductField[]
-  safetyInfo: ProductField
-  price: ProductField
-  currency: ProductField
-  images: ProductField[]
-
-  reviews: ReviewSample        // max 100 when present in source
-  priceHistory: PriceHistoryEntry[]
-
-  importJobId: string
-  rawStorageRef: string
-  normalizedAt: ISO8601
-  qualityDecision: SUFFICIENT | INSUFFICIENT | REFETCH
+ProductFieldMeta {
+  value: any?,
+  missing: boolean,
+  missingReason: string?,
+  source, sourceRecordId: string?,
+  confidence: number?,
+  extractedAt: Date?
 }
 ```
+
+`normalized_products` is **not** a competing canonical truth in Phase 4.
 
 ## 5. Review Sampling
 

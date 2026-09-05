@@ -27,17 +27,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("startup: %v", err)
 	}
+	application.StartBackgroundWorkers()
 	defer application.Shutdown(context.Background())
 
 	health.SetReadinessCheck(application.Ready)
 
 	resolver := &graph.Resolver{
-		Auth:       application.Auth,
-		Org:        application.Org,
-		Consent:    application.Consent,
-		Compliance: application.Compliance,
-		PolicyRepo: application.PolicyRepo,
-		CookieOpts: application.CookieOptions(),
+		Auth:               application.Auth,
+		Org:                application.Org,
+		Consent:            application.Consent,
+		Compliance:         application.Compliance,
+		PolicyRepo:         application.PolicyRepo,
+		ProductService:     application.Products,
+		UGCService:         application.UGC,
+		MarketplaceService: application.Marketplace,
+		DatasetService:     application.Dataset,
+		CookieOpts:         application.CookieOptions(),
 	}
 
 	r := chi.NewRouter()

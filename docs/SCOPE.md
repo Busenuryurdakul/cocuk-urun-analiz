@@ -1,6 +1,6 @@
 # Miyuna — Scope Definition
 
-> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.2 FROZEN  
+> **Source of Truth:** [FINAL_MASTER_PROMPT.md](./FINAL_MASTER_PROMPT.md) v1.0.4 FROZEN (CR-005)  
 > Bu doküman master prompt ile çelişemez.
 
 ## 1. Product Identity
@@ -10,7 +10,7 @@
 | Product Name | **Miyuna** |
 | Full Name | Miyuna — Çocuk Ürünleri Akıllı Analiz ve Karar Destek Platformu |
 | Tagline | Skoru değil, skorun kanıtını göster. |
-| Version | 1.0.2 FROZEN |
+| Version | 1.0.4 FROZEN (CR-005) |
 | Positioning | Decision-support / risk-assessment system |
 
 ## 2. Scope Freeze Rule
@@ -76,6 +76,20 @@
 
 **CANCELLED (2026-09-04):** Shopify, WooCommerce ve diğer platform store API entegrasyonları.
 
+### Phase 4 — Marketplace + UGC + Dataset Foundation (CR-005, IMPLEMENTED)
+
+- [x] Canonical `products` collection (single product truth)
+- [x] ProductSourceMapping + deterministic dedup
+- [x] Miyuna UserExperience (UGC) + consent/compliance reuse
+- [x] UGC portal UI (products + experience form)
+- [x] MarketplaceAdapter architecture (Hepsiburada + Trendyol boundaries)
+- [x] MarketplaceReview + async Redis import (Go API consumer)
+- [x] CSV/JSON import fallback
+- [x] Raw object storage (MinIO/S3 StorageClient)
+- [x] DatasetEligibility + provenance/license/rights metadata
+- [x] DatasetRecord + DatasetVersion (DRAFT only)
+- [ ] Live Hepsiburada/Trendyol fetch — **DEFERRED_WITH_REASON** (authorized API pending)
+
 ### Security & Infrastructure
 
 - [x] Defense in depth (4 layers)
@@ -99,7 +113,7 @@
 | 3rd LLM / third reviewer | Explicitly forbidden |
 | Unrestricted web crawler | LLM has no direct internet |
 | Platform store API (Shopify, WooCommerce) | **CANCELLED** — 2026-09-04 |
-| Multi-marketplace / pazaryeri adapters | Future CR |
+| Multi-marketplace adapters (Hepsiburada, Trendyol) | **CR-005 IN** — live fetch deferred |
 | Encrypted EcommerceIntegration (platform API) | CANCELLED with platform API |
 | Unlimited review collection | Max 100 per product |
 | LLM direct internet access | Tool Registry only |
@@ -161,7 +175,7 @@ Phase 1 requires explicit command: **"FAZ 1'E GEÇ"**
 | PHASE_0_ARCHITECTURE | APPROVED |
 | PHASE_0_FILES | COMPLETE |
 | PLATFORM_ECOMMERCE_API_STATUS | CANCELLED |
-| IMPLEMENTATION_STATUS | PHASE_3_ORG_COMPLIANCE_COMPLETE |
+| IMPLEMENTATION_STATUS | PHASE_4_COMPLETE_PENDING_REVIEW |
 | NEXT_ALLOWED_ACTION | AWAIT_NEXT_PHASE_APPROVAL |
 | PHASE_1_REQUIRES_EXPLICIT_COMMAND | "FAZ 1'E GEÇ" (completed) |
 | PHASE_2_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |

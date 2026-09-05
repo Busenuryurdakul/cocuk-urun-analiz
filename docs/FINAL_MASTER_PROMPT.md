@@ -2,10 +2,10 @@
 
 ## Miyuna — Çocuk Ürünleri Agentic Intelligence & Analysis Platform
 
-### Architecture & Product Specification — v1.0.2
+### Architecture & Product Specification — v1.0.4
 
 ```text
-STATUS: FROZEN — NO SCOPE EXPANSION WITHOUT EXPLICIT CHANGE REQUEST
+STATUS: FROZEN — CR-005 Marketplace Review + UGC + Dataset Foundation
 ```
 
 ## 0. ROLÜN
@@ -306,7 +306,7 @@ Web, Electron Win/Mac, Go GraphQL, Mongo, Redis, S3, tenancy, auth/MFA/device, a
 - 3rd LLM
 - Unrestricted crawler
 - Platform store API integrations (Shopify, WooCommerce) — **CANCELLED**
-- Multi-marketplace / pazaryeri scrape adapters — future CR
+- Multi-marketplace adapters (Hepsiburada, Trendyol boundaries) — **CR-005 IN (Phase 4)**
 - Unlimited review collection
 - LLM direct internet
 - Mock import acceptance
@@ -403,14 +403,13 @@ Onay olmadan FROZEN prompt değiştirilmez.
 
 | Field | Value |
 |-------|-------|
-| MASTER_PROMPT_VERSION | 1.0.2 FROZEN |
+| MASTER_PROMPT_VERSION | 1.0.4 FROZEN (CR-005) |
 | ARCHITECTURE_SCOPE | LOCKED |
 | PRODUCT_NAME | Miyuna |
 | PHASE_0_ARCHITECTURE | APPROVED |
 | PHASE_0_FILES | COMPLETE |
 | PLATFORM_ECOMMERCE_API_STATUS | CANCELLED |
-| IMPLEMENTATION_STATUS | PHASE_3_ORG_COMPLIANCE_COMPLETE |
-| PROJECT_ROOT | C:\Users\MOSTER\Documents\GitHub\cocuk-urun-analiz |
-| NEXT_ALLOWED_ACTION | AWAIT_NEXT_PHASE_APPROVAL |
-| PHASE_1_REQUIRES_EXPLICIT_COMMAND | "FAZ 1'E GEÇ" (completed) |
-| PHASE_2_REQUIRES_EXPLICIT_APPROVAL | YES — approved 2026-09-03 (completed) |
+| PHASE_4_SCOPE | MARKETPLACE_REVIEW + UGC + DATASET_FOUNDATION |
+| IMPLEMENTATION_STATUS | PHASE_4_COMPLETE_PENDING_REVIEW |
+| REAL_MARKETPLACE_E2E | DEFERRED_WITH_REASON (authorized API pending) |
+| NEXT_ALLOWED_ACTION | COMMIT_REVIEW_THEN_PHASE_5_AFTER_MERGE |
