@@ -221,34 +221,19 @@ type ComplexityRoot struct {
 	}
 
 	Product struct {
-		Attributes     func(childComplexity int) int
 		Brand          func(childComplexity int) int
 		Category       func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
-		Currency       func(childComplexity int) int
-		CurrentPrice   func(childComplexity int) int
 		Description    func(childComplexity int) int
 		ID             func(childComplexity int) int
-		ImageRefs      func(childComplexity int) int
-		Materials      func(childComplexity int) int
 		Name           func(childComplexity int) int
 		OrganizationID func(childComplexity int) int
-		OriginalPrice  func(childComplexity int) int
-		Rating         func(childComplexity int) int
-		ReviewCount    func(childComplexity int) int
-		SafetyWarnings func(childComplexity int) int
-		Seller         func(childComplexity int) int
 		Sku            func(childComplexity int) int
-		StockStatus    func(childComplexity int) int
-		TargetAge      func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 	}
 
 	ProductFieldMeta struct {
-		Confidence     func(childComplexity int) int
-		ExtractedAt    func(childComplexity int) int
 		Missing        func(childComplexity int) int
-		MissingReason  func(childComplexity int) int
 		Source         func(childComplexity int) int
 		SourceRecordID func(childComplexity int) int
 		Value          func(childComplexity int) int
@@ -1285,12 +1270,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.OrganizationMember.UserID(childComplexity), true
 
-	case "Product.attributes":
-		if e.complexity.Product.Attributes == nil {
-			break
-		}
-
-		return e.complexity.Product.Attributes(childComplexity), true
 	case "Product.brand":
 		if e.complexity.Product.Brand == nil {
 			break
@@ -1309,18 +1288,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.CreatedAt(childComplexity), true
-	case "Product.currency":
-		if e.complexity.Product.Currency == nil {
-			break
-		}
-
-		return e.complexity.Product.Currency(childComplexity), true
-	case "Product.currentPrice":
-		if e.complexity.Product.CurrentPrice == nil {
-			break
-		}
-
-		return e.complexity.Product.CurrentPrice(childComplexity), true
 	case "Product.description":
 		if e.complexity.Product.Description == nil {
 			break
@@ -1333,18 +1300,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.ID(childComplexity), true
-	case "Product.imageRefs":
-		if e.complexity.Product.ImageRefs == nil {
-			break
-		}
-
-		return e.complexity.Product.ImageRefs(childComplexity), true
-	case "Product.materials":
-		if e.complexity.Product.Materials == nil {
-			break
-		}
-
-		return e.complexity.Product.Materials(childComplexity), true
 	case "Product.name":
 		if e.complexity.Product.Name == nil {
 			break
@@ -1357,54 +1312,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.OrganizationID(childComplexity), true
-	case "Product.originalPrice":
-		if e.complexity.Product.OriginalPrice == nil {
-			break
-		}
-
-		return e.complexity.Product.OriginalPrice(childComplexity), true
-	case "Product.rating":
-		if e.complexity.Product.Rating == nil {
-			break
-		}
-
-		return e.complexity.Product.Rating(childComplexity), true
-	case "Product.reviewCount":
-		if e.complexity.Product.ReviewCount == nil {
-			break
-		}
-
-		return e.complexity.Product.ReviewCount(childComplexity), true
-	case "Product.safetyWarnings":
-		if e.complexity.Product.SafetyWarnings == nil {
-			break
-		}
-
-		return e.complexity.Product.SafetyWarnings(childComplexity), true
-	case "Product.seller":
-		if e.complexity.Product.Seller == nil {
-			break
-		}
-
-		return e.complexity.Product.Seller(childComplexity), true
 	case "Product.sku":
 		if e.complexity.Product.Sku == nil {
 			break
 		}
 
 		return e.complexity.Product.Sku(childComplexity), true
-	case "Product.stockStatus":
-		if e.complexity.Product.StockStatus == nil {
-			break
-		}
-
-		return e.complexity.Product.StockStatus(childComplexity), true
-	case "Product.targetAge":
-		if e.complexity.Product.TargetAge == nil {
-			break
-		}
-
-		return e.complexity.Product.TargetAge(childComplexity), true
 	case "Product.updatedAt":
 		if e.complexity.Product.UpdatedAt == nil {
 			break
@@ -1412,30 +1325,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Product.UpdatedAt(childComplexity), true
 
-	case "ProductFieldMeta.confidence":
-		if e.complexity.ProductFieldMeta.Confidence == nil {
-			break
-		}
-
-		return e.complexity.ProductFieldMeta.Confidence(childComplexity), true
-	case "ProductFieldMeta.extractedAt":
-		if e.complexity.ProductFieldMeta.ExtractedAt == nil {
-			break
-		}
-
-		return e.complexity.ProductFieldMeta.ExtractedAt(childComplexity), true
 	case "ProductFieldMeta.missing":
 		if e.complexity.ProductFieldMeta.Missing == nil {
 			break
 		}
 
 		return e.complexity.ProductFieldMeta.Missing(childComplexity), true
-	case "ProductFieldMeta.missingReason":
-		if e.complexity.ProductFieldMeta.MissingReason == nil {
-			break
-		}
-
-		return e.complexity.ProductFieldMeta.MissingReason(childComplexity), true
 	case "ProductFieldMeta.source":
 		if e.complexity.ProductFieldMeta.Source == nil {
 			break
@@ -3768,30 +3663,6 @@ func (ec *executionContext) fieldContext_CreateProductPayload_product(_ context.
 				return ec.fieldContext_Product_category(ctx, field)
 			case "description":
 				return ec.fieldContext_Product_description(ctx, field)
-			case "targetAge":
-				return ec.fieldContext_Product_targetAge(ctx, field)
-			case "materials":
-				return ec.fieldContext_Product_materials(ctx, field)
-			case "safetyWarnings":
-				return ec.fieldContext_Product_safetyWarnings(ctx, field)
-			case "currentPrice":
-				return ec.fieldContext_Product_currentPrice(ctx, field)
-			case "originalPrice":
-				return ec.fieldContext_Product_originalPrice(ctx, field)
-			case "currency":
-				return ec.fieldContext_Product_currency(ctx, field)
-			case "seller":
-				return ec.fieldContext_Product_seller(ctx, field)
-			case "rating":
-				return ec.fieldContext_Product_rating(ctx, field)
-			case "reviewCount":
-				return ec.fieldContext_Product_reviewCount(ctx, field)
-			case "attributes":
-				return ec.fieldContext_Product_attributes(ctx, field)
-			case "imageRefs":
-				return ec.fieldContext_Product_imageRefs(ctx, field)
-			case "stockStatus":
-				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
 			case "createdAt":
@@ -6972,16 +6843,10 @@ func (ec *executionContext) fieldContext_Product_name(_ context.Context, field g
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -7017,16 +6882,10 @@ func (ec *executionContext) fieldContext_Product_brand(_ context.Context, field 
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -7062,16 +6921,10 @@ func (ec *executionContext) fieldContext_Product_category(_ context.Context, fie
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -7107,556 +6960,10 @@ func (ec *executionContext) fieldContext_Product_description(_ context.Context, 
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_targetAge(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_targetAge,
-		func(ctx context.Context) (any, error) {
-			return obj.TargetAge, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_targetAge(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_materials(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_materials,
-		func(ctx context.Context) (any, error) {
-			return obj.Materials, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_materials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_safetyWarnings(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_safetyWarnings,
-		func(ctx context.Context) (any, error) {
-			return obj.SafetyWarnings, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_safetyWarnings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_currentPrice(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_currentPrice,
-		func(ctx context.Context) (any, error) {
-			return obj.CurrentPrice, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_currentPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_originalPrice(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_originalPrice,
-		func(ctx context.Context) (any, error) {
-			return obj.OriginalPrice, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_originalPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_currency(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_currency,
-		func(ctx context.Context) (any, error) {
-			return obj.Currency, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_seller(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_seller,
-		func(ctx context.Context) (any, error) {
-			return obj.Seller, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_seller(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_rating(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_rating,
-		func(ctx context.Context) (any, error) {
-			return obj.Rating, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_rating(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_reviewCount(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_reviewCount,
-		func(ctx context.Context) (any, error) {
-			return obj.ReviewCount, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_reviewCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_attributes(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_attributes,
-		func(ctx context.Context) (any, error) {
-			return obj.Attributes, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_attributes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_imageRefs(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_imageRefs,
-		func(ctx context.Context) (any, error) {
-			return obj.ImageRefs, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_imageRefs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Product_stockStatus(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Product_stockStatus,
-		func(ctx context.Context) (any, error) {
-			return obj.StockStatus, nil
-		},
-		nil,
-		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Product_stockStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Product",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "value":
-				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
-			case "missing":
-				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
-			case "source":
-				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
-			case "sourceRecordId":
-				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -7692,16 +6999,10 @@ func (ec *executionContext) fieldContext_Product_sku(_ context.Context, field gr
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
-			case "missingReason":
-				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
-			case "confidence":
-				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
-			case "extractedAt":
-				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -7825,35 +7126,6 @@ func (ec *executionContext) fieldContext_ProductFieldMeta_missing(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ProductFieldMeta_missingReason(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ProductFieldMeta_missingReason,
-		func(ctx context.Context) (any, error) {
-			return obj.MissingReason, nil
-		},
-		nil,
-		ec.marshalOString2ᚖstring,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_ProductFieldMeta_missingReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ProductFieldMeta",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ProductFieldMeta_source(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7900,64 +7172,6 @@ func (ec *executionContext) _ProductFieldMeta_sourceRecordId(ctx context.Context
 }
 
 func (ec *executionContext) fieldContext_ProductFieldMeta_sourceRecordId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ProductFieldMeta",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ProductFieldMeta_confidence(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ProductFieldMeta_confidence,
-		func(ctx context.Context) (any, error) {
-			return obj.Confidence, nil
-		},
-		nil,
-		ec.marshalOFloat2ᚖfloat64,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_ProductFieldMeta_confidence(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ProductFieldMeta",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ProductFieldMeta_extractedAt(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ProductFieldMeta_extractedAt,
-		func(ctx context.Context) (any, error) {
-			return obj.ExtractedAt, nil
-		},
-		nil,
-		ec.marshalOString2ᚖstring,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_ProductFieldMeta_extractedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ProductFieldMeta",
 		Field:      field,
@@ -8371,30 +7585,6 @@ func (ec *executionContext) fieldContext_Query_products(ctx context.Context, fie
 				return ec.fieldContext_Product_category(ctx, field)
 			case "description":
 				return ec.fieldContext_Product_description(ctx, field)
-			case "targetAge":
-				return ec.fieldContext_Product_targetAge(ctx, field)
-			case "materials":
-				return ec.fieldContext_Product_materials(ctx, field)
-			case "safetyWarnings":
-				return ec.fieldContext_Product_safetyWarnings(ctx, field)
-			case "currentPrice":
-				return ec.fieldContext_Product_currentPrice(ctx, field)
-			case "originalPrice":
-				return ec.fieldContext_Product_originalPrice(ctx, field)
-			case "currency":
-				return ec.fieldContext_Product_currency(ctx, field)
-			case "seller":
-				return ec.fieldContext_Product_seller(ctx, field)
-			case "rating":
-				return ec.fieldContext_Product_rating(ctx, field)
-			case "reviewCount":
-				return ec.fieldContext_Product_reviewCount(ctx, field)
-			case "attributes":
-				return ec.fieldContext_Product_attributes(ctx, field)
-			case "imageRefs":
-				return ec.fieldContext_Product_imageRefs(ctx, field)
-			case "stockStatus":
-				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
 			case "createdAt":
@@ -8456,30 +7646,6 @@ func (ec *executionContext) fieldContext_Query_product(ctx context.Context, fiel
 				return ec.fieldContext_Product_category(ctx, field)
 			case "description":
 				return ec.fieldContext_Product_description(ctx, field)
-			case "targetAge":
-				return ec.fieldContext_Product_targetAge(ctx, field)
-			case "materials":
-				return ec.fieldContext_Product_materials(ctx, field)
-			case "safetyWarnings":
-				return ec.fieldContext_Product_safetyWarnings(ctx, field)
-			case "currentPrice":
-				return ec.fieldContext_Product_currentPrice(ctx, field)
-			case "originalPrice":
-				return ec.fieldContext_Product_originalPrice(ctx, field)
-			case "currency":
-				return ec.fieldContext_Product_currency(ctx, field)
-			case "seller":
-				return ec.fieldContext_Product_seller(ctx, field)
-			case "rating":
-				return ec.fieldContext_Product_rating(ctx, field)
-			case "reviewCount":
-				return ec.fieldContext_Product_reviewCount(ctx, field)
-			case "attributes":
-				return ec.fieldContext_Product_attributes(ctx, field)
-			case "imageRefs":
-				return ec.fieldContext_Product_imageRefs(ctx, field)
-			case "stockStatus":
-				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
 			case "createdAt":
@@ -11559,7 +10725,7 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "brand", "category", "description", "targetAge", "materials", "safetyWarnings", "currentPrice", "originalPrice", "currency", "seller", "rating", "reviewCount", "stockStatus", "source", "sourceProductId", "sourceUrl", "sku"}
+	fieldsInOrder := [...]string{"organizationId", "name", "brand", "category", "description", "source", "sourceProductId", "sourceUrl", "sku"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11601,76 +10767,6 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 				return it, err
 			}
 			it.Description = data
-		case "targetAge":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetAge"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.TargetAge = data
-		case "materials":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("materials"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Materials = data
-		case "safetyWarnings":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("safetyWarnings"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.SafetyWarnings = data
-		case "currentPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentPrice"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CurrentPrice = data
-		case "originalPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPrice"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.OriginalPrice = data
-		case "currency":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Currency = data
-		case "seller":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seller"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Seller = data
-		case "rating":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rating"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Rating = data
-		case "reviewCount":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCount"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ReviewCount = data
-		case "stockStatus":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stockStatus"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.StockStatus = data
 		case "source":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
 			data, err := ec.unmarshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource(ctx, v)
@@ -13709,66 +12805,6 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "targetAge":
-			out.Values[i] = ec._Product_targetAge(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "materials":
-			out.Values[i] = ec._Product_materials(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "safetyWarnings":
-			out.Values[i] = ec._Product_safetyWarnings(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "currentPrice":
-			out.Values[i] = ec._Product_currentPrice(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "originalPrice":
-			out.Values[i] = ec._Product_originalPrice(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "currency":
-			out.Values[i] = ec._Product_currency(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "seller":
-			out.Values[i] = ec._Product_seller(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "rating":
-			out.Values[i] = ec._Product_rating(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "reviewCount":
-			out.Values[i] = ec._Product_reviewCount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "attributes":
-			out.Values[i] = ec._Product_attributes(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "imageRefs":
-			out.Values[i] = ec._Product_imageRefs(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "stockStatus":
-			out.Values[i] = ec._Product_stockStatus(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "sku":
 			out.Values[i] = ec._Product_sku(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13825,16 +12861,10 @@ func (ec *executionContext) _ProductFieldMeta(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "missingReason":
-			out.Values[i] = ec._ProductFieldMeta_missingReason(ctx, field, obj)
 		case "source":
 			out.Values[i] = ec._ProductFieldMeta_source(ctx, field, obj)
 		case "sourceRecordId":
 			out.Values[i] = ec._ProductFieldMeta_sourceRecordId(ctx, field, obj)
-		case "confidence":
-			out.Values[i] = ec._ProductFieldMeta_confidence(ctx, field, obj)
-		case "extractedAt":
-			out.Values[i] = ec._ProductFieldMeta_extractedAt(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

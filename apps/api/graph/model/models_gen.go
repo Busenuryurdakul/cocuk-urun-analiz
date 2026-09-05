@@ -87,16 +87,6 @@ type CreateProductInput struct {
 	Brand           *string           `json:"brand,omitempty"`
 	Category        *string           `json:"category,omitempty"`
 	Description     *string           `json:"description,omitempty"`
-	TargetAge       *string           `json:"targetAge,omitempty"`
-	Materials       *string           `json:"materials,omitempty"`
-	SafetyWarnings  *string           `json:"safetyWarnings,omitempty"`
-	CurrentPrice    *string           `json:"currentPrice,omitempty"`
-	OriginalPrice   *string           `json:"originalPrice,omitempty"`
-	Currency        *string           `json:"currency,omitempty"`
-	Seller          *string           `json:"seller,omitempty"`
-	Rating          *string           `json:"rating,omitempty"`
-	ReviewCount     *string           `json:"reviewCount,omitempty"`
-	StockStatus     *string           `json:"stockStatus,omitempty"`
 	Source          MarketplaceSource `json:"source"`
 	SourceProductID string            `json:"sourceProductId"`
 	SourceURL       *string           `json:"sourceUrl,omitempty"`
@@ -241,31 +231,16 @@ type Product struct {
 	Brand          *ProductFieldMeta `json:"brand"`
 	Category       *ProductFieldMeta `json:"category"`
 	Description    *ProductFieldMeta `json:"description"`
-	TargetAge      *ProductFieldMeta `json:"targetAge"`
-	Materials      *ProductFieldMeta `json:"materials"`
-	SafetyWarnings *ProductFieldMeta `json:"safetyWarnings"`
-	CurrentPrice   *ProductFieldMeta `json:"currentPrice"`
-	OriginalPrice  *ProductFieldMeta `json:"originalPrice"`
-	Currency       *ProductFieldMeta `json:"currency"`
-	Seller         *ProductFieldMeta `json:"seller"`
-	Rating         *ProductFieldMeta `json:"rating"`
-	ReviewCount    *ProductFieldMeta `json:"reviewCount"`
-	Attributes     *ProductFieldMeta `json:"attributes"`
-	ImageRefs      *ProductFieldMeta `json:"imageRefs"`
-	StockStatus    *ProductFieldMeta `json:"stockStatus"`
 	Sku            *ProductFieldMeta `json:"sku"`
 	CreatedAt      string            `json:"createdAt"`
 	UpdatedAt      string            `json:"updatedAt"`
 }
 
 type ProductFieldMeta struct {
-	Value          *string  `json:"value,omitempty"`
-	Missing        bool     `json:"missing"`
-	MissingReason  *string  `json:"missingReason,omitempty"`
-	Source         *string  `json:"source,omitempty"`
-	SourceRecordID *string  `json:"sourceRecordId,omitempty"`
-	Confidence     *float64 `json:"confidence,omitempty"`
-	ExtractedAt    *string  `json:"extractedAt,omitempty"`
+	Value          *string `json:"value,omitempty"`
+	Missing        bool    `json:"missing"`
+	Source         *string `json:"source,omitempty"`
+	SourceRecordID *string `json:"sourceRecordId,omitempty"`
 }
 
 type PublishCompliancePolicyInput struct {
