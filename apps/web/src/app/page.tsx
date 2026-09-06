@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { HomeProductPreview } from "@/components/home-product-preview";
 import { MarketingFooter, MarketingHeader } from "@/components/layout/marketing-header";
 
 const CATEGORIES = [
@@ -53,7 +54,7 @@ export default function HomePage() {
             <CategoryStrip />
           </div>
 
-          <ReportPreview />
+          <HomeProductPreview />
         </section>
 
         <section className="mt-10 grid gap-4 sm:grid-cols-3">
@@ -361,52 +362,3 @@ function DevicesTrustIcon() {
   );
 }
 
-function ReportPreview() {
-  return (
-    <aside id="ornek-rapor" className="relative scroll-mt-24">
-      <div className="absolute -inset-8 -z-10 rounded-[2.2rem] bg-clay/10 blur-2xl" aria-hidden />
-      <article className="card shadow-lift">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="kicker">Örnek rapor</p>
-            <h2 className="mt-2 font-display text-2xl leading-tight">Ahşap aktivite küpü</h2>
-            <p className="mt-1 text-sm text-muted">0–3 yaş · marka alanı eksik</p>
-          </div>
-          <span className="badge-clay">Kanıtlı</span>
-        </div>
-
-        <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
-          {[
-            ["14", "Satış kanalı"],
-            ["3", "Kullanıcı içeriği"],
-            ["2", "Eksik alan"],
-          ].map(([n, l]) => (
-            <div key={l} className="rounded-2xl bg-cream px-2 py-3">
-              <dt className="font-display text-2xl text-forest">{n}</dt>
-              <dd className="text-[11px] uppercase tracking-wide text-muted">{l}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <ul className="mt-6 space-y-3 text-sm">
-          <li className="flex gap-3">
-            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
-            <span>Malzeme belgesi kaynakta yok — bilgi eksik.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-forest-mid" />
-            <span>Yaş uyumsuzluğu şikayeti düşük sıklıkta.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sand" />
-            <span>Sertifikasyon iddiası üretilmez.</span>
-          </li>
-        </ul>
-
-        <p className="mt-6 border-t border-sand pt-4 text-[11px] leading-relaxed text-muted">
-          Karar destek / risk değerlendirme. Resmi sertifikasyon iddiası yoktur.
-        </p>
-      </article>
-    </aside>
-  );
-}

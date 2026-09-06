@@ -3,6 +3,7 @@ package graph
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
@@ -31,16 +32,77 @@ func mapPhase4Error(err error) error {
 }
 
 func toModelProductField(meta domain.ProductFieldMeta) *model.ProductFieldMeta {
-	var value *string
-	if meta.Value != nil {
-		s := fmt.Sprint(meta.Value)
-		value = &s
-	}
-	return &model.ProductFieldMeta{
-		Value:          value,
-		Missing:        meta.Missing,
+	out := &model.ProductFieldMeta{
+		Value:          formatFieldValue(meta.Value),
+		Missing:        meta.Missing || isEmptyFieldValue(meta.Value),
+		MissingReason:  strPtr(meta.MissingReason),
 		Source:         strPtr(meta.Source),
 		SourceRecordID: strPtr(meta.SourceRecordID),
+	}
+	if meta.Confidence > 0 {
+		c := meta.Confidence
+		out.Confidence = &c
+	}
+	if meta.ExtractedAt != nil {
+		s := meta.ExtractedAt.UTC().Format(time.RFC3339)
+		out.ExtractedAt = &s
+	}
+	return out
+}
+
+func formatFieldValue(value any) *string {
+	if isEmptyFieldValue(value) {
+		return nil
+	}
+	switch v := value.(type) {
+	case string:
+		s := strings.TrimSpace(v)
+		return &s
+	case []string:
+		s := strings.Join(v, ", ")
+		return &s
+	case []any:
+		return joinFormattedValues(v)
+	case primitive.A:
+		return joinFormattedValues([]any(v))
+	default:
+		s := strings.TrimSpace(fmt.Sprint(v))
+		if s == "" || s == "<nil>" || s == "[]" || s == "map[]" {
+			return nil
+		}
+		return &s
+	}
+}
+
+func joinFormattedValues(items []any) *string {
+	parts := make([]string, 0, len(items))
+	for _, item := range items {
+		if formatted := formatFieldValue(item); formatted != nil {
+			parts = append(parts, *formatted)
+		}
+	}
+	if len(parts) == 0 {
+		return nil
+	}
+	joined := strings.Join(parts, ", ")
+	return &joined
+}
+
+func isEmptyFieldValue(value any) bool {
+	if value == nil {
+		return true
+	}
+	switch v := value.(type) {
+	case string:
+		return strings.TrimSpace(v) == ""
+	case []string:
+		return len(v) == 0
+	case []any:
+		return len(v) == 0
+	case primitive.A:
+		return len(v) == 0
+	default:
+		return false
 	}
 }
 
@@ -52,6 +114,18 @@ func toModelProduct(p *domain.Product) *model.Product {
 		Brand:          toModelProductField(p.Brand),
 		Category:       toModelProductField(p.Category),
 		Description:    toModelProductField(p.Description),
+		TargetAge:      toModelProductField(p.TargetAge),
+		Materials:      toModelProductField(p.Materials),
+		SafetyWarnings: toModelProductField(p.SafetyWarnings),
+		CurrentPrice:   toModelProductField(p.CurrentPrice),
+		OriginalPrice:  toModelProductField(p.OriginalPrice),
+		Currency:       toModelProductField(p.Currency),
+		Seller:         toModelProductField(p.Seller),
+		Rating:         toModelProductField(p.Rating),
+		ReviewCount:    toModelProductField(p.ReviewCount),
+		Attributes:     toModelProductField(p.Attributes),
+		ImageRefs:      toModelProductField(p.ImageRefs),
+		StockStatus:    toModelProductField(p.StockStatus),
 		Sku:            toModelProductField(p.SKU),
 		CreatedAt:      p.CreatedAt.UTC().Format(time.RFC3339),
 		UpdatedAt:      p.UpdatedAt.UTC().Format(time.RFC3339),

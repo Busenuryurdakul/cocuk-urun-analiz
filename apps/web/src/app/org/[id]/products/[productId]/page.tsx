@@ -6,16 +6,9 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AnalysisPanel } from "@/components/analysis-panel";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
+import { ProductMetaGrid, ProductSummaryStats } from "@/components/product-fields";
 import { graphqlRequest } from "@/lib/graphql";
-
-type ProductField = { value?: string | null; missing: boolean };
-type Product = {
-  id: string;
-  name: ProductField;
-  brand: ProductField;
-  category: ProductField;
-  description: ProductField;
-};
+import { PRODUCT_FIELD_SELECTION, fieldValue, productSubtitle, productTitle, type Product } from "@/lib/product";
 
 type UserExperience = {
   id: string;
@@ -97,7 +90,7 @@ export default function ProductDetailPage() {
       }>(
         `query($orgId: ID!, $productId: ID!) {
           product(organizationId: $orgId, productId: $productId) {
-            id name { value } brand { value } category { value } description { value }
+            ${PRODUCT_FIELD_SELECTION}
           }
           userExperiences(organizationId: $orgId, productId: $productId) {
             id usageStatus satisfactionLevel rating issueType narrative moderationStatus createdAt
@@ -178,10 +171,10 @@ export default function ProductDetailPage() {
 
   return (
     <AppShell
-      title={product?.name.value ?? "Ürün detayı"}
+      title={product ? productTitle(product) : "Ürün detayı"}
       kicker="Ürün"
       orgId={orgId}
-      description={[product?.brand.value, product?.category.value].filter(Boolean).join(" · ") || "Kanıt, deneyim ve marketplace kaynakları."}
+      description={product ? productSubtitle(product) || "Kanıt, deneyim ve marketplace kaynakları." : "Kanıt, deneyim ve marketplace kaynakları."}
     >
       {view === "loading" && <AsyncView state="loading" />}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
@@ -198,9 +191,19 @@ export default function ProductDetailPage() {
 
       {view === "success" && product && (
         <div className="space-y-6">
-          {product.description.value && (
-            <p className="max-w-2xl text-sm leading-relaxed text-muted">{product.description.value}</p>
-          )}
+          <section className="card space-y-4">
+            <div>
+              <p className="kicker">Veritabanı kaydı</p>
+              <h2 className="mt-2 font-display text-2xl">{productTitle(product)}</h2>
+              {fieldValue(product.description) ? (
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{fieldValue(product.description)}</p>
+              ) : (
+                <p className="mt-2 text-sm text-muted">Açıklama kaynağında yok — üretilmez.</p>
+              )}
+            </div>
+            <ProductSummaryStats product={product} />
+            <ProductMetaGrid product={product} />
+          </section>
 
           <AnalysisPanel orgId={orgId} productId={productId} canStart canCancel />
 

@@ -25,7 +25,9 @@ const (
 type DevicePlatform string
 
 const (
-	DevicePlatformWeb DevicePlatform = "WEB"
+	DevicePlatformWeb         DevicePlatform = "WEB"
+	DevicePlatformElectronWin DevicePlatform = "ELECTRON_WIN"
+	DevicePlatformElectronMac DevicePlatform = "ELECTRON_MAC"
 )
 
 type SecuritySeverity string
@@ -39,12 +41,22 @@ const (
 type SecurityEventType string
 
 const (
-	EventCrossTenantAccess  SecurityEventType = "CROSS_TENANT_ACCESS"
-	EventAuthFailure        SecurityEventType = "AUTH_FAILURE"
-	EventMFAFailure         SecurityEventType = "MFA_FAILURE"
-	EventRefreshTokenReplay SecurityEventType = "REFRESH_TOKEN_REPLAY"
-	EventOTPAttemptLimit    SecurityEventType = "OTP_ATTEMPT_LIMIT"
+	EventCrossTenantAccess     SecurityEventType = "CROSS_TENANT_ACCESS"
+	EventAuthFailure           SecurityEventType = "AUTH_FAILURE"
+	EventMFAFailure            SecurityEventType = "MFA_FAILURE"
+	EventRefreshTokenReplay    SecurityEventType = "REFRESH_TOKEN_REPLAY"
+	EventOTPAttemptLimit       SecurityEventType = "OTP_ATTEMPT_LIMIT"
+	EventEmailVerified         SecurityEventType = "EMAIL_VERIFIED"
+	EventLoginSuccess          SecurityEventType = "LOGIN_SUCCESS"
+	EventLogout                SecurityEventType = "LOGOUT"
+	EventDeviceRevoked         SecurityEventType = "DEVICE_REVOKED"
+	EventLoginEmailOTPSent     SecurityEventType = "LOGIN_EMAIL_OTP_SENT"
+	EventDesktopSessionBlocked SecurityEventType = "DESKTOP_SESSION_BLOCKED"
 )
+
+func IsElectronPlatform(p DevicePlatform) bool {
+	return p == DevicePlatformElectronWin || p == DevicePlatformElectronMac
+}
 
 type User struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty"`
@@ -83,7 +95,12 @@ type Device struct {
 	UserID            primitive.ObjectID `bson:"userId"`
 	DeviceFingerprint string             `bson:"deviceFingerprint"`
 	Platform          DevicePlatform     `bson:"platform"`
+	Label             string             `bson:"label,omitempty"`
+	UserAgent         string             `bson:"userAgent,omitempty"`
+	IPAddress         string             `bson:"ipAddress,omitempty"`
+	AppVersion        string             `bson:"appVersion,omitempty"`
 	Verified          bool               `bson:"verified"`
+	RevokedAt         *time.Time         `bson:"revokedAt,omitempty"`
 	LastActiveAt      time.Time          `bson:"lastActiveAt"`
 	CreatedAt         time.Time          `bson:"createdAt"`
 }
@@ -155,12 +172,38 @@ type DeviceVerification struct {
 }
 
 type MFASetupChallenge struct {
+	ID                primitive.ObjectID `bson:"_id,omitempty"`
+	UserID            primitive.ObjectID `bson:"userId"`
+	TokenHash         string             `bson:"tokenHash"`
+	Secret            string             `bson:"secret"`
+	DeviceFingerprint string             `bson:"deviceFingerprint,omitempty"`
+	Platform          DevicePlatform     `bson:"platform,omitempty"`
+	AppVersion        string             `bson:"appVersion,omitempty"`
+	FailedAttempts    int                `bson:"failedAttempts"`
+	Locked            bool               `bson:"locked"`
+	ExpiresAt         time.Time          `bson:"expiresAt"`
+	CreatedAt         time.Time          `bson:"createdAt"`
+}
+
+type LoginEmailVerification struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	UserID         primitive.ObjectID `bson:"userId"`
-	TokenHash      string             `bson:"tokenHash"`
-	Secret         string             `bson:"secret"`
+	PendingHash    string             `bson:"pendingHash"`
+	CodeHash       string             `bson:"codeHash"`
 	FailedAttempts int                `bson:"failedAttempts"`
 	Locked         bool               `bson:"locked"`
 	ExpiresAt      time.Time          `bson:"expiresAt"`
 	CreatedAt      time.Time          `bson:"createdAt"`
+}
+
+type UserActivityLog struct {
+	ID             primitive.ObjectID  `bson:"_id,omitempty"`
+	UserID         primitive.ObjectID  `bson:"userId"`
+	DeviceID       *primitive.ObjectID `bson:"deviceId,omitempty"`
+	OrganizationID *primitive.ObjectID `bson:"organizationId,omitempty"`
+	Action         string              `bson:"action"`
+	ResourceID     string              `bson:"resourceId,omitempty"`
+	IPAddress      string              `bson:"ipAddress,omitempty"`
+	UserAgent      string              `bson:"userAgent,omitempty"`
+	Timestamp      time.Time           `bson:"timestamp"`
 }

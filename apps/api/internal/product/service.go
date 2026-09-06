@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,6 +32,16 @@ type CreateInput struct {
 	Brand           string
 	Category        string
 	Description     string
+	TargetAge       string
+	Materials       string
+	SafetyWarnings  string
+	CurrentPrice    string
+	OriginalPrice   string
+	Currency        string
+	Seller          string
+	Rating          string
+	ReviewCount     string
+	StockStatus     string
 	Source          domain.MarketplaceSource
 	SourceProductID string
 	SourceURL       string
@@ -62,11 +73,21 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Produc
 	}
 
 	normalized := normalize.NormalizeProductInput(normalize.ProductInput{
-		Name:        input.Name,
-		Brand:       input.Brand,
-		Category:    input.Category,
-		Description: input.Description,
-		SKU:         input.SKU,
+		Name:           input.Name,
+		Brand:          input.Brand,
+		Category:       input.Category,
+		Description:    input.Description,
+		TargetAge:      input.TargetAge,
+		Materials:      input.Materials,
+		SafetyWarnings: input.SafetyWarnings,
+		CurrentPrice:   optionalNumberOrString(input.CurrentPrice),
+		OriginalPrice:  optionalNumberOrString(input.OriginalPrice),
+		Currency:       input.Currency,
+		Seller:         input.Seller,
+		Rating:         optionalNumberOrString(input.Rating),
+		ReviewCount:    optionalNumberOrString(input.ReviewCount),
+		SKU:            input.SKU,
+		StockStatus:    input.StockStatus,
 	}, string(input.Source), sourceProductID)
 
 	product := &normalized
@@ -131,4 +152,15 @@ func (s *Service) List(ctx context.Context, actorID, organizationID primitive.Ob
 
 func NowUTC() time.Time {
 	return time.Now().UTC()
+}
+
+func optionalNumberOrString(raw string) any {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return nil
+	}
+	if n, err := strconv.ParseFloat(s, 64); err == nil {
+		return n
+	}
+	return s
 }

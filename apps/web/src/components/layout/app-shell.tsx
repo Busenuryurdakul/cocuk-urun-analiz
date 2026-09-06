@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
-import { graphqlRequest } from "@/lib/graphql";
+import { clearDesktopSession, graphqlRequest } from "@/lib/graphql";
 
 type AppShellProps = {
   title: string;
@@ -28,12 +28,14 @@ export function AppShell({
   const pathname = usePathname();
 
   async function logout() {
-    await graphqlRequest(`mutation { logout }`);
+    await graphqlRequest(`mutation { logout }`).catch(() => undefined);
+    await clearDesktopSession();
     window.location.href = "/auth/login";
   }
 
   const items = [
     { href: "/workspace", label: "Çalışma alanı", match: (p: string) => p === "/workspace" },
+    { href: "/settings/security", label: "Güvenlik", match: (p: string) => p.startsWith("/settings") },
     ...(orgId
       ? [
           {
@@ -50,6 +52,11 @@ export function AppShell({
             href: `/org/${orgId}/compliance`,
             label: "Uyumluluk",
             match: (p: string) => p.includes("/compliance"),
+          },
+          {
+            href: `/org/${orgId}/llm`,
+            label: "LLM",
+            match: (p: string) => p.includes("/llm"),
           },
         ]
       : []),

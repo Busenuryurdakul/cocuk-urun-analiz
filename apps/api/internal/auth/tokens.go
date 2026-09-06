@@ -12,6 +12,7 @@ import (
 
 var ErrRefreshReplay = errors.New("refresh token replay detected")
 var ErrAccountLocked = errors.New("account temporarily locked")
+var ErrDesktopSessionActive = errors.New("another desktop session is already active")
 
 type AuthTokens struct {
 	AccessToken      string

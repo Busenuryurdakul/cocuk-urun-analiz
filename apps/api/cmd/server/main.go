@@ -27,7 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("startup: %v", err)
 	}
-	application.StartBackgroundWorkers()
+	application.StartBackgroundWorkers(ctx)
 	defer application.Shutdown(context.Background())
 
 	health.SetReadinessCheck(application.Ready)
@@ -43,6 +43,7 @@ func main() {
 		MarketplaceService: application.Marketplace,
 		DatasetService:     application.Dataset,
 		AgentService:       application.Agent,
+		LLMService:         application.LLM,
 		CookieOpts:         application.CookieOptions(),
 	}
 
@@ -59,6 +60,9 @@ func main() {
 	r.Get("/ready", health.Readiness)
 	if application.AgentInternal != nil {
 		application.AgentInternal.Register(r)
+	}
+	if application.LLMInternal != nil {
+		application.LLMInternal.Register(r)
 	}
 	r.Handle("/graphql", graph.NewHandler(resolver, application.Auth))
 	if cfg.AllowGraphQLPlayground {

@@ -1,0 +1,53 @@
+{
+  "name": "@miyuna/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "description": "Miyuna desktop client for Windows and macOS",
+  "author": "Miyuna",
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron .",
+    "build:win": "electron-builder --win nsis",
+    "build:mac": "electron-builder --mac dmg"
+  },
+  "dependencies": {
+    "keytar": "^7.9.0",
+    "node-machine-id": "^1.1.12"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.miyuna.desktop",
+    "productName": "Miyuna",
+    "directories": {
+      "output": "dist"
+    },
+    "files": ["main.js", "preload.js", "offline.html", "assets/**/*"],
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.png",
+      "artifactName": "Miyuna-Setup-${version}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "shortcutName": "Miyuna"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.productivity",
+      "icon": "assets/icon.png"
+    },
+    "protocols": [
+      {
+        "name": "Miyuna",
+        "schemes": ["miyuna"]
+      }
+    ]
+  }
+}

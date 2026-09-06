@@ -1,0 +1,135 @@
+# Miyuna — Render Blueprint (production)
+# Apply: https://dashboard.render.com/blueprint/new?repo=https://github.com/Busenuryurdakul/cocuk-urun-analiz
+#
+# Requires Render paid plan for Standard LLM private services.
+# After apply: fill sync:false secrets in Dashboard (MongoDB Atlas, SMTP, JWT, tokens, Turnstile).
+
+projects:
+  - name: Miyuna
+    environments:
+      - name: production
+        services:
+          - type: keyvalue
+            name: miyuna-redis
+            plan: free
+            region: frankfurt
+            maxmemoryPolicy: allkeys-lru
+            ipAllowList: []
+
+          - type: pserv
+            name: miyuna-llm-primary
+            runtime: docker
+            plan: standard
+            region: frankfurt
+            repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
+            branch: feature/phase-6-llm-gateway
+            dockerfilePath: ./infra/render/llm/Dockerfile.primary
+            dockerContext: .
+            disk:
+              name: llm-primary-data
+              mountPath: /root/.ollama
+              sizeGB: 10
+            envVars:
+              - key: OLLAMA_MODEL
+                value: qwen2.5:0.5b
+
+          - type: pserv
+            name: miyuna-llm-secondary
+            runtime: docker
+            plan: standard
+            region: frankfurt
+            repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
+            branch: feature/phase-6-llm-gateway
+            dockerfilePath: ./infra/render/llm/Dockerfile.secondary
+            dockerContext: .
+            disk:
+              name: llm-secondary-data
+              mountPath: /root/.ollama
+              sizeGB: 10
+            envVars:
+              - key: OLLAMA_MODEL
+                value: llama3.2:1b
+
+          - type: pserv
+            name: miyuna-agent
+            runtime: docker
+            plan: starter
+            region: frankfurt
+            repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
+            branch: feature/phase-6-llm-gateway
+            dockerfilePath: ./infra/render/agent/Dockerfile
+            dockerContext: .
+            envVars:
+              - key: GO_API_URL
+                value: http://miyuna-api:8080
+              - key: INTERNAL_TOKEN
+                sync: false
+              - key: AGENT_INTERNAL_TOKEN
+                sync: false
+
+          - type: web
+            name: miyuna-api
+            runtime: docker
+            plan: starter
+            region: frankfurt
+            repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
+            branch: feature/phase-6-llm-gateway
+            dockerfilePath: ./infra/render/api/Dockerfile
+            dockerContext: .
+            healthCheckPath: /health
+            envVars:
+              - key: API_HOST
+                value: 0.0.0.0
+              - key: API_PORT
+                value: "8080"
+              - key: ALLOW_GRAPHQL_PLAYGROUND
+                value: "false"
+              - key: COOKIE_SECURE
+                value: "true"
+              - key: MAIL_QUEUE_ENABLED
+                value: "true"
+              - key: LLM_USE_MOCK
+                value: "false"
+              - key: TURNSTILE_ENABLED
+                value: "true"
+              - key: MONGODB_URI
+                sync: false
+              - key: REDIS_URL
+                fromService:
+                  type: keyvalue
+                  name: miyuna-redis
+                  property: connectionString
+              - key: WEB_BASE_URL
+                sync: false
+              - key: JWT_SECRET
+                sync: false
+              - key: AGENT_INTERNAL_TOKEN
+                sync: false
+              - key: AGENT_ORCHESTRATOR_URL
+                value: http://miyuna-agent:8090
+              - key: GO_INTERNAL_API_URL
+                value: http://miyuna-api:8080
+              - key: LLM_PRIMARY_BASE_URL
+                value: http://miyuna-llm-primary:11434/v1
+              - key: LLM_SECONDARY_BASE_URL
+                value: http://miyuna-llm-secondary:11434/v1
+              - key: LLM_PRIMARY_MODEL_NAME
+                value: qwen2.5:0.5b
+              - key: LLM_SECONDARY_MODEL_NAME
+                value: llama3.2:1b
+              - key: MAIL_SMTP_HOST
+                sync: false
+              - key: MAIL_SMTP_PORT
+                sync: false
+              - key: MAIL_SMTP_USER
+                sync: false
+              - key: MAIL_SMTP_PASS
+                sync: false
+              - key: MAIL_SMTP_TLS
+                value: "true"
+              - key: MAIL_FROM
+                sync: false
+              - key: TURNSTILE_SECRET_KEY
+                sync: false
+              - key: CREDENTIALS_ENCRYPTION_KEY
+                sync: false

@@ -13,6 +13,7 @@ type SecurityPolicy struct {
 	PendingAuthTTL       time.Duration
 	MFASetupTTL          time.Duration
 	DeviceVerifyTTL      time.Duration
+	LoginEmailOTPTTL     time.Duration
 }
 
 func DefaultSecurityPolicy() SecurityPolicy {
@@ -26,5 +27,6 @@ func DefaultSecurityPolicy() SecurityPolicy {
 		PendingAuthTTL:       10 * time.Minute,
 		MFASetupTTL:          30 * time.Minute,
 		DeviceVerifyTTL:      15 * time.Minute,
+		LoginEmailOTPTTL:     10 * time.Minute,
 	}
 }

@@ -55,11 +55,17 @@ class RunContext:
     analysis_run_id: str
     product_id: str
     trace_id: str
+    correlation_id: str
     actor_user_id: str
     status: str
+    config_snapshot_id: str
+    compliance_profile: str
+    llm_routing_policy_version: str
+    require_evidence: bool
     capabilities: CapabilitySnapshot
     marketplace_review_count: int
     ugc_count: int
+    worker_rotation_pattern: str = "RUN_A"
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> RunContext:
@@ -68,11 +74,17 @@ class RunContext:
             analysis_run_id=raw["analysisRunId"],
             product_id=raw["productId"],
             trace_id=raw["traceId"],
+            correlation_id=raw.get("correlationId", raw.get("traceId", "")),
             actor_user_id=raw["actorUserId"],
             status=raw["status"],
+            config_snapshot_id=raw.get("configSnapshotId", ""),
+            compliance_profile=raw.get("complianceProfile", ""),
+            llm_routing_policy_version=raw.get("llmRoutingPolicyVersion", ""),
+            require_evidence=bool(raw.get("requireEvidence", False)),
             capabilities=CapabilitySnapshot.from_dict(raw["capabilities"]),
             marketplace_review_count=int(raw.get("marketplaceReviewCount", 0)),
             ugc_count=int(raw.get("ugcCount", 0)),
+            worker_rotation_pattern=raw.get("workerRotationPattern", "RUN_A") or "RUN_A",
         )
 
 

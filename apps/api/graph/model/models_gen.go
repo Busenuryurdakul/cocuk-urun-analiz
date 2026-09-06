@@ -9,6 +9,15 @@ import (
 	"strconv"
 )
 
+type ActivityLogEntry struct {
+	ID         string  `json:"id"`
+	Action     string  `json:"action"`
+	ResourceID *string `json:"resourceId,omitempty"`
+	IPAddress  *string `json:"ipAddress,omitempty"`
+	UserAgent  *string `json:"userAgent,omitempty"`
+	Timestamp  string  `json:"timestamp"`
+}
+
 type AgentRunEvent struct {
 	ID             string                `json:"id"`
 	OrganizationID string                `json:"organizationId"`
@@ -64,7 +73,8 @@ type CompliancePolicy struct {
 }
 
 type ConfirmMFAInput struct {
-	Code string `json:"code"`
+	Code       string  `json:"code"`
+	SetupToken *string `json:"setupToken,omitempty"`
 }
 
 type Consent struct {
@@ -74,6 +84,16 @@ type Consent struct {
 	GrantedAt      string         `json:"grantedAt"`
 	WithdrawnAt    *string        `json:"withdrawnAt,omitempty"`
 	OrganizationID *string        `json:"organizationId,omitempty"`
+}
+
+type CreateLLMConfigurationDraftInput struct {
+	OrganizationID       string  `json:"organizationId"`
+	RoutingPolicyVersion *string `json:"routingPolicyVersion,omitempty"`
+	PersonaKey           *string `json:"personaKey,omitempty"`
+	PersonaVersion       *string `json:"personaVersion,omitempty"`
+	DefaultModelKey      *string `json:"defaultModelKey,omitempty"`
+	FallbackModelKey     *string `json:"fallbackModelKey,omitempty"`
+	Reason               string  `json:"reason"`
 }
 
 type CreateOrganizationInput struct {
@@ -132,6 +152,18 @@ type DeleteUserExperienceInput struct {
 	ExperienceID   string `json:"experienceId"`
 }
 
+type Device struct {
+	ID           string         `json:"id"`
+	Platform     ClientPlatform `json:"platform"`
+	Label        string         `json:"label"`
+	UserAgent    *string        `json:"userAgent,omitempty"`
+	IPAddress    *string        `json:"ipAddress,omitempty"`
+	AppVersion   *string        `json:"appVersion,omitempty"`
+	Verified     bool           `json:"verified"`
+	LastActiveAt string         `json:"lastActiveAt"`
+	CreatedAt    string         `json:"createdAt"`
+}
+
 type EligibilityCount struct {
 	Eligibility DatasetEligibility `json:"eligibility"`
 	Count       int                `json:"count"`
@@ -153,20 +185,156 @@ type InviteMemberInput struct {
 	Role           OrgRole `json:"role"`
 }
 
+type LLMCall struct {
+	ID                      string             `json:"id"`
+	OrganizationID          string             `json:"organizationId"`
+	ModelKey                string             `json:"modelKey"`
+	PersonaKey              string             `json:"personaKey"`
+	RoutingReason           string             `json:"routingReason"`
+	FallbackUsed            bool               `json:"fallbackUsed"`
+	InputTokens             int                `json:"inputTokens"`
+	OutputTokens            int                `json:"outputTokens"`
+	LatencyMs               int                `json:"latencyMs"`
+	Status                  string             `json:"status"`
+	ComplianceProfile       *ComplianceProfile `json:"complianceProfile,omitempty"`
+	CompliancePolicyVersion *string            `json:"compliancePolicyVersion,omitempty"`
+	ComplianceReflexVersion *string            `json:"complianceReflexVersion,omitempty"`
+	SafetyResult            *string            `json:"safetyResult,omitempty"`
+	CreatedAt               string             `json:"createdAt"`
+}
+
+type LLMConfiguration struct {
+	ID                   string  `json:"id"`
+	OrganizationID       *string `json:"organizationId,omitempty"`
+	RoutingPolicyVersion string  `json:"routingPolicyVersion"`
+	PersonaKey           string  `json:"personaKey"`
+	PersonaVersion       string  `json:"personaVersion"`
+	DefaultModelKey      string  `json:"defaultModelKey"`
+	FallbackModelKey     string  `json:"fallbackModelKey"`
+	PublishedAt          string  `json:"publishedAt"`
+	Reason               string  `json:"reason"`
+}
+
+type LLMConfigurationDraft struct {
+	ID                   string   `json:"id"`
+	OrganizationID       string   `json:"organizationId"`
+	Status               string   `json:"status"`
+	RoutingPolicyVersion string   `json:"routingPolicyVersion"`
+	PersonaKey           string   `json:"personaKey"`
+	PersonaVersion       string   `json:"personaVersion"`
+	DefaultModelKey      string   `json:"defaultModelKey"`
+	FallbackModelKey     string   `json:"fallbackModelKey"`
+	ValidationErrors     []string `json:"validationErrors"`
+	UpdatedAt            string   `json:"updatedAt"`
+}
+
+type LLMModel struct {
+	ID                  string   `json:"id"`
+	ModelKey            string   `json:"modelKey"`
+	DisplayName         string   `json:"displayName"`
+	Status              string   `json:"status"`
+	HealthStatus        string   `json:"healthStatus"`
+	ContextWindowTokens int      `json:"contextWindowTokens"`
+	DefaultForPlatform  bool     `json:"defaultForPlatform"`
+	FallbackForPlatform bool     `json:"fallbackForPlatform"`
+	SupportedTaskTypes  []string `json:"supportedTaskTypes"`
+}
+
+type LLMModelHealth struct {
+	ModelKey     string `json:"modelKey"`
+	DisplayName  string `json:"displayName"`
+	HealthStatus string `json:"healthStatus"`
+	ProviderKey  string `json:"providerKey"`
+}
+
+type LLMModelUsage struct {
+	ModelKey         string  `json:"modelKey"`
+	DisplayName      string  `json:"displayName"`
+	CallCount        int     `json:"callCount"`
+	InputTokens      int     `json:"inputTokens"`
+	OutputTokens     int     `json:"outputTokens"`
+	TotalTokens      int     `json:"totalTokens"`
+	EstimatedCostUsd float64 `json:"estimatedCostUsd"`
+}
+
+type LLMOrgSettings struct {
+	OrganizationID   string `json:"organizationId"`
+	PersonaKey       string `json:"personaKey"`
+	DefaultModelKey  string `json:"defaultModelKey"`
+	FallbackModelKey string `json:"fallbackModelKey"`
+}
+
+type LLMPersona struct {
+	ID          string `json:"id"`
+	PersonaKey  string `json:"personaKey"`
+	Version     string `json:"version"`
+	Status      string `json:"status"`
+	DisplayName string `json:"displayName"`
+}
+
+type LLMProvider struct {
+	ID          string `json:"id"`
+	ProviderKey string `json:"providerKey"`
+	DisplayName string `json:"displayName"`
+	Status      string `json:"status"`
+}
+
+type LLMRoutingPolicy struct {
+	ID               string  `json:"id"`
+	Version          string  `json:"version"`
+	Status           string  `json:"status"`
+	DefaultModelKey  string  `json:"defaultModelKey"`
+	FallbackModelKey string  `json:"fallbackModelKey"`
+	PublishedAt      *string `json:"publishedAt,omitempty"`
+}
+
+type LLMTestResult struct {
+	CallID         string `json:"callId"`
+	ModelKey       string `json:"modelKey"`
+	FallbackUsed   bool   `json:"fallbackUsed"`
+	EscalationUsed bool   `json:"escalationUsed"`
+	RoutingReason  string `json:"routingReason"`
+	PersonaKey     string `json:"personaKey"`
+	PersonaVersion string `json:"personaVersion"`
+	ContentPreview string `json:"contentPreview"`
+	InputTokens    int    `json:"inputTokens"`
+	OutputTokens   int    `json:"outputTokens"`
+}
+
+type LLMUsageDashboard struct {
+	Summary     *LLMUsageSummary `json:"summary"`
+	ByModel     []*LLMModelUsage `json:"byModel"`
+	RecentCalls []*LLMCall       `json:"recentCalls"`
+}
+
+type LLMUsageSummary struct {
+	CallCount        int     `json:"callCount"`
+	InputTokens      int     `json:"inputTokens"`
+	OutputTokens     int     `json:"outputTokens"`
+	TotalTokens      int     `json:"totalTokens"`
+	EstimatedCostUsd float64 `json:"estimatedCostUsd"`
+	FallbackCount    int     `json:"fallbackCount"`
+}
+
 type LoginInput struct {
-	Email             string `json:"email"`
-	Password          string `json:"password"`
-	DeviceFingerprint string `json:"deviceFingerprint"`
+	Email             string          `json:"email"`
+	Password          string          `json:"password"`
+	DeviceFingerprint string          `json:"deviceFingerprint"`
+	Platform          *ClientPlatform `json:"platform,omitempty"`
+	AppVersion        *string         `json:"appVersion,omitempty"`
+	TurnstileToken    *string         `json:"turnstileToken,omitempty"`
 }
 
 type LoginPayload struct {
-	Status LoginStatus `json:"status"`
-	User   *User       `json:"user,omitempty"`
+	Status   LoginStatus      `json:"status"`
+	User     *User            `json:"user,omitempty"`
+	MfaSetup *MFASetupPayload `json:"mfaSetup,omitempty"`
 }
 
 type MFASetupPayload struct {
 	Secret     string `json:"secret"`
 	OtpauthURL string `json:"otpauthUrl"`
+	SetupToken string `json:"setupToken"`
 }
 
 type MarketplaceImportRun struct {
@@ -231,16 +399,31 @@ type Product struct {
 	Brand          *ProductFieldMeta `json:"brand"`
 	Category       *ProductFieldMeta `json:"category"`
 	Description    *ProductFieldMeta `json:"description"`
+	TargetAge      *ProductFieldMeta `json:"targetAge"`
+	Materials      *ProductFieldMeta `json:"materials"`
+	SafetyWarnings *ProductFieldMeta `json:"safetyWarnings"`
+	CurrentPrice   *ProductFieldMeta `json:"currentPrice"`
+	OriginalPrice  *ProductFieldMeta `json:"originalPrice"`
+	Currency       *ProductFieldMeta `json:"currency"`
+	Seller         *ProductFieldMeta `json:"seller"`
+	Rating         *ProductFieldMeta `json:"rating"`
+	ReviewCount    *ProductFieldMeta `json:"reviewCount"`
+	Attributes     *ProductFieldMeta `json:"attributes"`
+	ImageRefs      *ProductFieldMeta `json:"imageRefs"`
+	StockStatus    *ProductFieldMeta `json:"stockStatus"`
 	Sku            *ProductFieldMeta `json:"sku"`
 	CreatedAt      string            `json:"createdAt"`
 	UpdatedAt      string            `json:"updatedAt"`
 }
 
 type ProductFieldMeta struct {
-	Value          *string `json:"value,omitempty"`
-	Missing        bool    `json:"missing"`
-	Source         *string `json:"source,omitempty"`
-	SourceRecordID *string `json:"sourceRecordId,omitempty"`
+	Value          *string  `json:"value,omitempty"`
+	Missing        bool     `json:"missing"`
+	MissingReason  *string  `json:"missingReason,omitempty"`
+	Source         *string  `json:"source,omitempty"`
+	SourceRecordID *string  `json:"sourceRecordId,omitempty"`
+	Confidence     *float64 `json:"confidence,omitempty"`
+	ExtractedAt    *string  `json:"extractedAt,omitempty"`
 }
 
 type PublishCompliancePolicyInput struct {
@@ -250,12 +433,19 @@ type PublishCompliancePolicyInput struct {
 	Reason            string            `json:"reason"`
 }
 
+type PublishLLMConfigurationInput struct {
+	OrganizationID string `json:"organizationId"`
+	DraftID        string `json:"draftId"`
+	Reason         string `json:"reason"`
+}
+
 type Query struct {
 }
 
 type RegisterInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email          string  `json:"email"`
+	Password       string  `json:"password"`
+	TurnstileToken *string `json:"turnstileToken,omitempty"`
 }
 
 type RegisterPayload struct {
@@ -265,6 +455,29 @@ type RegisterPayload struct {
 type RemoveMemberInput struct {
 	OrganizationID string `json:"organizationId"`
 	UserID         string `json:"userId"`
+}
+
+type ResendEmailVerificationInput struct {
+	Email          string  `json:"email"`
+	Password       string  `json:"password"`
+	TurnstileToken *string `json:"turnstileToken,omitempty"`
+}
+
+type RollbackLLMConfigurationInput struct {
+	OrganizationID string `json:"organizationId"`
+	SnapshotID     string `json:"snapshotId"`
+	Reason         string `json:"reason"`
+}
+
+type SetOrganizationModelsInput struct {
+	OrganizationID   string `json:"organizationId"`
+	DefaultModelKey  string `json:"defaultModelKey"`
+	FallbackModelKey string `json:"fallbackModelKey"`
+}
+
+type SetOrganizationPersonaInput struct {
+	OrganizationID string `json:"organizationId"`
+	PersonaKey     string `json:"personaKey"`
 }
 
 type SourceCount struct {
@@ -291,6 +504,12 @@ type StartMarketplaceFileImportInput struct {
 type StartMarketplaceURLImportInput struct {
 	OrganizationID string `json:"organizationId"`
 	SourceURL      string `json:"sourceUrl"`
+}
+
+type TestLLMConfigurationInput struct {
+	OrganizationID string  `json:"organizationId"`
+	PersonaKey     *string `json:"personaKey,omitempty"`
+	Prompt         string  `json:"prompt"`
 }
 
 type UpdateComplianceProfileInput struct {
@@ -339,9 +558,20 @@ type UserExperience struct {
 	UpdatedAt          string             `json:"updatedAt"`
 }
 
+type ValidateLLMConfigurationInput struct {
+	OrganizationID string `json:"organizationId"`
+	DraftID        string `json:"draftId"`
+}
+
 type VerifyDeviceInput struct {
 	Code              string `json:"code"`
 	DeviceFingerprint string `json:"deviceFingerprint"`
+}
+
+type VerifyLoginEmailOTPInput struct {
+	Code              string  `json:"code"`
+	DeviceFingerprint string  `json:"deviceFingerprint"`
+	TurnstileToken    *string `json:"turnstileToken,omitempty"`
 }
 
 type VerifyLoginMFAInput struct {
@@ -539,6 +769,63 @@ func (e *AnalysisRunStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e AnalysisRunStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ClientPlatform string
+
+const (
+	ClientPlatformWeb         ClientPlatform = "WEB"
+	ClientPlatformElectronWin ClientPlatform = "ELECTRON_WIN"
+	ClientPlatformElectronMac ClientPlatform = "ELECTRON_MAC"
+)
+
+var AllClientPlatform = []ClientPlatform{
+	ClientPlatformWeb,
+	ClientPlatformElectronWin,
+	ClientPlatformElectronMac,
+}
+
+func (e ClientPlatform) IsValid() bool {
+	switch e {
+	case ClientPlatformWeb, ClientPlatformElectronWin, ClientPlatformElectronMac:
+		return true
+	}
+	return false
+}
+
+func (e ClientPlatform) String() string {
+	return string(e)
+}
+
+func (e *ClientPlatform) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ClientPlatform(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ClientPlatform", str)
+	}
+	return nil
+}
+
+func (e ClientPlatform) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ClientPlatform) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ClientPlatform) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
@@ -846,6 +1133,7 @@ func (e IssueType) MarshalJSON() ([]byte, error) {
 type LoginStatus string
 
 const (
+	LoginStatusEmailOtpRequired           LoginStatus = "EMAIL_OTP_REQUIRED"
 	LoginStatusMfaSetupRequired           LoginStatus = "MFA_SETUP_REQUIRED"
 	LoginStatusMfaRequired                LoginStatus = "MFA_REQUIRED"
 	LoginStatusDeviceVerificationRequired LoginStatus = "DEVICE_VERIFICATION_REQUIRED"
@@ -853,6 +1141,7 @@ const (
 )
 
 var AllLoginStatus = []LoginStatus{
+	LoginStatusEmailOtpRequired,
 	LoginStatusMfaSetupRequired,
 	LoginStatusMfaRequired,
 	LoginStatusDeviceVerificationRequired,
@@ -861,7 +1150,7 @@ var AllLoginStatus = []LoginStatus{
 
 func (e LoginStatus) IsValid() bool {
 	switch e {
-	case LoginStatusMfaSetupRequired, LoginStatusMfaRequired, LoginStatusDeviceVerificationRequired, LoginStatusAuthenticated:
+	case LoginStatusEmailOtpRequired, LoginStatusMfaSetupRequired, LoginStatusMfaRequired, LoginStatusDeviceVerificationRequired, LoginStatusAuthenticated:
 		return true
 	}
 	return false

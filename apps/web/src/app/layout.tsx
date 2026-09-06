@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { DesktopBridge } from "@/components/layout/desktop-bridge";
 import { DesktopTitlebar } from "@/components/layout/desktop-titlebar";
 import "./globals.css";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${sans.variable} ${display.variable}`}>
       <body className="font-sans">
+        <DesktopBridge />
         <DesktopTitlebar />
         {children}
       </body>

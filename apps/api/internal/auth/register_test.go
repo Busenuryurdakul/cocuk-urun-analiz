@@ -40,7 +40,7 @@ func TestRegisterThenLoginRequiresEmailVerification(t *testing.T) {
 		t.Fatalf("expected 1 verification mail, got %d", len(box.messages))
 	}
 
-	_, err = svc.Login(ctx, email, password, "fp-1")
+	_, err = svc.Login(ctx, LoginRequest{Email: email, Password: password, DeviceFingerprint: "fp-1"})
 	if err != ErrEmailNotVerified {
 		t.Fatalf("login before verify: got %v, want EMAIL_NOT_VERIFIED", err)
 	}

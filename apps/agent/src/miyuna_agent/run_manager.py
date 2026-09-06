@@ -9,7 +9,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable
 
-from miyuna_agent.go_client import GoAgentClient, hash_tool_input
+from miyuna_agent.go_client import GoAgentClient, RunContext, hash_tool_input
+from miyuna_agent.llm_client import GoLLMClient, LLMCompletionResult, LLMGatewayError
 from miyuna_agent.planner import build_deterministic_plan
 
 logger = logging.getLogger(__name__)
@@ -21,12 +22,24 @@ PHASE_TOOL_SELECTED = "TOOL_SELECTED"
 PHASE_TOOL_EXECUTION_STARTED = "TOOL_EXECUTION_STARTED"
 PHASE_TOOL_EXECUTION_COMPLETED = "TOOL_EXECUTION_COMPLETED"
 PHASE_OBSERVATION_CREATED = "OBSERVATION_CREATED"
+PHASE_LLM_REQUESTED = "LLM_REQUESTED"
+PHASE_LLM_COMPLETED = "LLM_COMPLETED"
+PHASE_LLM_FAILED = "LLM_FAILED"
+PHASE_LLM_FALLBACK_USED = "LLM_FALLBACK_USED"
+PHASE_LLM_ESCALATED = "LLM_ESCALATED"
 PHASE_RUN_COMPLETED = "RUN_COMPLETED"
 PHASE_RUN_FAILED = "RUN_FAILED"
 PHASE_RUN_CANCELLED = "RUN_CANCELLED"
 
 DEFAULT_RUN_TIMEOUT_SECONDS = 600
 MAX_TOOL_ATTEMPTS = 3
+PERSONA_WORKER = "careful_analyst"
+PERSONA_REVIEWER = "result_analyst"
+ROTATION_RUN_A = "RUN_A"
+ROTATION_RUN_B = "RUN_B"
+TASK_ANALYSIS = "analysis"
+TASK_REVIEW = "review"
+TASK_DEEP_ANALYSIS = "deep_analysis"
 
 
 @dataclass
@@ -57,6 +70,7 @@ def _owner_id() -> str:
 @dataclass
 class RunManager:
     go_client: GoAgentClient
+    llm_client: GoLLMClient
     _lock: threading.Lock = field(default_factory=threading.Lock)
     _active: dict[str, threading.Event] = field(default_factory=dict)
     _terminal: dict[str, bool] = field(default_factory=dict)
@@ -228,6 +242,58 @@ class RunManager:
 
             if self._is_terminal(run_id):
                 return
+
+            worker_persona, reviewer_persona = self._rotation_personas(ctx)
+
+            worker_prompt = self._worker_prompt(ctx)
+            worker_result = self._run_llm_step(
+                org_id=org_id,
+                run_id=run_id,
+                trace_id=trace_id,
+                ctx=ctx,
+                step_key="worker",
+                persona_key=worker_persona,
+                task_type=TASK_ANALYSIS,
+                user_prompt=worker_prompt,
+            )
+            analysis_result = worker_result
+            if self._should_escalate_analysis(worker_prompt, worker_result):
+                self._emit(
+                    org_id,
+                    run_id,
+                    trace_id,
+                    PHASE_LLM_ESCALATED,
+                    "RUNNING",
+                    metadata={
+                        "fromModel": worker_result.model_key,
+                        "reason": "long_or_complex_analysis",
+                        "taskType": TASK_DEEP_ANALYSIS,
+                    },
+                )
+                analysis_result = self._run_llm_step(
+                    org_id=org_id,
+                    run_id=run_id,
+                    trace_id=trace_id,
+                    ctx=ctx,
+                    step_key="worker-escalated",
+                    persona_key=self._escalation_persona(worker_persona),
+                    task_type=TASK_DEEP_ANALYSIS,
+                    user_prompt=worker_prompt,
+                )
+            reviewer_result = self._run_llm_step(
+                org_id=org_id,
+                run_id=run_id,
+                trace_id=trace_id,
+                ctx=ctx,
+                step_key="reviewer",
+                persona_key=reviewer_persona,
+                task_type=TASK_REVIEW,
+                user_prompt=self._reviewer_prompt(ctx, analysis_result.content),
+            )
+            _ = reviewer_result
+
+            if self._is_terminal(run_id):
+                return
             self._mark_terminal(run_id)
             self._emit(org_id, run_id, trace_id, PHASE_RUN_COMPLETED, "COMPLETED")
             self.go_client.update_run_status(
@@ -337,3 +403,165 @@ class RunManager:
             tool_name=tool_name,
             metadata=meta,
         )
+
+    def _rotation_personas(self, ctx: RunContext) -> tuple[str, str]:
+        if ctx.worker_rotation_pattern == ROTATION_RUN_B:
+            return PERSONA_REVIEWER, PERSONA_WORKER
+        return PERSONA_WORKER, PERSONA_REVIEWER
+
+    @staticmethod
+    def _escalation_persona(worker_persona: str) -> str:
+        if worker_persona == PERSONA_WORKER:
+            return PERSONA_REVIEWER
+        return PERSONA_WORKER
+
+    def _worker_prompt(self, ctx: RunContext) -> str:
+        return (
+            f"Analyze product {ctx.product_id} for organization {ctx.organization_id}. "
+            f"Use evidence-backed reasoning for marketplace review count={ctx.marketplace_review_count} "
+            f"and ugc count={ctx.ugc_count}. Compliance profile={ctx.compliance_profile or 'default'}."
+        )
+
+    def _reviewer_prompt(self, ctx: RunContext, worker_content: str) -> str:
+        return (
+            f"Review the worker analysis for product {ctx.product_id} and produce a concise decision summary.\n\n"
+            f"Worker output:\n{worker_content}"
+        )
+
+    def _should_escalate_analysis(self, prompt: str, result: LLMCompletionResult) -> bool:
+        if result.escalation_used or result.fallback_used:
+            return False
+        text = prompt.strip()
+        content = result.content.strip()
+        if len(text) >= 350:
+            return True
+        lowered = text.lower()
+        hints = (
+            "detayli",
+            "detaylı",
+            "kapsamli",
+            "kapsamlı",
+            "adim adim",
+            "adım adım",
+            "uzun surec",
+            "uzun süreç",
+            "comprehensive",
+            "step by step",
+        )
+        if any(hint in lowered for hint in hints):
+            return True
+        if len(text) >= 250 and len(content) < 100:
+            return True
+        return False
+
+    def _run_llm_step(
+        self,
+        *,
+        org_id: str,
+        run_id: str,
+        trace_id: str,
+        ctx: RunContext,
+        step_key: str,
+        persona_key: str,
+        task_type: str,
+        user_prompt: str,
+    ) -> LLMCompletionResult:
+        correlation_id = ctx.correlation_id or trace_id
+        idempotency_key = f"{run_id}:llm:{step_key}"
+        request_meta = {
+            "correlationId": correlation_id,
+            "personaKey": persona_key,
+            "taskType": task_type,
+            "idempotencyKey": idempotency_key,
+            "configSnapshotId": ctx.config_snapshot_id,
+            "complianceProfile": ctx.compliance_profile,
+        }
+        if step_key == "worker":
+            request_meta["workerRotationPattern"] = ctx.worker_rotation_pattern
+        self._emit(
+            org_id,
+            run_id,
+            trace_id,
+            PHASE_LLM_REQUESTED,
+            "RUNNING",
+            metadata=request_meta,
+        )
+        try:
+            result = self.llm_client.complete(
+                organization_id=org_id,
+                user_prompt=user_prompt,
+                correlation_id=correlation_id,
+                task_type=task_type,
+                persona_key=persona_key,
+                analysis_run_id=run_id,
+                user_id=ctx.actor_user_id,
+                idempotency_key=idempotency_key,
+                config_snapshot_id=ctx.config_snapshot_id,
+                require_evidence=ctx.require_evidence,
+                routing_policy_version=ctx.llm_routing_policy_version,
+            )
+        except LLMGatewayError as exc:
+            fail_meta = {
+                "correlationId": exc.correlation_id or correlation_id,
+                "personaKey": persona_key,
+                "taskType": task_type,
+                "error": str(exc),
+            }
+            if exc.status_code:
+                fail_meta["statusCode"] = str(exc.status_code)
+            self._emit(
+                org_id,
+                run_id,
+                trace_id,
+                PHASE_LLM_FAILED,
+                "FAILED",
+                metadata=fail_meta,
+            )
+            raise RuntimeError(f"llm gateway failed for {step_key}: {exc}") from exc
+
+        completion_meta = self._llm_result_metadata(result, task_type=task_type)
+        if result.escalation_used:
+            self._emit(
+                org_id,
+                run_id,
+                trace_id,
+                PHASE_LLM_ESCALATED,
+                "COMPLETED",
+                metadata=completion_meta,
+            )
+        elif result.fallback_used:
+            self._emit(
+                org_id,
+                run_id,
+                trace_id,
+                PHASE_LLM_FALLBACK_USED,
+                "COMPLETED",
+                metadata=completion_meta,
+            )
+        self._emit(
+            org_id,
+            run_id,
+            trace_id,
+            PHASE_LLM_COMPLETED,
+            "COMPLETED",
+            metadata=completion_meta,
+        )
+        return result
+
+    @staticmethod
+    def _llm_result_metadata(result: LLMCompletionResult, *, task_type: str) -> dict[str, str]:
+        meta = {
+            "llmCallId": result.call_id,
+            "selectedModel": result.model_key,
+            "selectedProvider": result.provider_key,
+            "personaKey": result.persona_key,
+            "personaVersion": result.persona_version,
+            "routingReason": result.routing_reason,
+            "fallbackUsed": str(result.fallback_used).lower(),
+            "escalationUsed": str(result.escalation_used).lower(),
+            "inputTokens": str(result.input_tokens),
+            "outputTokens": str(result.output_tokens),
+            "correlationId": result.correlation_id,
+            "taskType": task_type,
+        }
+        return meta

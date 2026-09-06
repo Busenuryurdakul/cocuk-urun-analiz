@@ -47,6 +47,15 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	ActivityLogEntry struct {
+		Action     func(childComplexity int) int
+		ID         func(childComplexity int) int
+		IPAddress  func(childComplexity int) int
+		ResourceID func(childComplexity int) int
+		Timestamp  func(childComplexity int) int
+		UserAgent  func(childComplexity int) int
+	}
+
 	AgentRunEvent struct {
 		AnalysisRunID  func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -124,6 +133,18 @@ type ComplexityRoot struct {
 		Version           func(childComplexity int) int
 	}
 
+	Device struct {
+		AppVersion   func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
+		ID           func(childComplexity int) int
+		IPAddress    func(childComplexity int) int
+		Label        func(childComplexity int) int
+		LastActiveAt func(childComplexity int) int
+		Platform     func(childComplexity int) int
+		UserAgent    func(childComplexity int) int
+		Verified     func(childComplexity int) int
+	}
+
 	EligibilityCount struct {
 		Count       func(childComplexity int) int
 		Eligibility func(childComplexity int) int
@@ -134,14 +155,147 @@ type ComplexityRoot struct {
 		Value func(childComplexity int) int
 	}
 
+	LLMCall struct {
+		CompliancePolicyVersion func(childComplexity int) int
+		ComplianceProfile       func(childComplexity int) int
+		ComplianceReflexVersion func(childComplexity int) int
+		CreatedAt               func(childComplexity int) int
+		FallbackUsed            func(childComplexity int) int
+		ID                      func(childComplexity int) int
+		InputTokens             func(childComplexity int) int
+		LatencyMs               func(childComplexity int) int
+		ModelKey                func(childComplexity int) int
+		OrganizationID          func(childComplexity int) int
+		OutputTokens            func(childComplexity int) int
+		PersonaKey              func(childComplexity int) int
+		RoutingReason           func(childComplexity int) int
+		SafetyResult            func(childComplexity int) int
+		Status                  func(childComplexity int) int
+	}
+
+	LLMConfiguration struct {
+		DefaultModelKey      func(childComplexity int) int
+		FallbackModelKey     func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		OrganizationID       func(childComplexity int) int
+		PersonaKey           func(childComplexity int) int
+		PersonaVersion       func(childComplexity int) int
+		PublishedAt          func(childComplexity int) int
+		Reason               func(childComplexity int) int
+		RoutingPolicyVersion func(childComplexity int) int
+	}
+
+	LLMConfigurationDraft struct {
+		DefaultModelKey      func(childComplexity int) int
+		FallbackModelKey     func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		OrganizationID       func(childComplexity int) int
+		PersonaKey           func(childComplexity int) int
+		PersonaVersion       func(childComplexity int) int
+		RoutingPolicyVersion func(childComplexity int) int
+		Status               func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		ValidationErrors     func(childComplexity int) int
+	}
+
+	LLMModel struct {
+		ContextWindowTokens func(childComplexity int) int
+		DefaultForPlatform  func(childComplexity int) int
+		DisplayName         func(childComplexity int) int
+		FallbackForPlatform func(childComplexity int) int
+		HealthStatus        func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		ModelKey            func(childComplexity int) int
+		Status              func(childComplexity int) int
+		SupportedTaskTypes  func(childComplexity int) int
+	}
+
+	LLMModelHealth struct {
+		DisplayName  func(childComplexity int) int
+		HealthStatus func(childComplexity int) int
+		ModelKey     func(childComplexity int) int
+		ProviderKey  func(childComplexity int) int
+	}
+
+	LLMModelUsage struct {
+		CallCount        func(childComplexity int) int
+		DisplayName      func(childComplexity int) int
+		EstimatedCostUsd func(childComplexity int) int
+		InputTokens      func(childComplexity int) int
+		ModelKey         func(childComplexity int) int
+		OutputTokens     func(childComplexity int) int
+		TotalTokens      func(childComplexity int) int
+	}
+
+	LLMOrgSettings struct {
+		DefaultModelKey  func(childComplexity int) int
+		FallbackModelKey func(childComplexity int) int
+		OrganizationID   func(childComplexity int) int
+		PersonaKey       func(childComplexity int) int
+	}
+
+	LLMPersona struct {
+		DisplayName func(childComplexity int) int
+		ID          func(childComplexity int) int
+		PersonaKey  func(childComplexity int) int
+		Status      func(childComplexity int) int
+		Version     func(childComplexity int) int
+	}
+
+	LLMProvider struct {
+		DisplayName func(childComplexity int) int
+		ID          func(childComplexity int) int
+		ProviderKey func(childComplexity int) int
+		Status      func(childComplexity int) int
+	}
+
+	LLMRoutingPolicy struct {
+		DefaultModelKey  func(childComplexity int) int
+		FallbackModelKey func(childComplexity int) int
+		ID               func(childComplexity int) int
+		PublishedAt      func(childComplexity int) int
+		Status           func(childComplexity int) int
+		Version          func(childComplexity int) int
+	}
+
+	LLMTestResult struct {
+		CallID         func(childComplexity int) int
+		ContentPreview func(childComplexity int) int
+		EscalationUsed func(childComplexity int) int
+		FallbackUsed   func(childComplexity int) int
+		InputTokens    func(childComplexity int) int
+		ModelKey       func(childComplexity int) int
+		OutputTokens   func(childComplexity int) int
+		PersonaKey     func(childComplexity int) int
+		PersonaVersion func(childComplexity int) int
+		RoutingReason  func(childComplexity int) int
+	}
+
+	LLMUsageDashboard struct {
+		ByModel     func(childComplexity int) int
+		RecentCalls func(childComplexity int) int
+		Summary     func(childComplexity int) int
+	}
+
+	LLMUsageSummary struct {
+		CallCount        func(childComplexity int) int
+		EstimatedCostUsd func(childComplexity int) int
+		FallbackCount    func(childComplexity int) int
+		InputTokens      func(childComplexity int) int
+		OutputTokens     func(childComplexity int) int
+		TotalTokens      func(childComplexity int) int
+	}
+
 	LoginPayload struct {
-		Status func(childComplexity int) int
-		User   func(childComplexity int) int
+		MfaSetup func(childComplexity int) int
+		Status   func(childComplexity int) int
+		User     func(childComplexity int) int
 	}
 
 	MFASetupPayload struct {
 		OtpauthURL func(childComplexity int) int
 		Secret     func(childComplexity int) int
+		SetupToken func(childComplexity int) int
 	}
 
 	MarketplaceImportRun struct {
@@ -178,6 +332,7 @@ type ComplexityRoot struct {
 		BuildDatasetDraft                   func(childComplexity int, input model.BuildDatasetDraftInput) int
 		CancelAgentRun                      func(childComplexity int, input model.CancelAgentRunInput) int
 		ConfirmMfa                          func(childComplexity int, input model.ConfirmMFAInput) int
+		CreateLLMConfigurationDraft         func(childComplexity int, input model.CreateLLMConfigurationDraftInput) int
 		CreateOrganization                  func(childComplexity int, input model.CreateOrganizationInput) int
 		CreateProduct                       func(childComplexity int, input model.CreateProductInput) int
 		CreateUserExperience                func(childComplexity int, input model.CreateUserExperienceInput) int
@@ -188,18 +343,28 @@ type ComplexityRoot struct {
 		Logout                              func(childComplexity int) int
 		ModerateUserExperience              func(childComplexity int, input model.ModerateUserExperienceInput) int
 		PublishCompliancePolicyVersion      func(childComplexity int, input model.PublishCompliancePolicyInput) int
+		PublishLLMConfiguration             func(childComplexity int, input model.PublishLLMConfigurationInput) int
 		RefreshToken                        func(childComplexity int) int
 		Register                            func(childComplexity int, input model.RegisterInput) int
 		RemoveMember                        func(childComplexity int, input model.RemoveMemberInput) int
+		ResendEmailVerification             func(childComplexity int, input model.ResendEmailVerificationInput) int
+		ResendLoginEmailOtp                 func(childComplexity int) int
+		RevokeDevice                        func(childComplexity int, deviceID string) int
+		RollbackLLMConfiguration            func(childComplexity int, input model.RollbackLLMConfigurationInput) int
+		SetOrganizationModels               func(childComplexity int, input model.SetOrganizationModelsInput) int
+		SetOrganizationPersona              func(childComplexity int, input model.SetOrganizationPersonaInput) int
 		StartAgentRun                       func(childComplexity int, input model.StartAgentRunInput) int
 		StartMarketplaceFileImport          func(childComplexity int, input model.StartMarketplaceFileImportInput) int
 		StartMarketplaceURLImport           func(childComplexity int, input model.StartMarketplaceURLImportInput) int
 		SwitchWorkspace                     func(childComplexity int, organizationID string) int
+		TestLLMConfiguration                func(childComplexity int, input model.TestLLMConfigurationInput) int
 		UpdateMemberRole                    func(childComplexity int, input model.UpdateMemberRoleInput) int
 		UpdateOrganizationComplianceProfile func(childComplexity int, input model.UpdateComplianceProfileInput) int
 		UpdateUserExperience                func(childComplexity int, input model.UpdateUserExperienceInput) int
+		ValidateLLMConfiguration            func(childComplexity int, input model.ValidateLLMConfigurationInput) int
 		VerifyDevice                        func(childComplexity int, input model.VerifyDeviceInput) int
 		VerifyEmail                         func(childComplexity int, token string) int
+		VerifyLoginEmailOtp                 func(childComplexity int, input model.VerifyLoginEmailOTPInput) int
 		VerifyLoginMfa                      func(childComplexity int, input model.VerifyLoginMFAInput) int
 		WithdrawConsent                     func(childComplexity int, input model.WithdrawConsentInput) int
 	}
@@ -221,19 +386,34 @@ type ComplexityRoot struct {
 	}
 
 	Product struct {
+		Attributes     func(childComplexity int) int
 		Brand          func(childComplexity int) int
 		Category       func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
+		Currency       func(childComplexity int) int
+		CurrentPrice   func(childComplexity int) int
 		Description    func(childComplexity int) int
 		ID             func(childComplexity int) int
+		ImageRefs      func(childComplexity int) int
+		Materials      func(childComplexity int) int
 		Name           func(childComplexity int) int
 		OrganizationID func(childComplexity int) int
+		OriginalPrice  func(childComplexity int) int
+		Rating         func(childComplexity int) int
+		ReviewCount    func(childComplexity int) int
+		SafetyWarnings func(childComplexity int) int
+		Seller         func(childComplexity int) int
 		Sku            func(childComplexity int) int
+		StockStatus    func(childComplexity int) int
+		TargetAge      func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 	}
 
 	ProductFieldMeta struct {
+		Confidence     func(childComplexity int) int
+		ExtractedAt    func(childComplexity int) int
 		Missing        func(childComplexity int) int
+		MissingReason  func(childComplexity int) int
 		Source         func(childComplexity int) int
 		SourceRecordID func(childComplexity int) int
 		Value          func(childComplexity int) int
@@ -241,6 +421,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		ActiveCompliancePolicy    func(childComplexity int, organizationID string) int
+		ActiveLLMConfiguration    func(childComplexity int, organizationID string) int
 		AgentRun                  func(childComplexity int, organizationID string, analysisRunID string) int
 		AgentRunEvents            func(childComplexity int, organizationID string, analysisRunID string, afterSequence *int, limit *int) int
 		AnalysisRuns              func(childComplexity int, organizationID string, status *model.AnalysisRunStatus, limit *int) int
@@ -248,13 +429,26 @@ type ComplexityRoot struct {
 		DatasetEligibilitySummary func(childComplexity int, organizationID string) int
 		DatasetVersions           func(childComplexity int, organizationID string, limit *int) int
 		Health                    func(childComplexity int) int
+		LlmCall                   func(childComplexity int, organizationID string, callID string) int
+		LlmConfigurationDrafts    func(childComplexity int, organizationID string, limit *int) int
+		LlmHealth                 func(childComplexity int, organizationID string) int
+		LlmModels                 func(childComplexity int, organizationID string) int
+		LlmOrgSettings            func(childComplexity int, organizationID string) int
+		LlmPersonas               func(childComplexity int, organizationID string, limit *int) int
+		LlmProviders              func(childComplexity int) int
+		LlmRoutingPolicies        func(childComplexity int, organizationID string, limit *int) int
+		LlmUsageDashboard         func(childComplexity int, organizationID string, fromDate string, recentLimit *int) int
+		LlmUsageSummary           func(childComplexity int, organizationID string, fromDate string) int
 		MarketplaceImportRuns     func(childComplexity int, organizationID string, limit *int) int
 		MarketplaceImportStatus   func(childComplexity int, organizationID string, importRunID string) int
 		Me                        func(childComplexity int) int
+		MyActivityLog             func(childComplexity int, limit *int, cursor *string) int
 		MyConsents                func(childComplexity int) int
+		MyDevices                 func(childComplexity int) int
 		MyWorkspaces              func(childComplexity int) int
 		Organization              func(childComplexity int, organizationID string) int
 		OrganizationMembers       func(childComplexity int, organizationID string) int
+		PendingMfaSetup           func(childComplexity int) int
 		Product                   func(childComplexity int, organizationID string, productID string) int
 		ProductMarketplaceReviews func(childComplexity int, organizationID string, productID string) int
 		Products                  func(childComplexity int, organizationID string, limit *int) int
@@ -305,11 +499,15 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error)
+	ResendEmailVerification(ctx context.Context, input model.ResendEmailVerificationInput) (*model.RegisterPayload, error)
 	VerifyEmail(ctx context.Context, token string) (*model.MFASetupPayload, error)
 	ConfirmMfa(ctx context.Context, input model.ConfirmMFAInput) (bool, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.LoginPayload, error)
+	VerifyLoginEmailOtp(ctx context.Context, input model.VerifyLoginEmailOTPInput) (*model.LoginPayload, error)
+	ResendLoginEmailOtp(ctx context.Context) (*model.LoginPayload, error)
 	VerifyLoginMfa(ctx context.Context, input model.VerifyLoginMFAInput) (*model.LoginPayload, error)
 	VerifyDevice(ctx context.Context, input model.VerifyDeviceInput) (*model.LoginPayload, error)
+	RevokeDevice(ctx context.Context, deviceID string) (bool, error)
 	Logout(ctx context.Context) (bool, error)
 	RefreshToken(ctx context.Context) (bool, error)
 	SwitchWorkspace(ctx context.Context, organizationID string) (bool, error)
@@ -332,6 +530,13 @@ type MutationResolver interface {
 	BuildDatasetDraft(ctx context.Context, input model.BuildDatasetDraftInput) (*model.DatasetVersion, error)
 	StartAgentRun(ctx context.Context, input model.StartAgentRunInput) (*model.AnalysisRun, error)
 	CancelAgentRun(ctx context.Context, input model.CancelAgentRunInput) (*model.AnalysisRun, error)
+	CreateLLMConfigurationDraft(ctx context.Context, input model.CreateLLMConfigurationDraftInput) (*model.LLMConfigurationDraft, error)
+	ValidateLLMConfiguration(ctx context.Context, input model.ValidateLLMConfigurationInput) (*model.LLMConfigurationDraft, error)
+	PublishLLMConfiguration(ctx context.Context, input model.PublishLLMConfigurationInput) (*model.LLMConfiguration, error)
+	RollbackLLMConfiguration(ctx context.Context, input model.RollbackLLMConfigurationInput) (*model.LLMConfiguration, error)
+	SetOrganizationPersona(ctx context.Context, input model.SetOrganizationPersonaInput) (*model.LLMOrgSettings, error)
+	SetOrganizationModels(ctx context.Context, input model.SetOrganizationModelsInput) (*model.LLMOrgSettings, error)
+	TestLLMConfiguration(ctx context.Context, input model.TestLLMConfigurationInput) (*model.LLMTestResult, error)
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (string, error)
@@ -353,6 +558,20 @@ type QueryResolver interface {
 	AgentRun(ctx context.Context, organizationID string, analysisRunID string) (*model.AnalysisRun, error)
 	AnalysisRuns(ctx context.Context, organizationID string, status *model.AnalysisRunStatus, limit *int) ([]*model.AnalysisRun, error)
 	AgentRunEvents(ctx context.Context, organizationID string, analysisRunID string, afterSequence *int, limit *int) ([]*model.AgentRunEvent, error)
+	LlmProviders(ctx context.Context) ([]*model.LLMProvider, error)
+	LlmModels(ctx context.Context, organizationID string) ([]*model.LLMModel, error)
+	LlmRoutingPolicies(ctx context.Context, organizationID string, limit *int) ([]*model.LLMRoutingPolicy, error)
+	LlmPersonas(ctx context.Context, organizationID string, limit *int) ([]*model.LLMPersona, error)
+	ActiveLLMConfiguration(ctx context.Context, organizationID string) (*model.LLMConfiguration, error)
+	LlmConfigurationDrafts(ctx context.Context, organizationID string, limit *int) ([]*model.LLMConfigurationDraft, error)
+	LlmUsageSummary(ctx context.Context, organizationID string, fromDate string) (*model.LLMUsageSummary, error)
+	LlmUsageDashboard(ctx context.Context, organizationID string, fromDate string, recentLimit *int) (*model.LLMUsageDashboard, error)
+	LlmOrgSettings(ctx context.Context, organizationID string) (*model.LLMOrgSettings, error)
+	LlmCall(ctx context.Context, organizationID string, callID string) (*model.LLMCall, error)
+	LlmHealth(ctx context.Context, organizationID string) ([]*model.LLMModelHealth, error)
+	MyDevices(ctx context.Context) ([]*model.Device, error)
+	MyActivityLog(ctx context.Context, limit *int, cursor *string) ([]*model.ActivityLogEntry, error)
+	PendingMfaSetup(ctx context.Context) (*model.MFASetupPayload, error)
 }
 
 type executableSchema struct {
@@ -373,6 +592,43 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "ActivityLogEntry.action":
+		if e.complexity.ActivityLogEntry.Action == nil {
+			break
+		}
+
+		return e.complexity.ActivityLogEntry.Action(childComplexity), true
+	case "ActivityLogEntry.id":
+		if e.complexity.ActivityLogEntry.ID == nil {
+			break
+		}
+
+		return e.complexity.ActivityLogEntry.ID(childComplexity), true
+	case "ActivityLogEntry.ipAddress":
+		if e.complexity.ActivityLogEntry.IPAddress == nil {
+			break
+		}
+
+		return e.complexity.ActivityLogEntry.IPAddress(childComplexity), true
+	case "ActivityLogEntry.resourceId":
+		if e.complexity.ActivityLogEntry.ResourceID == nil {
+			break
+		}
+
+		return e.complexity.ActivityLogEntry.ResourceID(childComplexity), true
+	case "ActivityLogEntry.timestamp":
+		if e.complexity.ActivityLogEntry.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.ActivityLogEntry.Timestamp(childComplexity), true
+	case "ActivityLogEntry.userAgent":
+		if e.complexity.ActivityLogEntry.UserAgent == nil {
+			break
+		}
+
+		return e.complexity.ActivityLogEntry.UserAgent(childComplexity), true
 
 	case "AgentRunEvent.analysisRunId":
 		if e.complexity.AgentRunEvent.AnalysisRunID == nil {
@@ -717,6 +973,61 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DatasetVersion.Version(childComplexity), true
 
+	case "Device.appVersion":
+		if e.complexity.Device.AppVersion == nil {
+			break
+		}
+
+		return e.complexity.Device.AppVersion(childComplexity), true
+	case "Device.createdAt":
+		if e.complexity.Device.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Device.CreatedAt(childComplexity), true
+	case "Device.id":
+		if e.complexity.Device.ID == nil {
+			break
+		}
+
+		return e.complexity.Device.ID(childComplexity), true
+	case "Device.ipAddress":
+		if e.complexity.Device.IPAddress == nil {
+			break
+		}
+
+		return e.complexity.Device.IPAddress(childComplexity), true
+	case "Device.label":
+		if e.complexity.Device.Label == nil {
+			break
+		}
+
+		return e.complexity.Device.Label(childComplexity), true
+	case "Device.lastActiveAt":
+		if e.complexity.Device.LastActiveAt == nil {
+			break
+		}
+
+		return e.complexity.Device.LastActiveAt(childComplexity), true
+	case "Device.platform":
+		if e.complexity.Device.Platform == nil {
+			break
+		}
+
+		return e.complexity.Device.Platform(childComplexity), true
+	case "Device.userAgent":
+		if e.complexity.Device.UserAgent == nil {
+			break
+		}
+
+		return e.complexity.Device.UserAgent(childComplexity), true
+	case "Device.verified":
+		if e.complexity.Device.Verified == nil {
+			break
+		}
+
+		return e.complexity.Device.Verified(childComplexity), true
+
 	case "EligibilityCount.count":
 		if e.complexity.EligibilityCount.Count == nil {
 			break
@@ -743,6 +1054,577 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.EventMetadataEntry.Value(childComplexity), true
 
+	case "LLMCall.compliancePolicyVersion":
+		if e.complexity.LLMCall.CompliancePolicyVersion == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.CompliancePolicyVersion(childComplexity), true
+	case "LLMCall.complianceProfile":
+		if e.complexity.LLMCall.ComplianceProfile == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.ComplianceProfile(childComplexity), true
+	case "LLMCall.complianceReflexVersion":
+		if e.complexity.LLMCall.ComplianceReflexVersion == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.ComplianceReflexVersion(childComplexity), true
+	case "LLMCall.createdAt":
+		if e.complexity.LLMCall.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.CreatedAt(childComplexity), true
+	case "LLMCall.fallbackUsed":
+		if e.complexity.LLMCall.FallbackUsed == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.FallbackUsed(childComplexity), true
+	case "LLMCall.id":
+		if e.complexity.LLMCall.ID == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.ID(childComplexity), true
+	case "LLMCall.inputTokens":
+		if e.complexity.LLMCall.InputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.InputTokens(childComplexity), true
+	case "LLMCall.latencyMs":
+		if e.complexity.LLMCall.LatencyMs == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.LatencyMs(childComplexity), true
+	case "LLMCall.modelKey":
+		if e.complexity.LLMCall.ModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.ModelKey(childComplexity), true
+	case "LLMCall.organizationId":
+		if e.complexity.LLMCall.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.OrganizationID(childComplexity), true
+	case "LLMCall.outputTokens":
+		if e.complexity.LLMCall.OutputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.OutputTokens(childComplexity), true
+	case "LLMCall.personaKey":
+		if e.complexity.LLMCall.PersonaKey == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.PersonaKey(childComplexity), true
+	case "LLMCall.routingReason":
+		if e.complexity.LLMCall.RoutingReason == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.RoutingReason(childComplexity), true
+	case "LLMCall.safetyResult":
+		if e.complexity.LLMCall.SafetyResult == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.SafetyResult(childComplexity), true
+	case "LLMCall.status":
+		if e.complexity.LLMCall.Status == nil {
+			break
+		}
+
+		return e.complexity.LLMCall.Status(childComplexity), true
+
+	case "LLMConfiguration.defaultModelKey":
+		if e.complexity.LLMConfiguration.DefaultModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.DefaultModelKey(childComplexity), true
+	case "LLMConfiguration.fallbackModelKey":
+		if e.complexity.LLMConfiguration.FallbackModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.FallbackModelKey(childComplexity), true
+	case "LLMConfiguration.id":
+		if e.complexity.LLMConfiguration.ID == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.ID(childComplexity), true
+	case "LLMConfiguration.organizationId":
+		if e.complexity.LLMConfiguration.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.OrganizationID(childComplexity), true
+	case "LLMConfiguration.personaKey":
+		if e.complexity.LLMConfiguration.PersonaKey == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.PersonaKey(childComplexity), true
+	case "LLMConfiguration.personaVersion":
+		if e.complexity.LLMConfiguration.PersonaVersion == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.PersonaVersion(childComplexity), true
+	case "LLMConfiguration.publishedAt":
+		if e.complexity.LLMConfiguration.PublishedAt == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.PublishedAt(childComplexity), true
+	case "LLMConfiguration.reason":
+		if e.complexity.LLMConfiguration.Reason == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.Reason(childComplexity), true
+	case "LLMConfiguration.routingPolicyVersion":
+		if e.complexity.LLMConfiguration.RoutingPolicyVersion == nil {
+			break
+		}
+
+		return e.complexity.LLMConfiguration.RoutingPolicyVersion(childComplexity), true
+
+	case "LLMConfigurationDraft.defaultModelKey":
+		if e.complexity.LLMConfigurationDraft.DefaultModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.DefaultModelKey(childComplexity), true
+	case "LLMConfigurationDraft.fallbackModelKey":
+		if e.complexity.LLMConfigurationDraft.FallbackModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.FallbackModelKey(childComplexity), true
+	case "LLMConfigurationDraft.id":
+		if e.complexity.LLMConfigurationDraft.ID == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.ID(childComplexity), true
+	case "LLMConfigurationDraft.organizationId":
+		if e.complexity.LLMConfigurationDraft.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.OrganizationID(childComplexity), true
+	case "LLMConfigurationDraft.personaKey":
+		if e.complexity.LLMConfigurationDraft.PersonaKey == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.PersonaKey(childComplexity), true
+	case "LLMConfigurationDraft.personaVersion":
+		if e.complexity.LLMConfigurationDraft.PersonaVersion == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.PersonaVersion(childComplexity), true
+	case "LLMConfigurationDraft.routingPolicyVersion":
+		if e.complexity.LLMConfigurationDraft.RoutingPolicyVersion == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.RoutingPolicyVersion(childComplexity), true
+	case "LLMConfigurationDraft.status":
+		if e.complexity.LLMConfigurationDraft.Status == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.Status(childComplexity), true
+	case "LLMConfigurationDraft.updatedAt":
+		if e.complexity.LLMConfigurationDraft.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.UpdatedAt(childComplexity), true
+	case "LLMConfigurationDraft.validationErrors":
+		if e.complexity.LLMConfigurationDraft.ValidationErrors == nil {
+			break
+		}
+
+		return e.complexity.LLMConfigurationDraft.ValidationErrors(childComplexity), true
+
+	case "LLMModel.contextWindowTokens":
+		if e.complexity.LLMModel.ContextWindowTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.ContextWindowTokens(childComplexity), true
+	case "LLMModel.defaultForPlatform":
+		if e.complexity.LLMModel.DefaultForPlatform == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.DefaultForPlatform(childComplexity), true
+	case "LLMModel.displayName":
+		if e.complexity.LLMModel.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.DisplayName(childComplexity), true
+	case "LLMModel.fallbackForPlatform":
+		if e.complexity.LLMModel.FallbackForPlatform == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.FallbackForPlatform(childComplexity), true
+	case "LLMModel.healthStatus":
+		if e.complexity.LLMModel.HealthStatus == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.HealthStatus(childComplexity), true
+	case "LLMModel.id":
+		if e.complexity.LLMModel.ID == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.ID(childComplexity), true
+	case "LLMModel.modelKey":
+		if e.complexity.LLMModel.ModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.ModelKey(childComplexity), true
+	case "LLMModel.status":
+		if e.complexity.LLMModel.Status == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.Status(childComplexity), true
+	case "LLMModel.supportedTaskTypes":
+		if e.complexity.LLMModel.SupportedTaskTypes == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.SupportedTaskTypes(childComplexity), true
+
+	case "LLMModelHealth.displayName":
+		if e.complexity.LLMModelHealth.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.LLMModelHealth.DisplayName(childComplexity), true
+	case "LLMModelHealth.healthStatus":
+		if e.complexity.LLMModelHealth.HealthStatus == nil {
+			break
+		}
+
+		return e.complexity.LLMModelHealth.HealthStatus(childComplexity), true
+	case "LLMModelHealth.modelKey":
+		if e.complexity.LLMModelHealth.ModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMModelHealth.ModelKey(childComplexity), true
+	case "LLMModelHealth.providerKey":
+		if e.complexity.LLMModelHealth.ProviderKey == nil {
+			break
+		}
+
+		return e.complexity.LLMModelHealth.ProviderKey(childComplexity), true
+
+	case "LLMModelUsage.callCount":
+		if e.complexity.LLMModelUsage.CallCount == nil {
+			break
+		}
+
+		return e.complexity.LLMModelUsage.CallCount(childComplexity), true
+	case "LLMModelUsage.displayName":
+		if e.complexity.LLMModelUsage.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.LLMModelUsage.DisplayName(childComplexity), true
+	case "LLMModelUsage.estimatedCostUsd":
+		if e.complexity.LLMModelUsage.EstimatedCostUsd == nil {
+			break
+		}
+
+		return e.complexity.LLMModelUsage.EstimatedCostUsd(childComplexity), true
+	case "LLMModelUsage.inputTokens":
+		if e.complexity.LLMModelUsage.InputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMModelUsage.InputTokens(childComplexity), true
+	case "LLMModelUsage.modelKey":
+		if e.complexity.LLMModelUsage.ModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMModelUsage.ModelKey(childComplexity), true
+	case "LLMModelUsage.outputTokens":
+		if e.complexity.LLMModelUsage.OutputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMModelUsage.OutputTokens(childComplexity), true
+	case "LLMModelUsage.totalTokens":
+		if e.complexity.LLMModelUsage.TotalTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMModelUsage.TotalTokens(childComplexity), true
+
+	case "LLMOrgSettings.defaultModelKey":
+		if e.complexity.LLMOrgSettings.DefaultModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMOrgSettings.DefaultModelKey(childComplexity), true
+	case "LLMOrgSettings.fallbackModelKey":
+		if e.complexity.LLMOrgSettings.FallbackModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMOrgSettings.FallbackModelKey(childComplexity), true
+	case "LLMOrgSettings.organizationId":
+		if e.complexity.LLMOrgSettings.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.LLMOrgSettings.OrganizationID(childComplexity), true
+	case "LLMOrgSettings.personaKey":
+		if e.complexity.LLMOrgSettings.PersonaKey == nil {
+			break
+		}
+
+		return e.complexity.LLMOrgSettings.PersonaKey(childComplexity), true
+
+	case "LLMPersona.displayName":
+		if e.complexity.LLMPersona.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.LLMPersona.DisplayName(childComplexity), true
+	case "LLMPersona.id":
+		if e.complexity.LLMPersona.ID == nil {
+			break
+		}
+
+		return e.complexity.LLMPersona.ID(childComplexity), true
+	case "LLMPersona.personaKey":
+		if e.complexity.LLMPersona.PersonaKey == nil {
+			break
+		}
+
+		return e.complexity.LLMPersona.PersonaKey(childComplexity), true
+	case "LLMPersona.status":
+		if e.complexity.LLMPersona.Status == nil {
+			break
+		}
+
+		return e.complexity.LLMPersona.Status(childComplexity), true
+	case "LLMPersona.version":
+		if e.complexity.LLMPersona.Version == nil {
+			break
+		}
+
+		return e.complexity.LLMPersona.Version(childComplexity), true
+
+	case "LLMProvider.displayName":
+		if e.complexity.LLMProvider.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.LLMProvider.DisplayName(childComplexity), true
+	case "LLMProvider.id":
+		if e.complexity.LLMProvider.ID == nil {
+			break
+		}
+
+		return e.complexity.LLMProvider.ID(childComplexity), true
+	case "LLMProvider.providerKey":
+		if e.complexity.LLMProvider.ProviderKey == nil {
+			break
+		}
+
+		return e.complexity.LLMProvider.ProviderKey(childComplexity), true
+	case "LLMProvider.status":
+		if e.complexity.LLMProvider.Status == nil {
+			break
+		}
+
+		return e.complexity.LLMProvider.Status(childComplexity), true
+
+	case "LLMRoutingPolicy.defaultModelKey":
+		if e.complexity.LLMRoutingPolicy.DefaultModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMRoutingPolicy.DefaultModelKey(childComplexity), true
+	case "LLMRoutingPolicy.fallbackModelKey":
+		if e.complexity.LLMRoutingPolicy.FallbackModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMRoutingPolicy.FallbackModelKey(childComplexity), true
+	case "LLMRoutingPolicy.id":
+		if e.complexity.LLMRoutingPolicy.ID == nil {
+			break
+		}
+
+		return e.complexity.LLMRoutingPolicy.ID(childComplexity), true
+	case "LLMRoutingPolicy.publishedAt":
+		if e.complexity.LLMRoutingPolicy.PublishedAt == nil {
+			break
+		}
+
+		return e.complexity.LLMRoutingPolicy.PublishedAt(childComplexity), true
+	case "LLMRoutingPolicy.status":
+		if e.complexity.LLMRoutingPolicy.Status == nil {
+			break
+		}
+
+		return e.complexity.LLMRoutingPolicy.Status(childComplexity), true
+	case "LLMRoutingPolicy.version":
+		if e.complexity.LLMRoutingPolicy.Version == nil {
+			break
+		}
+
+		return e.complexity.LLMRoutingPolicy.Version(childComplexity), true
+
+	case "LLMTestResult.callId":
+		if e.complexity.LLMTestResult.CallID == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.CallID(childComplexity), true
+	case "LLMTestResult.contentPreview":
+		if e.complexity.LLMTestResult.ContentPreview == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.ContentPreview(childComplexity), true
+	case "LLMTestResult.escalationUsed":
+		if e.complexity.LLMTestResult.EscalationUsed == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.EscalationUsed(childComplexity), true
+	case "LLMTestResult.fallbackUsed":
+		if e.complexity.LLMTestResult.FallbackUsed == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.FallbackUsed(childComplexity), true
+	case "LLMTestResult.inputTokens":
+		if e.complexity.LLMTestResult.InputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.InputTokens(childComplexity), true
+	case "LLMTestResult.modelKey":
+		if e.complexity.LLMTestResult.ModelKey == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.ModelKey(childComplexity), true
+	case "LLMTestResult.outputTokens":
+		if e.complexity.LLMTestResult.OutputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.OutputTokens(childComplexity), true
+	case "LLMTestResult.personaKey":
+		if e.complexity.LLMTestResult.PersonaKey == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.PersonaKey(childComplexity), true
+	case "LLMTestResult.personaVersion":
+		if e.complexity.LLMTestResult.PersonaVersion == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.PersonaVersion(childComplexity), true
+	case "LLMTestResult.routingReason":
+		if e.complexity.LLMTestResult.RoutingReason == nil {
+			break
+		}
+
+		return e.complexity.LLMTestResult.RoutingReason(childComplexity), true
+
+	case "LLMUsageDashboard.byModel":
+		if e.complexity.LLMUsageDashboard.ByModel == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageDashboard.ByModel(childComplexity), true
+	case "LLMUsageDashboard.recentCalls":
+		if e.complexity.LLMUsageDashboard.RecentCalls == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageDashboard.RecentCalls(childComplexity), true
+	case "LLMUsageDashboard.summary":
+		if e.complexity.LLMUsageDashboard.Summary == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageDashboard.Summary(childComplexity), true
+
+	case "LLMUsageSummary.callCount":
+		if e.complexity.LLMUsageSummary.CallCount == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageSummary.CallCount(childComplexity), true
+	case "LLMUsageSummary.estimatedCostUsd":
+		if e.complexity.LLMUsageSummary.EstimatedCostUsd == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageSummary.EstimatedCostUsd(childComplexity), true
+	case "LLMUsageSummary.fallbackCount":
+		if e.complexity.LLMUsageSummary.FallbackCount == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageSummary.FallbackCount(childComplexity), true
+	case "LLMUsageSummary.inputTokens":
+		if e.complexity.LLMUsageSummary.InputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageSummary.InputTokens(childComplexity), true
+	case "LLMUsageSummary.outputTokens":
+		if e.complexity.LLMUsageSummary.OutputTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageSummary.OutputTokens(childComplexity), true
+	case "LLMUsageSummary.totalTokens":
+		if e.complexity.LLMUsageSummary.TotalTokens == nil {
+			break
+		}
+
+		return e.complexity.LLMUsageSummary.TotalTokens(childComplexity), true
+
+	case "LoginPayload.mfaSetup":
+		if e.complexity.LoginPayload.MfaSetup == nil {
+			break
+		}
+
+		return e.complexity.LoginPayload.MfaSetup(childComplexity), true
 	case "LoginPayload.status":
 		if e.complexity.LoginPayload.Status == nil {
 			break
@@ -768,6 +1650,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.MFASetupPayload.Secret(childComplexity), true
+	case "MFASetupPayload.setupToken":
+		if e.complexity.MFASetupPayload.SetupToken == nil {
+			break
+		}
+
+		return e.complexity.MFASetupPayload.SetupToken(childComplexity), true
 
 	case "MarketplaceImportRun.accessMode":
 		if e.complexity.MarketplaceImportRun.AccessMode == nil {
@@ -953,6 +1841,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.ConfirmMfa(childComplexity, args["input"].(model.ConfirmMFAInput)), true
+	case "Mutation.createLLMConfigurationDraft":
+		if e.complexity.Mutation.CreateLLMConfigurationDraft == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createLLMConfigurationDraft_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateLLMConfigurationDraft(childComplexity, args["input"].(model.CreateLLMConfigurationDraftInput)), true
 	case "Mutation.createOrganization":
 		if e.complexity.Mutation.CreateOrganization == nil {
 			break
@@ -1058,6 +1957,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.PublishCompliancePolicyVersion(childComplexity, args["input"].(model.PublishCompliancePolicyInput)), true
+	case "Mutation.publishLLMConfiguration":
+		if e.complexity.Mutation.PublishLLMConfiguration == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_publishLLMConfiguration_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PublishLLMConfiguration(childComplexity, args["input"].(model.PublishLLMConfigurationInput)), true
 	case "Mutation.refreshToken":
 		if e.complexity.Mutation.RefreshToken == nil {
 			break
@@ -1086,6 +1996,67 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.RemoveMember(childComplexity, args["input"].(model.RemoveMemberInput)), true
+	case "Mutation.resendEmailVerification":
+		if e.complexity.Mutation.ResendEmailVerification == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_resendEmailVerification_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ResendEmailVerification(childComplexity, args["input"].(model.ResendEmailVerificationInput)), true
+	case "Mutation.resendLoginEmailOTP":
+		if e.complexity.Mutation.ResendLoginEmailOtp == nil {
+			break
+		}
+
+		return e.complexity.Mutation.ResendLoginEmailOtp(childComplexity), true
+	case "Mutation.revokeDevice":
+		if e.complexity.Mutation.RevokeDevice == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_revokeDevice_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RevokeDevice(childComplexity, args["deviceId"].(string)), true
+	case "Mutation.rollbackLLMConfiguration":
+		if e.complexity.Mutation.RollbackLLMConfiguration == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_rollbackLLMConfiguration_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RollbackLLMConfiguration(childComplexity, args["input"].(model.RollbackLLMConfigurationInput)), true
+	case "Mutation.setOrganizationModels":
+		if e.complexity.Mutation.SetOrganizationModels == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setOrganizationModels_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetOrganizationModels(childComplexity, args["input"].(model.SetOrganizationModelsInput)), true
+	case "Mutation.setOrganizationPersona":
+		if e.complexity.Mutation.SetOrganizationPersona == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setOrganizationPersona_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetOrganizationPersona(childComplexity, args["input"].(model.SetOrganizationPersonaInput)), true
 	case "Mutation.startAgentRun":
 		if e.complexity.Mutation.StartAgentRun == nil {
 			break
@@ -1130,6 +2101,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SwitchWorkspace(childComplexity, args["organizationId"].(string)), true
+	case "Mutation.testLLMConfiguration":
+		if e.complexity.Mutation.TestLLMConfiguration == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_testLLMConfiguration_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TestLLMConfiguration(childComplexity, args["input"].(model.TestLLMConfigurationInput)), true
 	case "Mutation.updateMemberRole":
 		if e.complexity.Mutation.UpdateMemberRole == nil {
 			break
@@ -1163,6 +2145,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateUserExperience(childComplexity, args["input"].(model.UpdateUserExperienceInput)), true
+	case "Mutation.validateLLMConfiguration":
+		if e.complexity.Mutation.ValidateLLMConfiguration == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_validateLLMConfiguration_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ValidateLLMConfiguration(childComplexity, args["input"].(model.ValidateLLMConfigurationInput)), true
 	case "Mutation.verifyDevice":
 		if e.complexity.Mutation.VerifyDevice == nil {
 			break
@@ -1185,6 +2178,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.VerifyEmail(childComplexity, args["token"].(string)), true
+	case "Mutation.verifyLoginEmailOTP":
+		if e.complexity.Mutation.VerifyLoginEmailOtp == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verifyLoginEmailOTP_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.VerifyLoginEmailOtp(childComplexity, args["input"].(model.VerifyLoginEmailOTPInput)), true
 	case "Mutation.verifyLoginMFA":
 		if e.complexity.Mutation.VerifyLoginMfa == nil {
 			break
@@ -1270,6 +2274,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.OrganizationMember.UserID(childComplexity), true
 
+	case "Product.attributes":
+		if e.complexity.Product.Attributes == nil {
+			break
+		}
+
+		return e.complexity.Product.Attributes(childComplexity), true
 	case "Product.brand":
 		if e.complexity.Product.Brand == nil {
 			break
@@ -1288,6 +2298,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.CreatedAt(childComplexity), true
+	case "Product.currency":
+		if e.complexity.Product.Currency == nil {
+			break
+		}
+
+		return e.complexity.Product.Currency(childComplexity), true
+	case "Product.currentPrice":
+		if e.complexity.Product.CurrentPrice == nil {
+			break
+		}
+
+		return e.complexity.Product.CurrentPrice(childComplexity), true
 	case "Product.description":
 		if e.complexity.Product.Description == nil {
 			break
@@ -1300,6 +2322,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.ID(childComplexity), true
+	case "Product.imageRefs":
+		if e.complexity.Product.ImageRefs == nil {
+			break
+		}
+
+		return e.complexity.Product.ImageRefs(childComplexity), true
+	case "Product.materials":
+		if e.complexity.Product.Materials == nil {
+			break
+		}
+
+		return e.complexity.Product.Materials(childComplexity), true
 	case "Product.name":
 		if e.complexity.Product.Name == nil {
 			break
@@ -1312,12 +2346,54 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.OrganizationID(childComplexity), true
+	case "Product.originalPrice":
+		if e.complexity.Product.OriginalPrice == nil {
+			break
+		}
+
+		return e.complexity.Product.OriginalPrice(childComplexity), true
+	case "Product.rating":
+		if e.complexity.Product.Rating == nil {
+			break
+		}
+
+		return e.complexity.Product.Rating(childComplexity), true
+	case "Product.reviewCount":
+		if e.complexity.Product.ReviewCount == nil {
+			break
+		}
+
+		return e.complexity.Product.ReviewCount(childComplexity), true
+	case "Product.safetyWarnings":
+		if e.complexity.Product.SafetyWarnings == nil {
+			break
+		}
+
+		return e.complexity.Product.SafetyWarnings(childComplexity), true
+	case "Product.seller":
+		if e.complexity.Product.Seller == nil {
+			break
+		}
+
+		return e.complexity.Product.Seller(childComplexity), true
 	case "Product.sku":
 		if e.complexity.Product.Sku == nil {
 			break
 		}
 
 		return e.complexity.Product.Sku(childComplexity), true
+	case "Product.stockStatus":
+		if e.complexity.Product.StockStatus == nil {
+			break
+		}
+
+		return e.complexity.Product.StockStatus(childComplexity), true
+	case "Product.targetAge":
+		if e.complexity.Product.TargetAge == nil {
+			break
+		}
+
+		return e.complexity.Product.TargetAge(childComplexity), true
 	case "Product.updatedAt":
 		if e.complexity.Product.UpdatedAt == nil {
 			break
@@ -1325,12 +2401,30 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Product.UpdatedAt(childComplexity), true
 
+	case "ProductFieldMeta.confidence":
+		if e.complexity.ProductFieldMeta.Confidence == nil {
+			break
+		}
+
+		return e.complexity.ProductFieldMeta.Confidence(childComplexity), true
+	case "ProductFieldMeta.extractedAt":
+		if e.complexity.ProductFieldMeta.ExtractedAt == nil {
+			break
+		}
+
+		return e.complexity.ProductFieldMeta.ExtractedAt(childComplexity), true
 	case "ProductFieldMeta.missing":
 		if e.complexity.ProductFieldMeta.Missing == nil {
 			break
 		}
 
 		return e.complexity.ProductFieldMeta.Missing(childComplexity), true
+	case "ProductFieldMeta.missingReason":
+		if e.complexity.ProductFieldMeta.MissingReason == nil {
+			break
+		}
+
+		return e.complexity.ProductFieldMeta.MissingReason(childComplexity), true
 	case "ProductFieldMeta.source":
 		if e.complexity.ProductFieldMeta.Source == nil {
 			break
@@ -1361,6 +2455,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.ActiveCompliancePolicy(childComplexity, args["organizationId"].(string)), true
+	case "Query.activeLLMConfiguration":
+		if e.complexity.Query.ActiveLLMConfiguration == nil {
+			break
+		}
+
+		args, err := ec.field_Query_activeLLMConfiguration_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ActiveLLMConfiguration(childComplexity, args["organizationId"].(string)), true
 	case "Query.agentRun":
 		if e.complexity.Query.AgentRun == nil {
 			break
@@ -1433,6 +2538,111 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Health(childComplexity), true
+	case "Query.llmCall":
+		if e.complexity.Query.LlmCall == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmCall_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmCall(childComplexity, args["organizationId"].(string), args["callId"].(string)), true
+	case "Query.llmConfigurationDrafts":
+		if e.complexity.Query.LlmConfigurationDrafts == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmConfigurationDrafts_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmConfigurationDrafts(childComplexity, args["organizationId"].(string), args["limit"].(*int)), true
+	case "Query.llmHealth":
+		if e.complexity.Query.LlmHealth == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmHealth_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmHealth(childComplexity, args["organizationId"].(string)), true
+	case "Query.llmModels":
+		if e.complexity.Query.LlmModels == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmModels_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmModels(childComplexity, args["organizationId"].(string)), true
+	case "Query.llmOrgSettings":
+		if e.complexity.Query.LlmOrgSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmOrgSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmOrgSettings(childComplexity, args["organizationId"].(string)), true
+	case "Query.llmPersonas":
+		if e.complexity.Query.LlmPersonas == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmPersonas_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmPersonas(childComplexity, args["organizationId"].(string), args["limit"].(*int)), true
+	case "Query.llmProviders":
+		if e.complexity.Query.LlmProviders == nil {
+			break
+		}
+
+		return e.complexity.Query.LlmProviders(childComplexity), true
+	case "Query.llmRoutingPolicies":
+		if e.complexity.Query.LlmRoutingPolicies == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmRoutingPolicies_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmRoutingPolicies(childComplexity, args["organizationId"].(string), args["limit"].(*int)), true
+	case "Query.llmUsageDashboard":
+		if e.complexity.Query.LlmUsageDashboard == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmUsageDashboard_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmUsageDashboard(childComplexity, args["organizationId"].(string), args["fromDate"].(string), args["recentLimit"].(*int)), true
+	case "Query.llmUsageSummary":
+		if e.complexity.Query.LlmUsageSummary == nil {
+			break
+		}
+
+		args, err := ec.field_Query_llmUsageSummary_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LlmUsageSummary(childComplexity, args["organizationId"].(string), args["fromDate"].(string)), true
 	case "Query.marketplaceImportRuns":
 		if e.complexity.Query.MarketplaceImportRuns == nil {
 			break
@@ -1461,12 +2671,29 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Me(childComplexity), true
+	case "Query.myActivityLog":
+		if e.complexity.Query.MyActivityLog == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myActivityLog_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyActivityLog(childComplexity, args["limit"].(*int), args["cursor"].(*string)), true
 	case "Query.myConsents":
 		if e.complexity.Query.MyConsents == nil {
 			break
 		}
 
 		return e.complexity.Query.MyConsents(childComplexity), true
+	case "Query.myDevices":
+		if e.complexity.Query.MyDevices == nil {
+			break
+		}
+
+		return e.complexity.Query.MyDevices(childComplexity), true
 	case "Query.myWorkspaces":
 		if e.complexity.Query.MyWorkspaces == nil {
 			break
@@ -1495,6 +2722,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.OrganizationMembers(childComplexity, args["organizationId"].(string)), true
+	case "Query.pendingMfaSetup":
+		if e.complexity.Query.PendingMfaSetup == nil {
+			break
+		}
+
+		return e.complexity.Query.PendingMfaSetup(childComplexity), true
 	case "Query.product":
 		if e.complexity.Query.Product == nil {
 			break
@@ -1712,6 +2945,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBuildDatasetDraftInput,
 		ec.unmarshalInputCancelAgentRunInput,
 		ec.unmarshalInputConfirmMFAInput,
+		ec.unmarshalInputCreateLLMConfigurationDraftInput,
 		ec.unmarshalInputCreateOrganizationInput,
 		ec.unmarshalInputCreateProductInput,
 		ec.unmarshalInputCreateUserExperienceInput,
@@ -1721,15 +2955,23 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputModerateUserExperienceInput,
 		ec.unmarshalInputPublishCompliancePolicyInput,
+		ec.unmarshalInputPublishLLMConfigurationInput,
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputRemoveMemberInput,
+		ec.unmarshalInputResendEmailVerificationInput,
+		ec.unmarshalInputRollbackLLMConfigurationInput,
+		ec.unmarshalInputSetOrganizationModelsInput,
+		ec.unmarshalInputSetOrganizationPersonaInput,
 		ec.unmarshalInputStartAgentRunInput,
 		ec.unmarshalInputStartMarketplaceFileImportInput,
 		ec.unmarshalInputStartMarketplaceURLImportInput,
+		ec.unmarshalInputTestLLMConfigurationInput,
 		ec.unmarshalInputUpdateComplianceProfileInput,
 		ec.unmarshalInputUpdateMemberRoleInput,
 		ec.unmarshalInputUpdateUserExperienceInput,
+		ec.unmarshalInputValidateLLMConfigurationInput,
 		ec.unmarshalInputVerifyDeviceInput,
+		ec.unmarshalInputVerifyLoginEmailOTPInput,
 		ec.unmarshalInputVerifyLoginMFAInput,
 		ec.unmarshalInputWithdrawConsentInput,
 	)
@@ -1892,6 +3134,17 @@ func (ec *executionContext) field_Mutation_confirmMFA_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createLLMConfigurationDraft_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateLLMConfigurationDraftInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateLLMConfigurationDraftInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createOrganization_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1991,6 +3244,17 @@ func (ec *executionContext) field_Mutation_publishCompliancePolicyVersion_args(c
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_publishLLMConfiguration_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNPublishLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐPublishLLMConfigurationInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_register_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2006,6 +3270,61 @@ func (ec *executionContext) field_Mutation_removeMember_args(ctx context.Context
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNRemoveMemberInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRemoveMemberInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_resendEmailVerification_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNResendEmailVerificationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐResendEmailVerificationInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_revokeDevice_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "deviceId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["deviceId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_rollbackLLMConfiguration_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNRollbackLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRollbackLLMConfigurationInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setOrganizationModels_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSetOrganizationModelsInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSetOrganizationModelsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setOrganizationPersona_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSetOrganizationPersonaInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSetOrganizationPersonaInput)
 	if err != nil {
 		return nil, err
 	}
@@ -2057,6 +3376,17 @@ func (ec *executionContext) field_Mutation_switchWorkspace_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_testLLMConfiguration_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNTestLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐTestLLMConfigurationInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateMemberRole_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2090,6 +3420,17 @@ func (ec *executionContext) field_Mutation_updateUserExperience_args(ctx context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_validateLLMConfiguration_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNValidateLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐValidateLLMConfigurationInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_verifyDevice_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2109,6 +3450,17 @@ func (ec *executionContext) field_Mutation_verifyEmail_args(ctx context.Context,
 		return nil, err
 	}
 	args["token"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_verifyLoginEmailOTP_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNVerifyLoginEmailOTPInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐVerifyLoginEmailOTPInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -2146,6 +3498,17 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_activeCompliancePolicy_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_activeLLMConfiguration_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
@@ -2262,6 +3625,140 @@ func (ec *executionContext) field_Query_datasetVersions_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_llmCall_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "callId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["callId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmConfigurationDrafts_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmHealth_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmModels_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmOrgSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmPersonas_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmRoutingPolicies_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmUsageDashboard_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "recentLimit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["recentLimit"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_llmUsageSummary_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_marketplaceImportRuns_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2291,6 +3788,22 @@ func (ec *executionContext) field_Query_marketplaceImportStatus_args(ctx context
 		return nil, err
 	}
 	args["importRunId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myActivityLog_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "cursor", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["cursor"] = arg1
 	return args, nil
 }
 
@@ -2431,6 +3944,180 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _ActivityLogEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLogEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActivityLogEntry_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActivityLogEntry_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivityLogEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivityLogEntry_action(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLogEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActivityLogEntry_action,
+		func(ctx context.Context) (any, error) {
+			return obj.Action, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActivityLogEntry_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivityLogEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivityLogEntry_resourceId(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLogEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActivityLogEntry_resourceId,
+		func(ctx context.Context) (any, error) {
+			return obj.ResourceID, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActivityLogEntry_resourceId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivityLogEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivityLogEntry_ipAddress(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLogEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActivityLogEntry_ipAddress,
+		func(ctx context.Context) (any, error) {
+			return obj.IPAddress, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActivityLogEntry_ipAddress(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivityLogEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivityLogEntry_userAgent(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLogEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActivityLogEntry_userAgent,
+		func(ctx context.Context) (any, error) {
+			return obj.UserAgent, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActivityLogEntry_userAgent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivityLogEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActivityLogEntry_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLogEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActivityLogEntry_timestamp,
+		func(ctx context.Context) (any, error) {
+			return obj.Timestamp, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActivityLogEntry_timestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActivityLogEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _AgentRunEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.AgentRunEvent) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
@@ -3663,6 +5350,30 @@ func (ec *executionContext) fieldContext_CreateProductPayload_product(_ context.
 				return ec.fieldContext_Product_category(ctx, field)
 			case "description":
 				return ec.fieldContext_Product_description(ctx, field)
+			case "targetAge":
+				return ec.fieldContext_Product_targetAge(ctx, field)
+			case "materials":
+				return ec.fieldContext_Product_materials(ctx, field)
+			case "safetyWarnings":
+				return ec.fieldContext_Product_safetyWarnings(ctx, field)
+			case "currentPrice":
+				return ec.fieldContext_Product_currentPrice(ctx, field)
+			case "originalPrice":
+				return ec.fieldContext_Product_originalPrice(ctx, field)
+			case "currency":
+				return ec.fieldContext_Product_currency(ctx, field)
+			case "seller":
+				return ec.fieldContext_Product_seller(ctx, field)
+			case "rating":
+				return ec.fieldContext_Product_rating(ctx, field)
+			case "reviewCount":
+				return ec.fieldContext_Product_reviewCount(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Product_attributes(ctx, field)
+			case "imageRefs":
+				return ec.fieldContext_Product_imageRefs(ctx, field)
+			case "stockStatus":
+				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
 			case "createdAt":
@@ -4094,6 +5805,267 @@ func (ec *executionContext) fieldContext_DatasetVersion_createdAt(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Device_id(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_platform(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_platform,
+		func(ctx context.Context) (any, error) {
+			return obj.Platform, nil
+		},
+		nil,
+		ec.marshalNClientPlatform2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐClientPlatform,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_platform(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ClientPlatform does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_label(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_label,
+		func(ctx context.Context) (any, error) {
+			return obj.Label, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_userAgent(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_userAgent,
+		func(ctx context.Context) (any, error) {
+			return obj.UserAgent, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_userAgent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_ipAddress(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_ipAddress,
+		func(ctx context.Context) (any, error) {
+			return obj.IPAddress, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_ipAddress(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_appVersion(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_appVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.AppVersion, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_appVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_verified(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_verified,
+		func(ctx context.Context) (any, error) {
+			return obj.Verified, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_verified(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_lastActiveAt(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_lastActiveAt,
+		func(ctx context.Context) (any, error) {
+			return obj.LastActiveAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_lastActiveAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Device_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Device_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Device_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Device",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EligibilityCount_eligibility(ctx context.Context, field graphql.CollectedField, obj *model.EligibilityCount) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4210,6 +6182,2736 @@ func (ec *executionContext) fieldContext_EventMetadataEntry_value(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _LLMCall_id(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_modelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_modelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_modelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_personaKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_personaKey,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_personaKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_routingReason(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_routingReason,
+		func(ctx context.Context) (any, error) {
+			return obj.RoutingReason, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_routingReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_fallbackUsed(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_fallbackUsed,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackUsed, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_fallbackUsed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_inputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_inputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.InputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_inputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_outputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_outputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.OutputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_outputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_latencyMs(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_latencyMs,
+		func(ctx context.Context) (any, error) {
+			return obj.LatencyMs, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_latencyMs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_status(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_complianceProfile(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_complianceProfile,
+		func(ctx context.Context) (any, error) {
+			return obj.ComplianceProfile, nil
+		},
+		nil,
+		ec.marshalOComplianceProfile2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐComplianceProfile,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_complianceProfile(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ComplianceProfile does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_compliancePolicyVersion(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_compliancePolicyVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.CompliancePolicyVersion, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_compliancePolicyVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_complianceReflexVersion(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_complianceReflexVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.ComplianceReflexVersion, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_complianceReflexVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_safetyResult(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_safetyResult,
+		func(ctx context.Context) (any, error) {
+			return obj.SafetyResult, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_safetyResult(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMCall_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.LLMCall) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMCall_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMCall_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMCall",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_id(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalOID2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_routingPolicyVersion(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_routingPolicyVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.RoutingPolicyVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_routingPolicyVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_personaKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_personaKey,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_personaKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_personaVersion(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_personaVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_personaVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_defaultModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_defaultModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_defaultModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_fallbackModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_fallbackModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_fallbackModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_publishedAt(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_publishedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.PublishedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_publishedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfiguration_reason(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfiguration) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfiguration_reason,
+		func(ctx context.Context) (any, error) {
+			return obj.Reason, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfiguration_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_id(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_status(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_routingPolicyVersion(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_routingPolicyVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.RoutingPolicyVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_routingPolicyVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_personaKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_personaKey,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_personaKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_personaVersion(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_personaVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_personaVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_defaultModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_defaultModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_defaultModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_fallbackModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_fallbackModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_fallbackModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_validationErrors(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_validationErrors,
+		func(ctx context.Context) (any, error) {
+			return obj.ValidationErrors, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_validationErrors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMConfigurationDraft_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.LLMConfigurationDraft) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMConfigurationDraft_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMConfigurationDraft_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMConfigurationDraft",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_id(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_modelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_modelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_modelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_displayName(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_displayName,
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_status(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_healthStatus(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_healthStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.HealthStatus, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_healthStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_contextWindowTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_contextWindowTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.ContextWindowTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_contextWindowTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_defaultForPlatform(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_defaultForPlatform,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultForPlatform, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_defaultForPlatform(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_fallbackForPlatform(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_fallbackForPlatform,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackForPlatform, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_fallbackForPlatform(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_supportedTaskTypes(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModel_supportedTaskTypes,
+		func(ctx context.Context) (any, error) {
+			return obj.SupportedTaskTypes, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_supportedTaskTypes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelHealth_modelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelHealth) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelHealth_modelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelHealth_modelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelHealth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelHealth_displayName(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelHealth) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelHealth_displayName,
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelHealth_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelHealth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelHealth_healthStatus(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelHealth) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelHealth_healthStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.HealthStatus, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelHealth_healthStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelHealth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelHealth_providerKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelHealth) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelHealth_providerKey,
+		func(ctx context.Context) (any, error) {
+			return obj.ProviderKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelHealth_providerKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelHealth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelUsage_modelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelUsage_modelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelUsage_modelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelUsage_displayName(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelUsage_displayName,
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelUsage_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelUsage_callCount(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelUsage_callCount,
+		func(ctx context.Context) (any, error) {
+			return obj.CallCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelUsage_callCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelUsage_inputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelUsage_inputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.InputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelUsage_inputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelUsage_outputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelUsage_outputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.OutputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelUsage_outputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelUsage_totalTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelUsage_totalTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelUsage_totalTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModelUsage_estimatedCostUsd(ctx context.Context, field graphql.CollectedField, obj *model.LLMModelUsage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMModelUsage_estimatedCostUsd,
+		func(ctx context.Context) (any, error) {
+			return obj.EstimatedCostUsd, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMModelUsage_estimatedCostUsd(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModelUsage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMOrgSettings_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.LLMOrgSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMOrgSettings_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMOrgSettings_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMOrgSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMOrgSettings_personaKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMOrgSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMOrgSettings_personaKey,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMOrgSettings_personaKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMOrgSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMOrgSettings_defaultModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMOrgSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMOrgSettings_defaultModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMOrgSettings_defaultModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMOrgSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMOrgSettings_fallbackModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMOrgSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMOrgSettings_fallbackModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMOrgSettings_fallbackModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMOrgSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMPersona_id(ctx context.Context, field graphql.CollectedField, obj *model.LLMPersona) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMPersona_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMPersona_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMPersona",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMPersona_personaKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMPersona) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMPersona_personaKey,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMPersona_personaKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMPersona",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMPersona_version(ctx context.Context, field graphql.CollectedField, obj *model.LLMPersona) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMPersona_version,
+		func(ctx context.Context) (any, error) {
+			return obj.Version, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMPersona_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMPersona",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMPersona_status(ctx context.Context, field graphql.CollectedField, obj *model.LLMPersona) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMPersona_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMPersona_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMPersona",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMPersona_displayName(ctx context.Context, field graphql.CollectedField, obj *model.LLMPersona) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMPersona_displayName,
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMPersona_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMPersona",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMProvider_id(ctx context.Context, field graphql.CollectedField, obj *model.LLMProvider) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMProvider_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMProvider_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMProvider_providerKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMProvider) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMProvider_providerKey,
+		func(ctx context.Context) (any, error) {
+			return obj.ProviderKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMProvider_providerKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMProvider_displayName(ctx context.Context, field graphql.CollectedField, obj *model.LLMProvider) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMProvider_displayName,
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMProvider_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMProvider_status(ctx context.Context, field graphql.CollectedField, obj *model.LLMProvider) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMProvider_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMProvider_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMProvider",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMRoutingPolicy_id(ctx context.Context, field graphql.CollectedField, obj *model.LLMRoutingPolicy) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMRoutingPolicy_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMRoutingPolicy_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMRoutingPolicy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMRoutingPolicy_version(ctx context.Context, field graphql.CollectedField, obj *model.LLMRoutingPolicy) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMRoutingPolicy_version,
+		func(ctx context.Context) (any, error) {
+			return obj.Version, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMRoutingPolicy_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMRoutingPolicy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMRoutingPolicy_status(ctx context.Context, field graphql.CollectedField, obj *model.LLMRoutingPolicy) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMRoutingPolicy_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMRoutingPolicy_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMRoutingPolicy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMRoutingPolicy_defaultModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMRoutingPolicy) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMRoutingPolicy_defaultModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMRoutingPolicy_defaultModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMRoutingPolicy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMRoutingPolicy_fallbackModelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMRoutingPolicy) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMRoutingPolicy_fallbackModelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMRoutingPolicy_fallbackModelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMRoutingPolicy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMRoutingPolicy_publishedAt(ctx context.Context, field graphql.CollectedField, obj *model.LLMRoutingPolicy) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMRoutingPolicy_publishedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.PublishedAt, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMRoutingPolicy_publishedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMRoutingPolicy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_callId(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_callId,
+		func(ctx context.Context) (any, error) {
+			return obj.CallID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_callId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_modelKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_modelKey,
+		func(ctx context.Context) (any, error) {
+			return obj.ModelKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_modelKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_fallbackUsed(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_fallbackUsed,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackUsed, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_fallbackUsed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_escalationUsed(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_escalationUsed,
+		func(ctx context.Context) (any, error) {
+			return obj.EscalationUsed, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_escalationUsed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_routingReason(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_routingReason,
+		func(ctx context.Context) (any, error) {
+			return obj.RoutingReason, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_routingReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_personaKey(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_personaKey,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_personaKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_personaVersion(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_personaVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonaVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_personaVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_contentPreview(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_contentPreview,
+		func(ctx context.Context) (any, error) {
+			return obj.ContentPreview, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_contentPreview(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_inputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_inputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.InputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_inputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMTestResult_outputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMTestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMTestResult_outputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.OutputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMTestResult_outputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMTestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageDashboard_summary(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageDashboard) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageDashboard_summary,
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		ec.marshalNLLMUsageSummary2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMUsageSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageDashboard_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageDashboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "callCount":
+				return ec.fieldContext_LLMUsageSummary_callCount(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_LLMUsageSummary_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_LLMUsageSummary_outputTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_LLMUsageSummary_totalTokens(ctx, field)
+			case "estimatedCostUsd":
+				return ec.fieldContext_LLMUsageSummary_estimatedCostUsd(ctx, field)
+			case "fallbackCount":
+				return ec.fieldContext_LLMUsageSummary_fallbackCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMUsageSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageDashboard_byModel(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageDashboard) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageDashboard_byModel,
+		func(ctx context.Context) (any, error) {
+			return obj.ByModel, nil
+		},
+		nil,
+		ec.marshalNLLMModelUsage2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelUsageᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageDashboard_byModel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageDashboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelKey":
+				return ec.fieldContext_LLMModelUsage_modelKey(ctx, field)
+			case "displayName":
+				return ec.fieldContext_LLMModelUsage_displayName(ctx, field)
+			case "callCount":
+				return ec.fieldContext_LLMModelUsage_callCount(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_LLMModelUsage_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_LLMModelUsage_outputTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_LLMModelUsage_totalTokens(ctx, field)
+			case "estimatedCostUsd":
+				return ec.fieldContext_LLMModelUsage_estimatedCostUsd(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMModelUsage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageDashboard_recentCalls(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageDashboard) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageDashboard_recentCalls,
+		func(ctx context.Context) (any, error) {
+			return obj.RecentCalls, nil
+		},
+		nil,
+		ec.marshalNLLMCall2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMCallᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageDashboard_recentCalls(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageDashboard",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMCall_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMCall_organizationId(ctx, field)
+			case "modelKey":
+				return ec.fieldContext_LLMCall_modelKey(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMCall_personaKey(ctx, field)
+			case "routingReason":
+				return ec.fieldContext_LLMCall_routingReason(ctx, field)
+			case "fallbackUsed":
+				return ec.fieldContext_LLMCall_fallbackUsed(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_LLMCall_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_LLMCall_outputTokens(ctx, field)
+			case "latencyMs":
+				return ec.fieldContext_LLMCall_latencyMs(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMCall_status(ctx, field)
+			case "complianceProfile":
+				return ec.fieldContext_LLMCall_complianceProfile(ctx, field)
+			case "compliancePolicyVersion":
+				return ec.fieldContext_LLMCall_compliancePolicyVersion(ctx, field)
+			case "complianceReflexVersion":
+				return ec.fieldContext_LLMCall_complianceReflexVersion(ctx, field)
+			case "safetyResult":
+				return ec.fieldContext_LLMCall_safetyResult(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LLMCall_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMCall", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageSummary_callCount(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageSummary_callCount,
+		func(ctx context.Context) (any, error) {
+			return obj.CallCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageSummary_callCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageSummary_inputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageSummary_inputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.InputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageSummary_inputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageSummary_outputTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageSummary_outputTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.OutputTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageSummary_outputTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageSummary_totalTokens(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageSummary_totalTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageSummary_totalTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageSummary_estimatedCostUsd(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageSummary_estimatedCostUsd,
+		func(ctx context.Context) (any, error) {
+			return obj.EstimatedCostUsd, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageSummary_estimatedCostUsd(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMUsageSummary_fallbackCount(ctx context.Context, field graphql.CollectedField, obj *model.LLMUsageSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LLMUsageSummary_fallbackCount,
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_LLMUsageSummary_fallbackCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMUsageSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LoginPayload_status(ctx context.Context, field graphql.CollectedField, obj *model.LoginPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4280,6 +8982,43 @@ func (ec *executionContext) fieldContext_LoginPayload_user(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _LoginPayload_mfaSetup(ctx context.Context, field graphql.CollectedField, obj *model.LoginPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LoginPayload_mfaSetup,
+		func(ctx context.Context) (any, error) {
+			return obj.MfaSetup, nil
+		},
+		nil,
+		ec.marshalOMFASetupPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMFASetupPayload,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LoginPayload_mfaSetup(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "secret":
+				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
+			case "otpauthUrl":
+				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			case "setupToken":
+				return ec.fieldContext_MFASetupPayload_setupToken(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MFASetupPayload_secret(ctx context.Context, field graphql.CollectedField, obj *model.MFASetupPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4326,6 +9065,35 @@ func (ec *executionContext) _MFASetupPayload_otpauthUrl(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_MFASetupPayload_otpauthUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MFASetupPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MFASetupPayload_setupToken(ctx context.Context, field graphql.CollectedField, obj *model.MFASetupPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MFASetupPayload_setupToken,
+		func(ctx context.Context) (any, error) {
+			return obj.SetupToken, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MFASetupPayload_setupToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MFASetupPayload",
 		Field:      field,
@@ -5050,6 +9818,51 @@ func (ec *executionContext) fieldContext_Mutation_register(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_resendEmailVerification(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_resendEmailVerification,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ResendEmailVerification(ctx, fc.Args["input"].(model.ResendEmailVerificationInput))
+		},
+		nil,
+		ec.marshalNRegisterPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRegisterPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_resendEmailVerification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_RegisterPayload_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RegisterPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_resendEmailVerification_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_verifyEmail(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -5079,6 +9892,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyEmail(ctx context.Contex
 				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
 			case "otpauthUrl":
 				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			case "setupToken":
+				return ec.fieldContext_MFASetupPayload_setupToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
 		},
@@ -5167,6 +9982,8 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -5181,6 +9998,92 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_verifyLoginEmailOTP(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_verifyLoginEmailOTP,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().VerifyLoginEmailOtp(ctx, fc.Args["input"].(model.VerifyLoginEmailOTPInput))
+		},
+		nil,
+		ec.marshalNLoginPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLoginPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_verifyLoginEmailOTP(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "status":
+				return ec.fieldContext_LoginPayload_status(ctx, field)
+			case "user":
+				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_verifyLoginEmailOTP_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_resendLoginEmailOTP(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_resendLoginEmailOTP,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().ResendLoginEmailOtp(ctx)
+		},
+		nil,
+		ec.marshalNLoginPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLoginPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_resendLoginEmailOTP(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "status":
+				return ec.fieldContext_LoginPayload_status(ctx, field)
+			case "user":
+				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -5214,6 +10117,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyLoginMFA(ctx context.Con
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -5261,6 +10166,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyDevice(ctx context.Conte
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -5273,6 +10180,47 @@ func (ec *executionContext) fieldContext_Mutation_verifyDevice(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_verifyDevice_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_revokeDevice(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_revokeDevice,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().RevokeDevice(ctx, fc.Args["deviceId"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_revokeDevice(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_revokeDevice_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6467,6 +11415,419 @@ func (ec *executionContext) fieldContext_Mutation_cancelAgentRun(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createLLMConfigurationDraft(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createLLMConfigurationDraft,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateLLMConfigurationDraft(ctx, fc.Args["input"].(model.CreateLLMConfigurationDraftInput))
+		},
+		nil,
+		ec.marshalNLLMConfigurationDraft2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfigurationDraft,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createLLMConfigurationDraft(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMConfigurationDraft_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMConfigurationDraft_organizationId(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMConfigurationDraft_status(ctx, field)
+			case "routingPolicyVersion":
+				return ec.fieldContext_LLMConfigurationDraft_routingPolicyVersion(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMConfigurationDraft_personaKey(ctx, field)
+			case "personaVersion":
+				return ec.fieldContext_LLMConfigurationDraft_personaVersion(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMConfigurationDraft_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMConfigurationDraft_fallbackModelKey(ctx, field)
+			case "validationErrors":
+				return ec.fieldContext_LLMConfigurationDraft_validationErrors(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LLMConfigurationDraft_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMConfigurationDraft", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createLLMConfigurationDraft_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_validateLLMConfiguration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_validateLLMConfiguration,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ValidateLLMConfiguration(ctx, fc.Args["input"].(model.ValidateLLMConfigurationInput))
+		},
+		nil,
+		ec.marshalNLLMConfigurationDraft2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfigurationDraft,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_validateLLMConfiguration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMConfigurationDraft_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMConfigurationDraft_organizationId(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMConfigurationDraft_status(ctx, field)
+			case "routingPolicyVersion":
+				return ec.fieldContext_LLMConfigurationDraft_routingPolicyVersion(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMConfigurationDraft_personaKey(ctx, field)
+			case "personaVersion":
+				return ec.fieldContext_LLMConfigurationDraft_personaVersion(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMConfigurationDraft_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMConfigurationDraft_fallbackModelKey(ctx, field)
+			case "validationErrors":
+				return ec.fieldContext_LLMConfigurationDraft_validationErrors(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LLMConfigurationDraft_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMConfigurationDraft", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_validateLLMConfiguration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_publishLLMConfiguration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_publishLLMConfiguration,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().PublishLLMConfiguration(ctx, fc.Args["input"].(model.PublishLLMConfigurationInput))
+		},
+		nil,
+		ec.marshalNLLMConfiguration2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfiguration,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_publishLLMConfiguration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMConfiguration_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMConfiguration_organizationId(ctx, field)
+			case "routingPolicyVersion":
+				return ec.fieldContext_LLMConfiguration_routingPolicyVersion(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMConfiguration_personaKey(ctx, field)
+			case "personaVersion":
+				return ec.fieldContext_LLMConfiguration_personaVersion(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMConfiguration_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMConfiguration_fallbackModelKey(ctx, field)
+			case "publishedAt":
+				return ec.fieldContext_LLMConfiguration_publishedAt(ctx, field)
+			case "reason":
+				return ec.fieldContext_LLMConfiguration_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMConfiguration", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_publishLLMConfiguration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_rollbackLLMConfiguration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_rollbackLLMConfiguration,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().RollbackLLMConfiguration(ctx, fc.Args["input"].(model.RollbackLLMConfigurationInput))
+		},
+		nil,
+		ec.marshalNLLMConfiguration2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfiguration,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_rollbackLLMConfiguration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMConfiguration_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMConfiguration_organizationId(ctx, field)
+			case "routingPolicyVersion":
+				return ec.fieldContext_LLMConfiguration_routingPolicyVersion(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMConfiguration_personaKey(ctx, field)
+			case "personaVersion":
+				return ec.fieldContext_LLMConfiguration_personaVersion(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMConfiguration_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMConfiguration_fallbackModelKey(ctx, field)
+			case "publishedAt":
+				return ec.fieldContext_LLMConfiguration_publishedAt(ctx, field)
+			case "reason":
+				return ec.fieldContext_LLMConfiguration_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMConfiguration", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_rollbackLLMConfiguration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setOrganizationPersona(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setOrganizationPersona,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetOrganizationPersona(ctx, fc.Args["input"].(model.SetOrganizationPersonaInput))
+		},
+		nil,
+		ec.marshalNLLMOrgSettings2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMOrgSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setOrganizationPersona(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organizationId":
+				return ec.fieldContext_LLMOrgSettings_organizationId(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMOrgSettings_personaKey(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMOrgSettings_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMOrgSettings_fallbackModelKey(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMOrgSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setOrganizationPersona_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setOrganizationModels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setOrganizationModels,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetOrganizationModels(ctx, fc.Args["input"].(model.SetOrganizationModelsInput))
+		},
+		nil,
+		ec.marshalNLLMOrgSettings2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMOrgSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setOrganizationModels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organizationId":
+				return ec.fieldContext_LLMOrgSettings_organizationId(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMOrgSettings_personaKey(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMOrgSettings_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMOrgSettings_fallbackModelKey(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMOrgSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setOrganizationModels_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_testLLMConfiguration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_testLLMConfiguration,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().TestLLMConfiguration(ctx, fc.Args["input"].(model.TestLLMConfigurationInput))
+		},
+		nil,
+		ec.marshalNLLMTestResult2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMTestResult,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_testLLMConfiguration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "callId":
+				return ec.fieldContext_LLMTestResult_callId(ctx, field)
+			case "modelKey":
+				return ec.fieldContext_LLMTestResult_modelKey(ctx, field)
+			case "fallbackUsed":
+				return ec.fieldContext_LLMTestResult_fallbackUsed(ctx, field)
+			case "escalationUsed":
+				return ec.fieldContext_LLMTestResult_escalationUsed(ctx, field)
+			case "routingReason":
+				return ec.fieldContext_LLMTestResult_routingReason(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMTestResult_personaKey(ctx, field)
+			case "personaVersion":
+				return ec.fieldContext_LLMTestResult_personaVersion(ctx, field)
+			case "contentPreview":
+				return ec.fieldContext_LLMTestResult_contentPreview(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_LLMTestResult_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_LLMTestResult_outputTokens(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMTestResult", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_testLLMConfiguration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_id(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6843,10 +12204,16 @@ func (ec *executionContext) fieldContext_Product_name(_ context.Context, field g
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -6882,10 +12249,16 @@ func (ec *executionContext) fieldContext_Product_brand(_ context.Context, field 
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -6921,10 +12294,16 @@ func (ec *executionContext) fieldContext_Product_category(_ context.Context, fie
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -6960,10 +12339,556 @@ func (ec *executionContext) fieldContext_Product_description(_ context.Context, 
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_targetAge(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_targetAge,
+		func(ctx context.Context) (any, error) {
+			return obj.TargetAge, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_targetAge(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_materials(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_materials,
+		func(ctx context.Context) (any, error) {
+			return obj.Materials, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_materials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_safetyWarnings(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_safetyWarnings,
+		func(ctx context.Context) (any, error) {
+			return obj.SafetyWarnings, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_safetyWarnings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_currentPrice(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_currentPrice,
+		func(ctx context.Context) (any, error) {
+			return obj.CurrentPrice, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_currentPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_originalPrice(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_originalPrice,
+		func(ctx context.Context) (any, error) {
+			return obj.OriginalPrice, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_originalPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_currency(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_seller(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_seller,
+		func(ctx context.Context) (any, error) {
+			return obj.Seller, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_seller(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_rating(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_rating,
+		func(ctx context.Context) (any, error) {
+			return obj.Rating, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_rating(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_reviewCount(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_reviewCount,
+		func(ctx context.Context) (any, error) {
+			return obj.ReviewCount, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_reviewCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_attributes(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_attributes,
+		func(ctx context.Context) (any, error) {
+			return obj.Attributes, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_attributes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_imageRefs(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_imageRefs,
+		func(ctx context.Context) (any, error) {
+			return obj.ImageRefs, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_imageRefs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Product_stockStatus(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_stockStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.StockStatus, nil
+		},
+		nil,
+		ec.marshalNProductFieldMeta2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProductFieldMeta,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_stockStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "value":
+				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
+			case "missing":
+				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
+			case "source":
+				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -6999,10 +12924,16 @@ func (ec *executionContext) fieldContext_Product_sku(_ context.Context, field gr
 				return ec.fieldContext_ProductFieldMeta_value(ctx, field)
 			case "missing":
 				return ec.fieldContext_ProductFieldMeta_missing(ctx, field)
+			case "missingReason":
+				return ec.fieldContext_ProductFieldMeta_missingReason(ctx, field)
 			case "source":
 				return ec.fieldContext_ProductFieldMeta_source(ctx, field)
 			case "sourceRecordId":
 				return ec.fieldContext_ProductFieldMeta_sourceRecordId(ctx, field)
+			case "confidence":
+				return ec.fieldContext_ProductFieldMeta_confidence(ctx, field)
+			case "extractedAt":
+				return ec.fieldContext_ProductFieldMeta_extractedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProductFieldMeta", field.Name)
 		},
@@ -7126,6 +13057,35 @@ func (ec *executionContext) fieldContext_ProductFieldMeta_missing(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ProductFieldMeta_missingReason(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProductFieldMeta_missingReason,
+		func(ctx context.Context) (any, error) {
+			return obj.MissingReason, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProductFieldMeta_missingReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductFieldMeta",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ProductFieldMeta_source(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7172,6 +13132,64 @@ func (ec *executionContext) _ProductFieldMeta_sourceRecordId(ctx context.Context
 }
 
 func (ec *executionContext) fieldContext_ProductFieldMeta_sourceRecordId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductFieldMeta",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ProductFieldMeta_confidence(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProductFieldMeta_confidence,
+		func(ctx context.Context) (any, error) {
+			return obj.Confidence, nil
+		},
+		nil,
+		ec.marshalOFloat2ᚖfloat64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProductFieldMeta_confidence(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProductFieldMeta",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ProductFieldMeta_extractedAt(ctx context.Context, field graphql.CollectedField, obj *model.ProductFieldMeta) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProductFieldMeta_extractedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ExtractedAt, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProductFieldMeta_extractedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ProductFieldMeta",
 		Field:      field,
@@ -7585,6 +13603,30 @@ func (ec *executionContext) fieldContext_Query_products(ctx context.Context, fie
 				return ec.fieldContext_Product_category(ctx, field)
 			case "description":
 				return ec.fieldContext_Product_description(ctx, field)
+			case "targetAge":
+				return ec.fieldContext_Product_targetAge(ctx, field)
+			case "materials":
+				return ec.fieldContext_Product_materials(ctx, field)
+			case "safetyWarnings":
+				return ec.fieldContext_Product_safetyWarnings(ctx, field)
+			case "currentPrice":
+				return ec.fieldContext_Product_currentPrice(ctx, field)
+			case "originalPrice":
+				return ec.fieldContext_Product_originalPrice(ctx, field)
+			case "currency":
+				return ec.fieldContext_Product_currency(ctx, field)
+			case "seller":
+				return ec.fieldContext_Product_seller(ctx, field)
+			case "rating":
+				return ec.fieldContext_Product_rating(ctx, field)
+			case "reviewCount":
+				return ec.fieldContext_Product_reviewCount(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Product_attributes(ctx, field)
+			case "imageRefs":
+				return ec.fieldContext_Product_imageRefs(ctx, field)
+			case "stockStatus":
+				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
 			case "createdAt":
@@ -7646,6 +13688,30 @@ func (ec *executionContext) fieldContext_Query_product(ctx context.Context, fiel
 				return ec.fieldContext_Product_category(ctx, field)
 			case "description":
 				return ec.fieldContext_Product_description(ctx, field)
+			case "targetAge":
+				return ec.fieldContext_Product_targetAge(ctx, field)
+			case "materials":
+				return ec.fieldContext_Product_materials(ctx, field)
+			case "safetyWarnings":
+				return ec.fieldContext_Product_safetyWarnings(ctx, field)
+			case "currentPrice":
+				return ec.fieldContext_Product_currentPrice(ctx, field)
+			case "originalPrice":
+				return ec.fieldContext_Product_originalPrice(ctx, field)
+			case "currency":
+				return ec.fieldContext_Product_currency(ctx, field)
+			case "seller":
+				return ec.fieldContext_Product_seller(ctx, field)
+			case "rating":
+				return ec.fieldContext_Product_rating(ctx, field)
+			case "reviewCount":
+				return ec.fieldContext_Product_reviewCount(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Product_attributes(ctx, field)
+			case "imageRefs":
+				return ec.fieldContext_Product_imageRefs(ctx, field)
+			case "stockStatus":
+				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
 			case "createdAt":
@@ -8277,6 +14343,758 @@ func (ec *executionContext) fieldContext_Query_agentRunEvents(ctx context.Contex
 	if fc.Args, err = ec.field_Query_agentRunEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmProviders(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmProviders,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().LlmProviders(ctx)
+		},
+		nil,
+		ec.marshalNLLMProvider2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMProviderᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmProviders(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMProvider_id(ctx, field)
+			case "providerKey":
+				return ec.fieldContext_LLMProvider_providerKey(ctx, field)
+			case "displayName":
+				return ec.fieldContext_LLMProvider_displayName(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMProvider_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMProvider", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmModels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmModels,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmModels(ctx, fc.Args["organizationId"].(string))
+		},
+		nil,
+		ec.marshalNLLMModel2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmModels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMModel_id(ctx, field)
+			case "modelKey":
+				return ec.fieldContext_LLMModel_modelKey(ctx, field)
+			case "displayName":
+				return ec.fieldContext_LLMModel_displayName(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMModel_status(ctx, field)
+			case "healthStatus":
+				return ec.fieldContext_LLMModel_healthStatus(ctx, field)
+			case "contextWindowTokens":
+				return ec.fieldContext_LLMModel_contextWindowTokens(ctx, field)
+			case "defaultForPlatform":
+				return ec.fieldContext_LLMModel_defaultForPlatform(ctx, field)
+			case "fallbackForPlatform":
+				return ec.fieldContext_LLMModel_fallbackForPlatform(ctx, field)
+			case "supportedTaskTypes":
+				return ec.fieldContext_LLMModel_supportedTaskTypes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMModel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmModels_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmRoutingPolicies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmRoutingPolicies,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmRoutingPolicies(ctx, fc.Args["organizationId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNLLMRoutingPolicy2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMRoutingPolicyᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmRoutingPolicies(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMRoutingPolicy_id(ctx, field)
+			case "version":
+				return ec.fieldContext_LLMRoutingPolicy_version(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMRoutingPolicy_status(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMRoutingPolicy_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMRoutingPolicy_fallbackModelKey(ctx, field)
+			case "publishedAt":
+				return ec.fieldContext_LLMRoutingPolicy_publishedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMRoutingPolicy", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmRoutingPolicies_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmPersonas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmPersonas,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmPersonas(ctx, fc.Args["organizationId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNLLMPersona2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMPersonaᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmPersonas(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMPersona_id(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMPersona_personaKey(ctx, field)
+			case "version":
+				return ec.fieldContext_LLMPersona_version(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMPersona_status(ctx, field)
+			case "displayName":
+				return ec.fieldContext_LLMPersona_displayName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMPersona", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmPersonas_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_activeLLMConfiguration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_activeLLMConfiguration,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ActiveLLMConfiguration(ctx, fc.Args["organizationId"].(string))
+		},
+		nil,
+		ec.marshalOLLMConfiguration2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfiguration,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_activeLLMConfiguration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMConfiguration_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMConfiguration_organizationId(ctx, field)
+			case "routingPolicyVersion":
+				return ec.fieldContext_LLMConfiguration_routingPolicyVersion(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMConfiguration_personaKey(ctx, field)
+			case "personaVersion":
+				return ec.fieldContext_LLMConfiguration_personaVersion(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMConfiguration_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMConfiguration_fallbackModelKey(ctx, field)
+			case "publishedAt":
+				return ec.fieldContext_LLMConfiguration_publishedAt(ctx, field)
+			case "reason":
+				return ec.fieldContext_LLMConfiguration_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMConfiguration", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_activeLLMConfiguration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmConfigurationDrafts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmConfigurationDrafts,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmConfigurationDrafts(ctx, fc.Args["organizationId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNLLMConfigurationDraft2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfigurationDraftᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmConfigurationDrafts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMConfigurationDraft_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMConfigurationDraft_organizationId(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMConfigurationDraft_status(ctx, field)
+			case "routingPolicyVersion":
+				return ec.fieldContext_LLMConfigurationDraft_routingPolicyVersion(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMConfigurationDraft_personaKey(ctx, field)
+			case "personaVersion":
+				return ec.fieldContext_LLMConfigurationDraft_personaVersion(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMConfigurationDraft_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMConfigurationDraft_fallbackModelKey(ctx, field)
+			case "validationErrors":
+				return ec.fieldContext_LLMConfigurationDraft_validationErrors(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LLMConfigurationDraft_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMConfigurationDraft", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmConfigurationDrafts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmUsageSummary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmUsageSummary,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmUsageSummary(ctx, fc.Args["organizationId"].(string), fc.Args["fromDate"].(string))
+		},
+		nil,
+		ec.marshalNLLMUsageSummary2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMUsageSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmUsageSummary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "callCount":
+				return ec.fieldContext_LLMUsageSummary_callCount(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_LLMUsageSummary_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_LLMUsageSummary_outputTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_LLMUsageSummary_totalTokens(ctx, field)
+			case "estimatedCostUsd":
+				return ec.fieldContext_LLMUsageSummary_estimatedCostUsd(ctx, field)
+			case "fallbackCount":
+				return ec.fieldContext_LLMUsageSummary_fallbackCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMUsageSummary", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmUsageSummary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmUsageDashboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmUsageDashboard,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmUsageDashboard(ctx, fc.Args["organizationId"].(string), fc.Args["fromDate"].(string), fc.Args["recentLimit"].(*int))
+		},
+		nil,
+		ec.marshalNLLMUsageDashboard2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMUsageDashboard,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmUsageDashboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "summary":
+				return ec.fieldContext_LLMUsageDashboard_summary(ctx, field)
+			case "byModel":
+				return ec.fieldContext_LLMUsageDashboard_byModel(ctx, field)
+			case "recentCalls":
+				return ec.fieldContext_LLMUsageDashboard_recentCalls(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMUsageDashboard", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmUsageDashboard_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmOrgSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmOrgSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmOrgSettings(ctx, fc.Args["organizationId"].(string))
+		},
+		nil,
+		ec.marshalOLLMOrgSettings2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMOrgSettings,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmOrgSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organizationId":
+				return ec.fieldContext_LLMOrgSettings_organizationId(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMOrgSettings_personaKey(ctx, field)
+			case "defaultModelKey":
+				return ec.fieldContext_LLMOrgSettings_defaultModelKey(ctx, field)
+			case "fallbackModelKey":
+				return ec.fieldContext_LLMOrgSettings_fallbackModelKey(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMOrgSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmOrgSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmCall(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmCall,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmCall(ctx, fc.Args["organizationId"].(string), fc.Args["callId"].(string))
+		},
+		nil,
+		ec.marshalOLLMCall2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMCall,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmCall(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LLMCall_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_LLMCall_organizationId(ctx, field)
+			case "modelKey":
+				return ec.fieldContext_LLMCall_modelKey(ctx, field)
+			case "personaKey":
+				return ec.fieldContext_LLMCall_personaKey(ctx, field)
+			case "routingReason":
+				return ec.fieldContext_LLMCall_routingReason(ctx, field)
+			case "fallbackUsed":
+				return ec.fieldContext_LLMCall_fallbackUsed(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_LLMCall_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_LLMCall_outputTokens(ctx, field)
+			case "latencyMs":
+				return ec.fieldContext_LLMCall_latencyMs(ctx, field)
+			case "status":
+				return ec.fieldContext_LLMCall_status(ctx, field)
+			case "complianceProfile":
+				return ec.fieldContext_LLMCall_complianceProfile(ctx, field)
+			case "compliancePolicyVersion":
+				return ec.fieldContext_LLMCall_compliancePolicyVersion(ctx, field)
+			case "complianceReflexVersion":
+				return ec.fieldContext_LLMCall_complianceReflexVersion(ctx, field)
+			case "safetyResult":
+				return ec.fieldContext_LLMCall_safetyResult(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LLMCall_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMCall", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmCall_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_llmHealth(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_llmHealth,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().LlmHealth(ctx, fc.Args["organizationId"].(string))
+		},
+		nil,
+		ec.marshalNLLMModelHealth2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelHealthᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_llmHealth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelKey":
+				return ec.fieldContext_LLMModelHealth_modelKey(ctx, field)
+			case "displayName":
+				return ec.fieldContext_LLMModelHealth_displayName(ctx, field)
+			case "healthStatus":
+				return ec.fieldContext_LLMModelHealth_healthStatus(ctx, field)
+			case "providerKey":
+				return ec.fieldContext_LLMModelHealth_providerKey(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMModelHealth", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_llmHealth_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myDevices(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myDevices,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyDevices(ctx)
+		},
+		nil,
+		ec.marshalNDevice2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDeviceᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myDevices(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Device_id(ctx, field)
+			case "platform":
+				return ec.fieldContext_Device_platform(ctx, field)
+			case "label":
+				return ec.fieldContext_Device_label(ctx, field)
+			case "userAgent":
+				return ec.fieldContext_Device_userAgent(ctx, field)
+			case "ipAddress":
+				return ec.fieldContext_Device_ipAddress(ctx, field)
+			case "appVersion":
+				return ec.fieldContext_Device_appVersion(ctx, field)
+			case "verified":
+				return ec.fieldContext_Device_verified(ctx, field)
+			case "lastActiveAt":
+				return ec.fieldContext_Device_lastActiveAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Device_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Device", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myActivityLog(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myActivityLog,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyActivityLog(ctx, fc.Args["limit"].(*int), fc.Args["cursor"].(*string))
+		},
+		nil,
+		ec.marshalNActivityLogEntry2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐActivityLogEntryᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myActivityLog(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ActivityLogEntry_id(ctx, field)
+			case "action":
+				return ec.fieldContext_ActivityLogEntry_action(ctx, field)
+			case "resourceId":
+				return ec.fieldContext_ActivityLogEntry_resourceId(ctx, field)
+			case "ipAddress":
+				return ec.fieldContext_ActivityLogEntry_ipAddress(ctx, field)
+			case "userAgent":
+				return ec.fieldContext_ActivityLogEntry_userAgent(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_ActivityLogEntry_timestamp(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActivityLogEntry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myActivityLog_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_pendingMfaSetup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_pendingMfaSetup,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().PendingMfaSetup(ctx)
+		},
+		nil,
+		ec.marshalNMFASetupPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMFASetupPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_pendingMfaSetup(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "secret":
+				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
+			case "otpauthUrl":
+				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			case "setupToken":
+				return ec.fieldContext_MFASetupPayload_setupToken(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -10664,7 +17482,7 @@ func (ec *executionContext) unmarshalInputConfirmMFAInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"code"}
+	fieldsInOrder := [...]string{"code", "setupToken"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10678,6 +17496,82 @@ func (ec *executionContext) unmarshalInputConfirmMFAInput(ctx context.Context, o
 				return it, err
 			}
 			it.Code = data
+		case "setupToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("setupToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SetupToken = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateLLMConfigurationDraftInput(ctx context.Context, obj any) (model.CreateLLMConfigurationDraftInput, error) {
+	var it model.CreateLLMConfigurationDraftInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "routingPolicyVersion", "personaKey", "personaVersion", "defaultModelKey", "fallbackModelKey", "reason"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "routingPolicyVersion":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("routingPolicyVersion"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RoutingPolicyVersion = data
+		case "personaKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("personaKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PersonaKey = data
+		case "personaVersion":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("personaVersion"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PersonaVersion = data
+		case "defaultModelKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultModelKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultModelKey = data
+		case "fallbackModelKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fallbackModelKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FallbackModelKey = data
+		case "reason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reason"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Reason = data
 		}
 	}
 
@@ -10986,7 +17880,11 @@ func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj an
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "password", "deviceFingerprint"}
+	if _, present := asMap["platform"]; !present {
+		asMap["platform"] = "WEB"
+	}
+
+	fieldsInOrder := [...]string{"email", "password", "deviceFingerprint", "platform", "appVersion", "turnstileToken"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11014,6 +17912,27 @@ func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj an
 				return it, err
 			}
 			it.DeviceFingerprint = data
+		case "platform":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("platform"))
+			data, err := ec.unmarshalOClientPlatform2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐClientPlatform(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Platform = data
+		case "appVersion":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appVersion"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppVersion = data
+		case "turnstileToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("turnstileToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TurnstileToken = data
 		}
 	}
 
@@ -11116,6 +18035,47 @@ func (ec *executionContext) unmarshalInputPublishCompliancePolicyInput(ctx conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputPublishLLMConfigurationInput(ctx context.Context, obj any) (model.PublishLLMConfigurationInput, error) {
+	var it model.PublishLLMConfigurationInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "draftId", "reason"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "draftId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("draftId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DraftID = data
+		case "reason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reason"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Reason = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRegisterInput(ctx context.Context, obj any) (model.RegisterInput, error) {
 	var it model.RegisterInput
 	asMap := map[string]any{}
@@ -11123,7 +18083,7 @@ func (ec *executionContext) unmarshalInputRegisterInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "password"}
+	fieldsInOrder := [...]string{"email", "password", "turnstileToken"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11144,6 +18104,13 @@ func (ec *executionContext) unmarshalInputRegisterInput(ctx context.Context, obj
 				return it, err
 			}
 			it.Password = data
+		case "turnstileToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("turnstileToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TurnstileToken = data
 		}
 	}
 
@@ -11178,6 +18145,163 @@ func (ec *executionContext) unmarshalInputRemoveMemberInput(ctx context.Context,
 				return it, err
 			}
 			it.UserID = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputResendEmailVerificationInput(ctx context.Context, obj any) (model.ResendEmailVerificationInput, error) {
+	var it model.ResendEmailVerificationInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "password", "turnstileToken"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		case "turnstileToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("turnstileToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TurnstileToken = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRollbackLLMConfigurationInput(ctx context.Context, obj any) (model.RollbackLLMConfigurationInput, error) {
+	var it model.RollbackLLMConfigurationInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "snapshotId", "reason"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "snapshotId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("snapshotId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SnapshotID = data
+		case "reason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reason"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Reason = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSetOrganizationModelsInput(ctx context.Context, obj any) (model.SetOrganizationModelsInput, error) {
+	var it model.SetOrganizationModelsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "defaultModelKey", "fallbackModelKey"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "defaultModelKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultModelKey"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultModelKey = data
+		case "fallbackModelKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fallbackModelKey"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FallbackModelKey = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSetOrganizationPersonaInput(ctx context.Context, obj any) (model.SetOrganizationPersonaInput, error) {
+	var it model.SetOrganizationPersonaInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "personaKey"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "personaKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("personaKey"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PersonaKey = data
 		}
 	}
 
@@ -11328,6 +18452,47 @@ func (ec *executionContext) unmarshalInputStartMarketplaceURLImportInput(ctx con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTestLLMConfigurationInput(ctx context.Context, obj any) (model.TestLLMConfigurationInput, error) {
+	var it model.TestLLMConfigurationInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "personaKey", "prompt"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "personaKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("personaKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PersonaKey = data
+		case "prompt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prompt"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Prompt = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateComplianceProfileInput(ctx context.Context, obj any) (model.UpdateComplianceProfileInput, error) {
 	var it model.UpdateComplianceProfileInput
 	asMap := map[string]any{}
@@ -11472,6 +18637,40 @@ func (ec *executionContext) unmarshalInputUpdateUserExperienceInput(ctx context.
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputValidateLLMConfigurationInput(ctx context.Context, obj any) (model.ValidateLLMConfigurationInput, error) {
+	var it model.ValidateLLMConfigurationInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "draftId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "draftId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("draftId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DraftID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputVerifyDeviceInput(ctx context.Context, obj any) (model.VerifyDeviceInput, error) {
 	var it model.VerifyDeviceInput
 	asMap := map[string]any{}
@@ -11500,6 +18699,47 @@ func (ec *executionContext) unmarshalInputVerifyDeviceInput(ctx context.Context,
 				return it, err
 			}
 			it.DeviceFingerprint = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputVerifyLoginEmailOTPInput(ctx context.Context, obj any) (model.VerifyLoginEmailOTPInput, error) {
+	var it model.VerifyLoginEmailOTPInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"code", "deviceFingerprint", "turnstileToken"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "deviceFingerprint":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceFingerprint"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceFingerprint = data
+		case "turnstileToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("turnstileToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TurnstileToken = data
 		}
 	}
 
@@ -11581,6 +18821,61 @@ func (ec *executionContext) unmarshalInputWithdrawConsentInput(ctx context.Conte
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var activityLogEntryImplementors = []string{"ActivityLogEntry"}
+
+func (ec *executionContext) _ActivityLogEntry(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLogEntry) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, activityLogEntryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActivityLogEntry")
+		case "id":
+			out.Values[i] = ec._ActivityLogEntry_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "action":
+			out.Values[i] = ec._ActivityLogEntry_action(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "resourceId":
+			out.Values[i] = ec._ActivityLogEntry_resourceId(ctx, field, obj)
+		case "ipAddress":
+			out.Values[i] = ec._ActivityLogEntry_ipAddress(ctx, field, obj)
+		case "userAgent":
+			out.Values[i] = ec._ActivityLogEntry_userAgent(ctx, field, obj)
+		case "timestamp":
+			out.Values[i] = ec._ActivityLogEntry_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var agentRunEventImplementors = []string{"AgentRunEvent"}
 
@@ -12067,6 +19362,76 @@ func (ec *executionContext) _DatasetVersion(ctx context.Context, sel ast.Selecti
 	return out
 }
 
+var deviceImplementors = []string{"Device"}
+
+func (ec *executionContext) _Device(ctx context.Context, sel ast.SelectionSet, obj *model.Device) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deviceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Device")
+		case "id":
+			out.Values[i] = ec._Device_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "platform":
+			out.Values[i] = ec._Device_platform(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "label":
+			out.Values[i] = ec._Device_label(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userAgent":
+			out.Values[i] = ec._Device_userAgent(ctx, field, obj)
+		case "ipAddress":
+			out.Values[i] = ec._Device_ipAddress(ctx, field, obj)
+		case "appVersion":
+			out.Values[i] = ec._Device_appVersion(ctx, field, obj)
+		case "verified":
+			out.Values[i] = ec._Device_verified(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastActiveAt":
+			out.Values[i] = ec._Device_lastActiveAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Device_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var eligibilityCountImplementors = []string{"EligibilityCount"}
 
 func (ec *executionContext) _EligibilityCount(ctx context.Context, sel ast.SelectionSet, obj *model.EligibilityCount) graphql.Marshaler {
@@ -12155,6 +19520,890 @@ func (ec *executionContext) _EventMetadataEntry(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var lLMCallImplementors = []string{"LLMCall"}
+
+func (ec *executionContext) _LLMCall(ctx context.Context, sel ast.SelectionSet, obj *model.LLMCall) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMCallImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMCall")
+		case "id":
+			out.Values[i] = ec._LLMCall_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._LLMCall_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "modelKey":
+			out.Values[i] = ec._LLMCall_modelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaKey":
+			out.Values[i] = ec._LLMCall_personaKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "routingReason":
+			out.Values[i] = ec._LLMCall_routingReason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackUsed":
+			out.Values[i] = ec._LLMCall_fallbackUsed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "inputTokens":
+			out.Values[i] = ec._LLMCall_inputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "outputTokens":
+			out.Values[i] = ec._LLMCall_outputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "latencyMs":
+			out.Values[i] = ec._LLMCall_latencyMs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._LLMCall_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "complianceProfile":
+			out.Values[i] = ec._LLMCall_complianceProfile(ctx, field, obj)
+		case "compliancePolicyVersion":
+			out.Values[i] = ec._LLMCall_compliancePolicyVersion(ctx, field, obj)
+		case "complianceReflexVersion":
+			out.Values[i] = ec._LLMCall_complianceReflexVersion(ctx, field, obj)
+		case "safetyResult":
+			out.Values[i] = ec._LLMCall_safetyResult(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._LLMCall_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMConfigurationImplementors = []string{"LLMConfiguration"}
+
+func (ec *executionContext) _LLMConfiguration(ctx context.Context, sel ast.SelectionSet, obj *model.LLMConfiguration) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMConfigurationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMConfiguration")
+		case "id":
+			out.Values[i] = ec._LLMConfiguration_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._LLMConfiguration_organizationId(ctx, field, obj)
+		case "routingPolicyVersion":
+			out.Values[i] = ec._LLMConfiguration_routingPolicyVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaKey":
+			out.Values[i] = ec._LLMConfiguration_personaKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaVersion":
+			out.Values[i] = ec._LLMConfiguration_personaVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultModelKey":
+			out.Values[i] = ec._LLMConfiguration_defaultModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackModelKey":
+			out.Values[i] = ec._LLMConfiguration_fallbackModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "publishedAt":
+			out.Values[i] = ec._LLMConfiguration_publishedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reason":
+			out.Values[i] = ec._LLMConfiguration_reason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMConfigurationDraftImplementors = []string{"LLMConfigurationDraft"}
+
+func (ec *executionContext) _LLMConfigurationDraft(ctx context.Context, sel ast.SelectionSet, obj *model.LLMConfigurationDraft) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMConfigurationDraftImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMConfigurationDraft")
+		case "id":
+			out.Values[i] = ec._LLMConfigurationDraft_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._LLMConfigurationDraft_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._LLMConfigurationDraft_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "routingPolicyVersion":
+			out.Values[i] = ec._LLMConfigurationDraft_routingPolicyVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaKey":
+			out.Values[i] = ec._LLMConfigurationDraft_personaKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaVersion":
+			out.Values[i] = ec._LLMConfigurationDraft_personaVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultModelKey":
+			out.Values[i] = ec._LLMConfigurationDraft_defaultModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackModelKey":
+			out.Values[i] = ec._LLMConfigurationDraft_fallbackModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "validationErrors":
+			out.Values[i] = ec._LLMConfigurationDraft_validationErrors(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._LLMConfigurationDraft_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMModelImplementors = []string{"LLMModel"}
+
+func (ec *executionContext) _LLMModel(ctx context.Context, sel ast.SelectionSet, obj *model.LLMModel) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMModelImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMModel")
+		case "id":
+			out.Values[i] = ec._LLMModel_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "modelKey":
+			out.Values[i] = ec._LLMModel_modelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._LLMModel_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._LLMModel_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "healthStatus":
+			out.Values[i] = ec._LLMModel_healthStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contextWindowTokens":
+			out.Values[i] = ec._LLMModel_contextWindowTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultForPlatform":
+			out.Values[i] = ec._LLMModel_defaultForPlatform(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackForPlatform":
+			out.Values[i] = ec._LLMModel_fallbackForPlatform(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "supportedTaskTypes":
+			out.Values[i] = ec._LLMModel_supportedTaskTypes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMModelHealthImplementors = []string{"LLMModelHealth"}
+
+func (ec *executionContext) _LLMModelHealth(ctx context.Context, sel ast.SelectionSet, obj *model.LLMModelHealth) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMModelHealthImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMModelHealth")
+		case "modelKey":
+			out.Values[i] = ec._LLMModelHealth_modelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._LLMModelHealth_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "healthStatus":
+			out.Values[i] = ec._LLMModelHealth_healthStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "providerKey":
+			out.Values[i] = ec._LLMModelHealth_providerKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMModelUsageImplementors = []string{"LLMModelUsage"}
+
+func (ec *executionContext) _LLMModelUsage(ctx context.Context, sel ast.SelectionSet, obj *model.LLMModelUsage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMModelUsageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMModelUsage")
+		case "modelKey":
+			out.Values[i] = ec._LLMModelUsage_modelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._LLMModelUsage_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "callCount":
+			out.Values[i] = ec._LLMModelUsage_callCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "inputTokens":
+			out.Values[i] = ec._LLMModelUsage_inputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "outputTokens":
+			out.Values[i] = ec._LLMModelUsage_outputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalTokens":
+			out.Values[i] = ec._LLMModelUsage_totalTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "estimatedCostUsd":
+			out.Values[i] = ec._LLMModelUsage_estimatedCostUsd(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMOrgSettingsImplementors = []string{"LLMOrgSettings"}
+
+func (ec *executionContext) _LLMOrgSettings(ctx context.Context, sel ast.SelectionSet, obj *model.LLMOrgSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMOrgSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMOrgSettings")
+		case "organizationId":
+			out.Values[i] = ec._LLMOrgSettings_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaKey":
+			out.Values[i] = ec._LLMOrgSettings_personaKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultModelKey":
+			out.Values[i] = ec._LLMOrgSettings_defaultModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackModelKey":
+			out.Values[i] = ec._LLMOrgSettings_fallbackModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMPersonaImplementors = []string{"LLMPersona"}
+
+func (ec *executionContext) _LLMPersona(ctx context.Context, sel ast.SelectionSet, obj *model.LLMPersona) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMPersonaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMPersona")
+		case "id":
+			out.Values[i] = ec._LLMPersona_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaKey":
+			out.Values[i] = ec._LLMPersona_personaKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._LLMPersona_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._LLMPersona_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._LLMPersona_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMProviderImplementors = []string{"LLMProvider"}
+
+func (ec *executionContext) _LLMProvider(ctx context.Context, sel ast.SelectionSet, obj *model.LLMProvider) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMProviderImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMProvider")
+		case "id":
+			out.Values[i] = ec._LLMProvider_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "providerKey":
+			out.Values[i] = ec._LLMProvider_providerKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._LLMProvider_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._LLMProvider_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMRoutingPolicyImplementors = []string{"LLMRoutingPolicy"}
+
+func (ec *executionContext) _LLMRoutingPolicy(ctx context.Context, sel ast.SelectionSet, obj *model.LLMRoutingPolicy) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMRoutingPolicyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMRoutingPolicy")
+		case "id":
+			out.Values[i] = ec._LLMRoutingPolicy_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._LLMRoutingPolicy_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._LLMRoutingPolicy_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultModelKey":
+			out.Values[i] = ec._LLMRoutingPolicy_defaultModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackModelKey":
+			out.Values[i] = ec._LLMRoutingPolicy_fallbackModelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "publishedAt":
+			out.Values[i] = ec._LLMRoutingPolicy_publishedAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMTestResultImplementors = []string{"LLMTestResult"}
+
+func (ec *executionContext) _LLMTestResult(ctx context.Context, sel ast.SelectionSet, obj *model.LLMTestResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMTestResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMTestResult")
+		case "callId":
+			out.Values[i] = ec._LLMTestResult_callId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "modelKey":
+			out.Values[i] = ec._LLMTestResult_modelKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackUsed":
+			out.Values[i] = ec._LLMTestResult_fallbackUsed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "escalationUsed":
+			out.Values[i] = ec._LLMTestResult_escalationUsed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "routingReason":
+			out.Values[i] = ec._LLMTestResult_routingReason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaKey":
+			out.Values[i] = ec._LLMTestResult_personaKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personaVersion":
+			out.Values[i] = ec._LLMTestResult_personaVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contentPreview":
+			out.Values[i] = ec._LLMTestResult_contentPreview(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "inputTokens":
+			out.Values[i] = ec._LLMTestResult_inputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "outputTokens":
+			out.Values[i] = ec._LLMTestResult_outputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMUsageDashboardImplementors = []string{"LLMUsageDashboard"}
+
+func (ec *executionContext) _LLMUsageDashboard(ctx context.Context, sel ast.SelectionSet, obj *model.LLMUsageDashboard) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMUsageDashboardImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMUsageDashboard")
+		case "summary":
+			out.Values[i] = ec._LLMUsageDashboard_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "byModel":
+			out.Values[i] = ec._LLMUsageDashboard_byModel(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recentCalls":
+			out.Values[i] = ec._LLMUsageDashboard_recentCalls(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var lLMUsageSummaryImplementors = []string{"LLMUsageSummary"}
+
+func (ec *executionContext) _LLMUsageSummary(ctx context.Context, sel ast.SelectionSet, obj *model.LLMUsageSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMUsageSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMUsageSummary")
+		case "callCount":
+			out.Values[i] = ec._LLMUsageSummary_callCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "inputTokens":
+			out.Values[i] = ec._LLMUsageSummary_inputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "outputTokens":
+			out.Values[i] = ec._LLMUsageSummary_outputTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalTokens":
+			out.Values[i] = ec._LLMUsageSummary_totalTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "estimatedCostUsd":
+			out.Values[i] = ec._LLMUsageSummary_estimatedCostUsd(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackCount":
+			out.Values[i] = ec._LLMUsageSummary_fallbackCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var loginPayloadImplementors = []string{"LoginPayload"}
 
 func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.SelectionSet, obj *model.LoginPayload) graphql.Marshaler {
@@ -12173,6 +20422,8 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 			}
 		case "user":
 			out.Values[i] = ec._LoginPayload_user(ctx, field, obj)
+		case "mfaSetup":
+			out.Values[i] = ec._LoginPayload_mfaSetup(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12214,6 +20465,11 @@ func (ec *executionContext) _MFASetupPayload(ctx context.Context, sel ast.Select
 			}
 		case "otpauthUrl":
 			out.Values[i] = ec._MFASetupPayload_otpauthUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setupToken":
+			out.Values[i] = ec._MFASetupPayload_setupToken(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -12434,6 +20690,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "resendEmailVerification":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resendEmailVerification(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "verifyEmail":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_verifyEmail(ctx, field)
@@ -12455,6 +20718,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "verifyLoginEmailOTP":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_verifyLoginEmailOTP(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "resendLoginEmailOTP":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resendLoginEmailOTP(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "verifyLoginMFA":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_verifyLoginMFA(ctx, field)
@@ -12465,6 +20742,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "verifyDevice":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_verifyDevice(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "revokeDevice":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_revokeDevice(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -12619,6 +20903,55 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "cancelAgentRun":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_cancelAgentRun(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createLLMConfigurationDraft":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createLLMConfigurationDraft(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "validateLLMConfiguration":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_validateLLMConfiguration(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "publishLLMConfiguration":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_publishLLMConfiguration(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rollbackLLMConfiguration":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_rollbackLLMConfiguration(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setOrganizationPersona":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setOrganizationPersona(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setOrganizationModels":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setOrganizationModels(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "testLLMConfiguration":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_testLLMConfiguration(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -12805,6 +21138,66 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "targetAge":
+			out.Values[i] = ec._Product_targetAge(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "materials":
+			out.Values[i] = ec._Product_materials(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "safetyWarnings":
+			out.Values[i] = ec._Product_safetyWarnings(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPrice":
+			out.Values[i] = ec._Product_currentPrice(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "originalPrice":
+			out.Values[i] = ec._Product_originalPrice(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currency":
+			out.Values[i] = ec._Product_currency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "seller":
+			out.Values[i] = ec._Product_seller(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rating":
+			out.Values[i] = ec._Product_rating(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reviewCount":
+			out.Values[i] = ec._Product_reviewCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "attributes":
+			out.Values[i] = ec._Product_attributes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "imageRefs":
+			out.Values[i] = ec._Product_imageRefs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stockStatus":
+			out.Values[i] = ec._Product_stockStatus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "sku":
 			out.Values[i] = ec._Product_sku(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -12861,10 +21254,16 @@ func (ec *executionContext) _ProductFieldMeta(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "missingReason":
+			out.Values[i] = ec._ProductFieldMeta_missingReason(ctx, field, obj)
 		case "source":
 			out.Values[i] = ec._ProductFieldMeta_source(ctx, field, obj)
 		case "sourceRecordId":
 			out.Values[i] = ec._ProductFieldMeta_sourceRecordId(ctx, field, obj)
+		case "confidence":
+			out.Values[i] = ec._ProductFieldMeta_confidence(ctx, field, obj)
+		case "extractedAt":
+			out.Values[i] = ec._ProductFieldMeta_extractedAt(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13295,6 +21694,305 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_agentRunEvents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmProviders":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmProviders(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmModels":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmModels(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmRoutingPolicies":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmRoutingPolicies(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmPersonas":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmPersonas(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "activeLLMConfiguration":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_activeLLMConfiguration(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmConfigurationDrafts":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmConfigurationDrafts(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmUsageSummary":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmUsageSummary(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmUsageDashboard":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmUsageDashboard(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmOrgSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmOrgSettings(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmCall":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmCall(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "llmHealth":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_llmHealth(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myDevices":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myDevices(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myActivityLog":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myActivityLog(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "pendingMfaSetup":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pendingMfaSetup(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -13977,6 +22675,60 @@ func (ec *executionContext) marshalNAccessMode2githubᚗcomᚋBusenuryurdakulᚋ
 	return v
 }
 
+func (ec *executionContext) marshalNActivityLogEntry2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐActivityLogEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActivityLogEntry) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActivityLogEntry2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐActivityLogEntry(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNActivityLogEntry2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐActivityLogEntry(ctx context.Context, sel ast.SelectionSet, v *model.ActivityLogEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ActivityLogEntry(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNAgentEventStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAgentEventStatus(ctx context.Context, v any) (model.AgentEventStatus, error) {
 	var res model.AgentEventStatus
 	err := res.UnmarshalGQL(v)
@@ -14135,6 +22887,16 @@ func (ec *executionContext) unmarshalNCancelAgentRunInput2githubᚗcomᚋBusenur
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNClientPlatform2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐClientPlatform(ctx context.Context, v any) (model.ClientPlatform, error) {
+	var res model.ClientPlatform
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNClientPlatform2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐClientPlatform(ctx context.Context, sel ast.SelectionSet, v model.ClientPlatform) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNCompliancePolicy2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCompliancePolicy(ctx context.Context, sel ast.SelectionSet, v model.CompliancePolicy) graphql.Marshaler {
 	return ec._CompliancePolicy(ctx, sel, &v)
 }
@@ -14276,6 +23038,11 @@ func (ec *executionContext) marshalNConsentPurpose2githubᚗcomᚋBusenuryurdaku
 	return v
 }
 
+func (ec *executionContext) unmarshalNCreateLLMConfigurationDraftInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateLLMConfigurationDraftInput(ctx context.Context, v any) (model.CreateLLMConfigurationDraftInput, error) {
+	res, err := ec.unmarshalInputCreateLLMConfigurationDraftInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateOrganizationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCreateOrganizationInput(ctx context.Context, v any) (model.CreateOrganizationInput, error) {
 	res, err := ec.unmarshalInputCreateOrganizationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14402,6 +23169,60 @@ func (ec *executionContext) unmarshalNDeleteUserExperienceInput2githubᚗcomᚋB
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNDevice2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDeviceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Device) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDevice2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDevice(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDevice2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐDevice(ctx context.Context, sel ast.SelectionSet, v *model.Device) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Device(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNEligibilityCount2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEligibilityCountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EligibilityCount) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -14510,6 +23331,22 @@ func (ec *executionContext) marshalNEventMetadataEntry2ᚖgithubᚗcomᚋBusenur
 	return ec._EventMetadataEntry(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v any) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
 func (ec *executionContext) unmarshalNGrantConsentInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐGrantConsentInput(ctx context.Context, v any) (model.GrantConsentInput, error) {
 	res, err := ec.unmarshalInputGrantConsentInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14550,6 +23387,512 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 func (ec *executionContext) unmarshalNInviteMemberInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐInviteMemberInput(ctx context.Context, v any) (model.InviteMemberInput, error) {
 	res, err := ec.unmarshalInputInviteMemberInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLLMCall2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMCallᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMCall) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMCall2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMCall(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMCall2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMCall(ctx context.Context, sel ast.SelectionSet, v *model.LLMCall) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMCall(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMConfiguration2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfiguration(ctx context.Context, sel ast.SelectionSet, v model.LLMConfiguration) graphql.Marshaler {
+	return ec._LLMConfiguration(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLLMConfiguration2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.LLMConfiguration) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMConfiguration(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMConfigurationDraft2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfigurationDraft(ctx context.Context, sel ast.SelectionSet, v model.LLMConfigurationDraft) graphql.Marshaler {
+	return ec._LLMConfigurationDraft(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLLMConfigurationDraft2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfigurationDraftᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMConfigurationDraft) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMConfigurationDraft2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfigurationDraft(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMConfigurationDraft2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfigurationDraft(ctx context.Context, sel ast.SelectionSet, v *model.LLMConfigurationDraft) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMConfigurationDraft(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMModel2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMModel) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMModel2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMModel2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModel(ctx context.Context, sel ast.SelectionSet, v *model.LLMModel) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMModel(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMModelHealth2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelHealthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMModelHealth) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMModelHealth2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelHealth(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMModelHealth2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelHealth(ctx context.Context, sel ast.SelectionSet, v *model.LLMModelHealth) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMModelHealth(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMModelUsage2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelUsageᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMModelUsage) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMModelUsage2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelUsage(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMModelUsage2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMModelUsage(ctx context.Context, sel ast.SelectionSet, v *model.LLMModelUsage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMModelUsage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMOrgSettings2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMOrgSettings(ctx context.Context, sel ast.SelectionSet, v model.LLMOrgSettings) graphql.Marshaler {
+	return ec._LLMOrgSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLLMOrgSettings2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMOrgSettings(ctx context.Context, sel ast.SelectionSet, v *model.LLMOrgSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMOrgSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMPersona2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMPersonaᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMPersona) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMPersona2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMPersona(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMPersona2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMPersona(ctx context.Context, sel ast.SelectionSet, v *model.LLMPersona) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMPersona(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMProvider2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMProviderᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMProvider) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMProvider2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMProvider(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMProvider2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMProvider(ctx context.Context, sel ast.SelectionSet, v *model.LLMProvider) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMProvider(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMRoutingPolicy2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMRoutingPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LLMRoutingPolicy) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLLMRoutingPolicy2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMRoutingPolicy(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLLMRoutingPolicy2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMRoutingPolicy(ctx context.Context, sel ast.SelectionSet, v *model.LLMRoutingPolicy) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMRoutingPolicy(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMTestResult2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMTestResult(ctx context.Context, sel ast.SelectionSet, v model.LLMTestResult) graphql.Marshaler {
+	return ec._LLMTestResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLLMTestResult2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMTestResult(ctx context.Context, sel ast.SelectionSet, v *model.LLMTestResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMTestResult(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMUsageDashboard2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMUsageDashboard(ctx context.Context, sel ast.SelectionSet, v model.LLMUsageDashboard) graphql.Marshaler {
+	return ec._LLMUsageDashboard(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLLMUsageDashboard2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMUsageDashboard(ctx context.Context, sel ast.SelectionSet, v *model.LLMUsageDashboard) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMUsageDashboard(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMUsageSummary2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMUsageSummary(ctx context.Context, sel ast.SelectionSet, v model.LLMUsageSummary) graphql.Marshaler {
+	return ec._LLMUsageSummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLLMUsageSummary2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMUsageSummary(ctx context.Context, sel ast.SelectionSet, v *model.LLMUsageSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LLMUsageSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
@@ -14909,6 +24252,11 @@ func (ec *executionContext) unmarshalNPublishCompliancePolicyInput2githubᚗcom�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNPublishLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐPublishLLMConfigurationInput(ctx context.Context, v any) (model.PublishLLMConfigurationInput, error) {
+	res, err := ec.unmarshalInputPublishLLMConfigurationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNQualityStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐQualityStatus(ctx context.Context, v any) (model.QualityStatus, error) {
 	var res model.QualityStatus
 	err := res.UnmarshalGQL(v)
@@ -14943,6 +24291,16 @@ func (ec *executionContext) unmarshalNRemoveMemberInput2githubᚗcomᚋBusenuryu
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNResendEmailVerificationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐResendEmailVerificationInput(ctx context.Context, v any) (model.ResendEmailVerificationInput, error) {
+	res, err := ec.unmarshalInputResendEmailVerificationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNRollbackLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRollbackLLMConfigurationInput(ctx context.Context, v any) (model.RollbackLLMConfigurationInput, error) {
+	res, err := ec.unmarshalInputRollbackLLMConfigurationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel(ctx context.Context, v any) (model.SatisfactionLevel, error) {
 	var res model.SatisfactionLevel
 	err := res.UnmarshalGQL(v)
@@ -14951,6 +24309,16 @@ func (ec *executionContext) unmarshalNSatisfactionLevel2githubᚗcomᚋBusenuryu
 
 func (ec *executionContext) marshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel(ctx context.Context, sel ast.SelectionSet, v model.SatisfactionLevel) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNSetOrganizationModelsInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSetOrganizationModelsInput(ctx context.Context, v any) (model.SetOrganizationModelsInput, error) {
+	res, err := ec.unmarshalInputSetOrganizationModelsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSetOrganizationPersonaInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSetOrganizationPersonaInput(ctx context.Context, v any) (model.SetOrganizationPersonaInput, error) {
+	res, err := ec.unmarshalInputSetOrganizationPersonaInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNSourceCount2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSourceCountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SourceCount) graphql.Marshaler {
@@ -15038,6 +24406,41 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNTestLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐTestLLMConfigurationInput(ctx context.Context, v any) (model.TestLLMConfigurationInput, error) {
+	res, err := ec.unmarshalInputTestLLMConfigurationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUpdateComplianceProfileInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateComplianceProfileInput(ctx context.Context, v any) (model.UpdateComplianceProfileInput, error) {
 	res, err := ec.unmarshalInputUpdateComplianceProfileInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15121,8 +24524,18 @@ func (ec *executionContext) marshalNUserExperience2ᚖgithubᚗcomᚋBusenuryurd
 	return ec._UserExperience(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNValidateLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐValidateLLMConfigurationInput(ctx context.Context, v any) (model.ValidateLLMConfigurationInput, error) {
+	res, err := ec.unmarshalInputValidateLLMConfigurationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNVerifyDeviceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐVerifyDeviceInput(ctx context.Context, v any) (model.VerifyDeviceInput, error) {
 	res, err := ec.unmarshalInputVerifyDeviceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNVerifyLoginEmailOTPInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐVerifyLoginEmailOTPInput(ctx context.Context, v any) (model.VerifyLoginEmailOTPInput, error) {
+	res, err := ec.unmarshalInputVerifyLoginEmailOTPInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -15496,11 +24909,43 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOClientPlatform2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐClientPlatform(ctx context.Context, v any) (*model.ClientPlatform, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ClientPlatform)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOClientPlatform2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐClientPlatform(ctx context.Context, sel ast.SelectionSet, v *model.ClientPlatform) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalOCompliancePolicy2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCompliancePolicy(ctx context.Context, sel ast.SelectionSet, v *model.CompliancePolicy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._CompliancePolicy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOComplianceProfile2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐComplianceProfile(ctx context.Context, v any) (*model.ComplianceProfile, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ComplianceProfile)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOComplianceProfile2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐComplianceProfile(ctx context.Context, sel ast.SelectionSet, v *model.ComplianceProfile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {
@@ -15570,6 +25015,34 @@ func (ec *executionContext) marshalOIssueType2ᚖgithubᚗcomᚋBusenuryurdakul�
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOLLMCall2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMCall(ctx context.Context, sel ast.SelectionSet, v *model.LLMCall) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LLMCall(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOLLMConfiguration2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.LLMConfiguration) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LLMConfiguration(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOLLMOrgSettings2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLLMOrgSettings(ctx context.Context, sel ast.SelectionSet, v *model.LLMOrgSettings) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LLMOrgSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMFASetupPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMFASetupPayload(ctx context.Context, sel ast.SelectionSet, v *model.MFASetupPayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MFASetupPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun(ctx context.Context, sel ast.SelectionSet, v *model.MarketplaceImportRun) graphql.Marshaler {

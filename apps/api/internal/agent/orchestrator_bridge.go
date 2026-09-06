@@ -9,6 +9,7 @@ import (
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
+	llmsvc "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/llm"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,15 +17,21 @@ import (
 const maxEventMetadataBytes = 4096
 
 type RunContextResponse struct {
-	OrganizationID string             `json:"organizationId"`
-	AnalysisRunID  string             `json:"analysisRunId"`
-	ProductID      string             `json:"productId"`
-	TraceID        string             `json:"traceId"`
-	ActorUserID    string             `json:"actorUserId"`
-	Status         string             `json:"status"`
-	Capabilities   CapabilitySnapshot `json:"capabilities"`
-	ReviewCount    int                `json:"marketplaceReviewCount"`
-	UGCCount       int                `json:"ugcCount"`
+	OrganizationID          string             `json:"organizationId"`
+	AnalysisRunID           string             `json:"analysisRunId"`
+	ProductID               string             `json:"productId"`
+	TraceID                 string             `json:"traceId"`
+	CorrelationID           string             `json:"correlationId"`
+	ActorUserID             string             `json:"actorUserId"`
+	Status                  string             `json:"status"`
+	ConfigSnapshotID        string             `json:"configSnapshotId"`
+	ComplianceProfile       string             `json:"complianceProfile"`
+	LLMRoutingPolicyVersion string             `json:"llmRoutingPolicyVersion,omitempty"`
+	RequireEvidence         bool               `json:"requireEvidence"`
+	WorkerRotationPattern   string             `json:"workerRotationPattern"`
+	Capabilities            CapabilitySnapshot `json:"capabilities"`
+	ReviewCount             int                `json:"marketplaceReviewCount"`
+	UGCCount                int                `json:"ugcCount"`
 }
 
 func (s *Service) RunContext(ctx context.Context, organizationID, runID primitive.ObjectID) (*RunContextResponse, error) {
@@ -41,16 +48,34 @@ func (s *Service) RunContext(ctx context.Context, organizationID, runID primitiv
 		resolved = *resolvedPtr
 		s.cacheResolved(runID.Hex(), resolved)
 	}
+	complianceProfile := ""
+	if s.Orgs != nil {
+		if org, orgErr := s.Orgs.FindByID(ctx, organizationID); orgErr == nil {
+			complianceProfile = org.ComplianceProfile
+		}
+	}
+	llmRoutingPolicyVersion := ""
+	if s.Snapshots != nil {
+		if snapshot, snapErr := s.Snapshots.FindByID(ctx, run.ConfigSnapshotID); snapErr == nil {
+			llmRoutingPolicyVersion = snapshot.LLMRoutingPolicyVersion
+		}
+	}
 	return &RunContextResponse{
-		OrganizationID: organizationID.Hex(),
-		AnalysisRunID:  runID.Hex(),
-		ProductID:      run.ProductID.Hex(),
-		TraceID:        run.TraceID,
-		ActorUserID:    run.CreatedByUserID.Hex(),
-		Status:         string(run.Status),
-		Capabilities:   s.BuildCapabilitySnapshot(),
-		ReviewCount:    resolved.MarketplaceReviewCount,
-		UGCCount:       resolved.UGCCount,
+		OrganizationID:          organizationID.Hex(),
+		AnalysisRunID:           runID.Hex(),
+		ProductID:               run.ProductID.Hex(),
+		TraceID:                 run.TraceID,
+		CorrelationID:           run.CorrelationID,
+		ActorUserID:             run.CreatedByUserID.Hex(),
+		Status:                  string(run.Status),
+		ConfigSnapshotID:        run.ConfigSnapshotID.Hex(),
+		ComplianceProfile:       complianceProfile,
+		LLMRoutingPolicyVersion: llmRoutingPolicyVersion,
+		RequireEvidence:         true,
+		WorkerRotationPattern:   llmsvc.WorkerRotationPattern(runID),
+		Capabilities:            s.BuildCapabilitySnapshot(),
+		ReviewCount:             resolved.MarketplaceReviewCount,
+		UGCCount:                resolved.UGCCount,
 	}, nil
 }
 
@@ -448,8 +473,9 @@ func isAllowedOrchestratorPhase(phase string) bool {
 	switch phase {
 	case domain.AgentPhaseRunStarted, domain.AgentPhaseCompliancePrecheck, domain.AgentPhasePlanCreated,
 		domain.AgentPhaseToolSelected, domain.AgentPhaseToolExecutionStarted, domain.AgentPhaseToolExecutionCompleted,
-		domain.AgentPhaseObservationCreated, domain.AgentPhaseRunCompleted, domain.AgentPhaseRunFailed,
-		domain.AgentPhaseRunCancelled:
+		domain.AgentPhaseObservationCreated, domain.AgentPhaseLLMRequested, domain.AgentPhaseLLMCompleted,
+		domain.AgentPhaseLLMFailed, domain.AgentPhaseLLMFallbackUsed, domain.AgentPhaseLLMEscalated,
+		domain.AgentPhaseRunCompleted, domain.AgentPhaseRunFailed, domain.AgentPhaseRunCancelled:
 		return true
 	default:
 		return false

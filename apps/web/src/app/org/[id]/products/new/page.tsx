@@ -14,6 +14,17 @@ export default function NewProductPage() {
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [targetAge, setTargetAge] = useState("");
+  const [materials, setMaterials] = useState("");
+  const [safetyWarnings, setSafetyWarnings] = useState("");
+  const [currentPrice, setCurrentPrice] = useState("");
+  const [originalPrice, setOriginalPrice] = useState("");
+  const [currency, setCurrency] = useState("");
+  const [seller, setSeller] = useState("");
+  const [rating, setRating] = useState("");
+  const [reviewCount, setReviewCount] = useState("");
+  const [stockStatus, setStockStatus] = useState("");
+  const [sku, setSku] = useState("");
   const [source, setSource] = useState("MIYUNA");
   const [sourceProductId, setSourceProductId] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
@@ -38,6 +49,17 @@ export default function NewProductPage() {
             brand: brand || null,
             category: category || null,
             description: description || null,
+            targetAge: targetAge || null,
+            materials: materials || null,
+            safetyWarnings: safetyWarnings || null,
+            currentPrice: currentPrice || null,
+            originalPrice: originalPrice || null,
+            currency: currency || null,
+            seller: seller || null,
+            rating: rating || null,
+            reviewCount: reviewCount || null,
+            stockStatus: stockStatus || null,
+            sku: sku || null,
             source,
             sourceProductId: sourceProductId || name.toLowerCase().replace(/\s+/g, "-"),
             sourceUrl: sourceUrl || null,
@@ -81,6 +103,52 @@ export default function NewProductPage() {
             Açıklama
             <textarea className="input" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="label">
+              Hedef yaş
+              <input className="input" value={targetAge} onChange={(e) => setTargetAge(e.target.value)} />
+            </label>
+            <label className="label">
+              SKU
+              <input className="input" value={sku} onChange={(e) => setSku(e.target.value)} />
+            </label>
+            <label className="label">
+              Malzeme
+              <input className="input" value={materials} onChange={(e) => setMaterials(e.target.value)} />
+            </label>
+            <label className="label">
+              Güvenlik uyarıları
+              <input className="input" value={safetyWarnings} onChange={(e) => setSafetyWarnings(e.target.value)} />
+            </label>
+            <label className="label">
+              Güncel fiyat
+              <input className="input" value={currentPrice} onChange={(e) => setCurrentPrice(e.target.value)} />
+            </label>
+            <label className="label">
+              Liste fiyatı
+              <input className="input" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} />
+            </label>
+            <label className="label">
+              Para birimi
+              <input className="input" value={currency} onChange={(e) => setCurrency(e.target.value)} />
+            </label>
+            <label className="label">
+              Satıcı
+              <input className="input" value={seller} onChange={(e) => setSeller(e.target.value)} />
+            </label>
+            <label className="label">
+              Puan
+              <input className="input" value={rating} onChange={(e) => setRating(e.target.value)} />
+            </label>
+            <label className="label">
+              Yorum sayısı
+              <input className="input" value={reviewCount} onChange={(e) => setReviewCount(e.target.value)} />
+            </label>
+            <label className="label">
+              Stok
+              <input className="input" value={stockStatus} onChange={(e) => setStockStatus(e.target.value)} />
+            </label>
+          </div>
           <label className="label">
             Kaynak
             <select className="input" value={source} onChange={(e) => setSource(e.target.value)}>

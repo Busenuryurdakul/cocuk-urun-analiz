@@ -60,13 +60,39 @@ Cloudflare = **Layer 1** of defense in depth (see [SECURITY.md](./SECURITY.md)).
 
 ## 5. Rate Limiting
 
-### Edge Rate Limits
+### Edge Rate Limits (Auth / OTP)
+
+Configure in Cloudflare Dashboard → Security → WAF → Rate limiting rules:
+
+| Rule name | Match | Limit | Period | Action |
+|-----------|-------|-------|--------|--------|
+| `auth-login` | URI Path equals `/graphql` AND Request Body contains `"login"` | 10 | 5 minutes | Block (429) |
+| `auth-register` | URI Path equals `/graphql` AND Request Body contains `"register"` | 5 | 1 hour | Managed Challenge |
+| `auth-verify-otp` | URI Path equals `/graphql` AND Request Body contains `"verifyLoginEmailOTP"` | 20 | 10 minutes | Block (429) |
+| `auth-resend-email` | URI Path equals `/graphql` AND (Body contains `"resendEmailVerification"` OR `"resendLoginEmailOTP"`) | 3 | 15 minutes | Block (429) |
+
+### Turnstile (Application Layer)
+
+| Setting | Value |
+|---------|-------|
+| Widget pages | `/auth/login`, `/auth/register`, `/auth/email-otp` |
+| Site key (public) | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` |
+| Secret (origin) | `TURNSTILE_SECRET_KEY` |
+| Server verify | Go API `login`, `register`, `verifyLoginEmailOTP`, `resendEmailVerification` |
+
+### Transform Rules
+
+Forward client IP to origin:
+
+- Request header: `CF-Connecting-IP` → pass through (default when proxied)
+- Origin reads `CF-Connecting-IP` for device/activity logging
+
+### General Limits
 
 | Endpoint | Limit | Window |
 |----------|-------|--------|
-| `api.{domain}/graphql` | UNRESOLVED | UNRESOLVED |
-| `app.{domain}/*` | UNRESOLVED | UNRESOLVED |
-| Auth endpoints | Stricter limits | UNRESOLVED |
+| `api.{domain}/graphql` (all) | 300 | 1 minute |
+| `app.{domain}/*` | 600 | 1 minute |
 
 Rate limit exceeded → 429 response.
 

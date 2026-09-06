@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AuthShell } from "@/components/layout/auth-shell";
+import { TurnstileWidget, turnstileEnabled } from "@/components/turnstile-widget";
 import {
+  appVersion,
   authErrorMessage,
-  deviceFingerprint,
+  clientPlatform,
+  deviceFingerprintAsync,
   graphqlErrorCode,
   graphqlRequest,
 } from "@/lib/graphql";
 
 type LoginStatus =
+  | "EMAIL_OTP_REQUIRED"
   | "MFA_SETUP_REQUIRED"
   | "MFA_REQUIRED"
   | "DEVICE_VERIFICATION_REQUIRED"
@@ -26,6 +30,7 @@ export default function LoginPage() {
   const [pendingVerify, setPendingVerify] = useState<{ email: string; password: string } | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,29 +38,39 @@ export default function LoginPage() {
     setError("");
     setInfo("");
     setPendingVerify(null);
-    const fingerprint = deviceFingerprint();
+    const fingerprint = await deviceFingerprintAsync();
+    const version = await appVersion();
     try {
-      const data = await graphqlRequest<{ login: { status: LoginStatus } }>(
+      const data = await graphqlRequest<{ login: { status: LoginStatus; mfaSetup?: { secret: string; otpauthUrl: string; setupToken: string } } }>(
         `mutation Login($input: LoginInput!) {
-          login(input: $input) { status }
+          login(input: $input) { status mfaSetup { secret otpauthUrl setupToken } }
         }`,
         {
           input: {
             email,
             password,
             deviceFingerprint: fingerprint,
+            platform: clientPlatform(),
+            appVersion: version ?? null,
+            turnstileToken: turnstileToken || null,
           },
         },
       );
       switch (data.login.status) {
+        case "EMAIL_OTP_REQUIRED":
+          router.push("/auth/email-otp");
+          break;
         case "MFA_SETUP_REQUIRED":
+          if (data.login.mfaSetup) {
+            sessionStorage.setItem("miyuna_mfa_setup", JSON.stringify(data.login.mfaSetup));
+          }
           router.push("/auth/mfa");
           break;
         case "MFA_REQUIRED":
           router.push("/auth/mfa?step=verify");
           break;
         case "DEVICE_VERIFICATION_REQUIRED":
-          router.push("/auth/device");
+          router.push("/auth/email-otp");
           break;
         default:
           router.push("/workspace");
@@ -73,15 +88,22 @@ export default function LoginPage() {
   async function onResend() {
     setResending(true);
     setInfo("");
+    const creds = pendingVerify ?? { email, password };
     try {
-      const data = await graphqlRequest<{ register: { message: string } }>(
-        `mutation Register($input: RegisterInput!) {
-          register(input: $input) { message }
+      const data = await graphqlRequest<{ resendEmailVerification: { message: string } }>(
+        `mutation ResendEmailVerification($input: ResendEmailVerificationInput!) {
+          resendEmailVerification(input: $input) { message }
         }`,
-        { input: pendingVerify ?? { email, password } },
+        {
+          input: {
+            email: creds.email,
+            password: creds.password,
+            turnstileToken: turnstileToken || null,
+          },
+        },
       );
       setError("");
-      setInfo(data.register.message);
+      setInfo(data.resendEmailVerification.message);
     } catch (err) {
       setError(authErrorMessage(err, "Doğrulama e-postası gönderilemedi"));
     } finally {
@@ -113,7 +135,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="card space-y-4">
+      <form method="post" onSubmit={onSubmit} className="card space-y-4">
         <label className="label">
           E-posta
           <input
@@ -136,6 +158,9 @@ export default function LoginPage() {
             className="input"
           />
         </label>
+        {turnstileEnabled() && (
+          <TurnstileWidget onToken={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
+        )}
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? "Giriş yapılıyor…" : "Giriş yap"}
         </button>

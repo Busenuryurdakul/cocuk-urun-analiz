@@ -36,29 +36,26 @@ func setupAuthService(t *testing.T) (*Service, func()) {
 
 	db := mongo.DB
 	security := repository.NewSecurityEventRepository(db)
-	policy := SecurityPolicy{
-		MaxOTPAttempts:   5,
-		LoginMaxAttempts: 5,
-		AccessTokenTTL:   15 * time.Minute,
-		RefreshTokenTTL:  time.Hour,
-	}
+	policy := DefaultSecurityPolicy()
+	policy.RefreshTokenTTL = time.Hour
 	svc := &Service{
-		Users:        repository.NewUserRepository(db),
-		Orgs:         repository.NewOrganizationRepository(db),
-		Members:      repository.NewMemberRepository(db),
-		Devices:      repository.NewDeviceRepository(db),
-		Sessions:     repository.NewSessionRepository(db),
-		Rotated:      repository.NewRotatedRefreshRepository(db),
-		Pending:      repository.NewPendingAuthRepository(db),
-		EmailVerify:  repository.NewEmailVerificationRepository(db),
-		DeviceVerify: repository.NewDeviceVerificationRepository(db),
-		MFASetup:     repository.NewMFASetupRepository(db),
-		Security:     security,
-		BruteForce:   &BruteForceGuard{Redis: rc, Policy: policy, Security: security},
-		JWT:          NewJWTManager("test-jwt-secret-key-32chars!", policy.AccessTokenTTL),
-		Policy:       policy,
-		WebBaseURL:   "http://localhost:3000",
-		MFAIssuer:    "Miyuna",
+		Users:            repository.NewUserRepository(db),
+		Orgs:             repository.NewOrganizationRepository(db),
+		Members:          repository.NewMemberRepository(db),
+		Devices:          repository.NewDeviceRepository(db),
+		Sessions:         repository.NewSessionRepository(db),
+		Rotated:          repository.NewRotatedRefreshRepository(db),
+		Pending:          repository.NewPendingAuthRepository(db),
+		EmailVerify:      repository.NewEmailVerificationRepository(db),
+		LoginEmailVerify: repository.NewLoginEmailVerificationRepository(db),
+		DeviceVerify:     repository.NewDeviceVerificationRepository(db),
+		MFASetup:         repository.NewMFASetupRepository(db),
+		Security:         security,
+		BruteForce:       &BruteForceGuard{Redis: rc, Policy: policy, Security: security},
+		JWT:              NewJWTManager("test-jwt-secret-key-32chars!", policy.AccessTokenTTL),
+		Policy:           policy,
+		WebBaseURL:       "http://localhost:3000",
+		MFAIssuer:        "Miyuna",
 	}
 
 	cleanup := func() {

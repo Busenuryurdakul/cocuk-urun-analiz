@@ -4,6 +4,7 @@ from pydantic import AliasChoices, BaseModel, Field
 from miyuna_agent import __version__
 from miyuna_agent.config import settings
 from miyuna_agent.go_client import GoAgentClient
+from miyuna_agent.llm_client import GoLLMClient
 from miyuna_agent.run_manager import CancelRunPayload, RunManager, StartRunPayload
 
 INTERNAL_TOKEN_HEADER = "X-Miyuna-Internal-Token"
@@ -21,7 +22,12 @@ go_client = GoAgentClient(
     token=settings.internal_token,
     timeout_seconds=settings.ipc_timeout_seconds,
 )
-run_manager = RunManager(go_client=go_client)
+llm_client = GoLLMClient(
+    base_url=settings.go_api_url,
+    token=settings.internal_token,
+    timeout_seconds=settings.ipc_timeout_seconds,
+)
+run_manager = RunManager(go_client=go_client, llm_client=llm_client)
 
 
 def require_internal_token(

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { AuthShell } from "@/components/layout/auth-shell";
-import { authErrorMessage, deviceFingerprint, graphqlRequest } from "@/lib/graphql";
+import { authErrorMessage, deviceFingerprintAsync, graphqlRequest } from "@/lib/graphql";
 
 export default function DeviceVerifyPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function DeviceVerifyPage() {
       await graphqlRequest(`mutation VerifyDevice($input: VerifyDeviceInput!) {
         verifyDevice(input: $input) { status }
       }`, {
-        input: { code, deviceFingerprint: deviceFingerprint() },
+        input: { code, deviceFingerprint: await deviceFingerprintAsync() },
       });
       router.push("/workspace");
     } catch (err) {

@@ -5,16 +5,9 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
+import { ProductCardMeta } from "@/components/product-fields";
 import { graphqlRequest } from "@/lib/graphql";
-
-type ProductField = { value?: string | null; missing: boolean };
-type Product = {
-  id: string;
-  name: ProductField;
-  brand: ProductField;
-  category: ProductField;
-  createdAt: string;
-};
+import { PRODUCT_FIELD_SELECTION, type Product } from "@/lib/product";
 
 export default function OrgProductsPage() {
   const params = useParams<{ id: string }>();
@@ -28,11 +21,7 @@ export default function OrgProductsPage() {
       const data = await graphqlRequest<{ products: Product[] }>(
         `query($id: ID!) {
           products(organizationId: $id, limit: 100) {
-            id
-            name { value missing }
-            brand { value missing }
-            category { value missing }
-            createdAt
+            ${PRODUCT_FIELD_SELECTION}
           }
         }`,
         { id: orgId },
@@ -57,7 +46,7 @@ export default function OrgProductsPage() {
       title="Ürünler"
       kicker="Organizasyon"
       orgId={orgId}
-      description="Canonical ürünler — analiz, deneyim ve marketplace kaynakları buradan açılır."
+      description="Veritabanındaki canonical ürünler — eksik alanlar uydurulmaz, kaynaklarıyla gösterilir."
       actions={
         <Link href={`/org/${orgId}/products/new`} className="btn-accent">
           Ürün ekle
@@ -85,10 +74,7 @@ export default function OrgProductsPage() {
                 href={`/org/${orgId}/products/${p.id}`}
                 className="card block transition hover:-translate-y-0.5 hover:shadow-lift"
               >
-                <p className="font-display text-xl">{p.name.value ?? "İsimsiz ürün"}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {[p.brand.value, p.category.value].filter(Boolean).join(" · ") || "Detay yok"}
-                </p>
+                <ProductCardMeta product={p} />
               </Link>
             </li>
           ))}

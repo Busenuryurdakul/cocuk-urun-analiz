@@ -1,0 +1,6 @@
+FROM ollama/ollama:latest
+COPY infra/render/llm/start-secondary.sh /start.sh
+RUN chmod +x /start.sh
+ENV OLLAMA_MODEL=llama3.2:1b
+EXPOSE 11434
+CMD ["/start.sh"]
