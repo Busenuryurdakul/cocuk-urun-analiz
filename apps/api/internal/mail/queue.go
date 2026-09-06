@@ -73,7 +73,11 @@ func (q *QueuedService) StartWorker(ctx context.Context, interval time.Duration)
 			default:
 			}
 			raw, err := q.redis.BRPop(ctx, mailQueueKey, interval)
-			if err != nil || raw == "" {
+			if err != nil {
+				log.Printf("mail queue pop: %v", err)
+				continue
+			}
+			if raw == "" {
 				continue
 			}
 			var item queuedMessage

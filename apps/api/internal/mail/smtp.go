@@ -8,6 +8,7 @@ import (
 	"net/mail"
 	"net/smtp"
 	"strings"
+	"time"
 )
 
 type SMTPConfig struct {
@@ -55,7 +56,8 @@ func parseFrom(raw string) (envelope, header string) {
 
 func (s *SMTPService) sendTLS(addr, from, to, body string) error {
 	host := s.cfg.Host
-	conn, err := tls.Dial("tcp", addr, &tls.Config{ServerName: host})
+	dialer := &net.Dialer{Timeout: 15 * time.Second}
+	conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{ServerName: host})
 	if err != nil {
 		return fmt.Errorf("smtp tls dial: %w", err)
 	}
