@@ -68,6 +68,8 @@ type Query {
   myDevices: [Device!]!
   """Activity log for current user"""
   myActivityLog(limit: Int = 50, cursor: String): [ActivityLogEntry!]!
+  """Pending MFA setup (secret + QR URL) from setup session cookie"""
+  pendingMfaSetup: MFASetupPayload!
 }
 
 type Mutation {
@@ -301,6 +303,7 @@ type MFASetupPayload {
 type LoginPayload {
   status: LoginStatus!
   user: User
+  mfaSetup: MFASetupPayload
 }
 
 type Device {

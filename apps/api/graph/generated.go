@@ -287,8 +287,9 @@ type ComplexityRoot struct {
 	}
 
 	LoginPayload struct {
-		Status func(childComplexity int) int
-		User   func(childComplexity int) int
+		MfaSetup func(childComplexity int) int
+		Status   func(childComplexity int) int
+		User     func(childComplexity int) int
 	}
 
 	MFASetupPayload struct {
@@ -446,6 +447,7 @@ type ComplexityRoot struct {
 		MyWorkspaces              func(childComplexity int) int
 		Organization              func(childComplexity int, organizationID string) int
 		OrganizationMembers       func(childComplexity int, organizationID string) int
+		PendingMfaSetup           func(childComplexity int) int
 		Product                   func(childComplexity int, organizationID string, productID string) int
 		ProductMarketplaceReviews func(childComplexity int, organizationID string, productID string) int
 		Products                  func(childComplexity int, organizationID string, limit *int) int
@@ -568,6 +570,7 @@ type QueryResolver interface {
 	LlmHealth(ctx context.Context, organizationID string) ([]*model.LLMModelHealth, error)
 	MyDevices(ctx context.Context) ([]*model.Device, error)
 	MyActivityLog(ctx context.Context, limit *int, cursor *string) ([]*model.ActivityLogEntry, error)
+	PendingMfaSetup(ctx context.Context) (*model.MFASetupPayload, error)
 }
 
 type executableSchema struct {
@@ -1615,6 +1618,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.LLMUsageSummary.TotalTokens(childComplexity), true
 
+	case "LoginPayload.mfaSetup":
+		if e.complexity.LoginPayload.MfaSetup == nil {
+			break
+		}
+
+		return e.complexity.LoginPayload.MfaSetup(childComplexity), true
 	case "LoginPayload.status":
 		if e.complexity.LoginPayload.Status == nil {
 			break
@@ -2706,6 +2715,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.OrganizationMembers(childComplexity, args["organizationId"].(string)), true
+	case "Query.pendingMfaSetup":
+		if e.complexity.Query.PendingMfaSetup == nil {
+			break
+		}
+
+		return e.complexity.Query.PendingMfaSetup(childComplexity), true
 	case "Query.product":
 		if e.complexity.Query.Product == nil {
 			break
@@ -8960,6 +8975,41 @@ func (ec *executionContext) fieldContext_LoginPayload_user(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _LoginPayload_mfaSetup(ctx context.Context, field graphql.CollectedField, obj *model.LoginPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LoginPayload_mfaSetup,
+		func(ctx context.Context) (any, error) {
+			return obj.MfaSetup, nil
+		},
+		nil,
+		ec.marshalOMFASetupPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMFASetupPayload,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LoginPayload_mfaSetup(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "secret":
+				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
+			case "otpauthUrl":
+				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MFASetupPayload_secret(ctx context.Context, field graphql.CollectedField, obj *model.MFASetupPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -9892,6 +9942,8 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -9939,6 +9991,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyLoginEmailOTP(ctx contex
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -9985,6 +10039,8 @@ func (ec *executionContext) fieldContext_Mutation_resendLoginEmailOTP(_ context.
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -10021,6 +10077,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyLoginMFA(ctx context.Con
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -10068,6 +10126,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyDevice(ctx context.Conte
 				return ec.fieldContext_LoginPayload_status(ctx, field)
 			case "user":
 				return ec.fieldContext_LoginPayload_user(ctx, field)
+			case "mfaSetup":
+				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -14962,6 +15022,41 @@ func (ec *executionContext) fieldContext_Query_myActivityLog(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_pendingMfaSetup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_pendingMfaSetup,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().PendingMfaSetup(ctx)
+		},
+		nil,
+		ec.marshalNMFASetupPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMFASetupPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_pendingMfaSetup(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "secret":
+				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
+			case "otpauthUrl":
+				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -17475,7 +17570,7 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "brand", "category", "description", "targetAge", "materials", "safetyWarnings", "currentPrice", "originalPrice", "currency", "seller", "rating", "reviewCount", "stockStatus", "source", "sourceProductId", "sourceUrl", "sku"}
+	fieldsInOrder := [...]string{"organizationId", "name", "brand", "category", "description", "source", "sourceProductId", "sourceUrl", "sku"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17517,76 +17612,6 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 				return it, err
 			}
 			it.Description = data
-		case "targetAge":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetAge"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.TargetAge = data
-		case "materials":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("materials"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Materials = data
-		case "safetyWarnings":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("safetyWarnings"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.SafetyWarnings = data
-		case "currentPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentPrice"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CurrentPrice = data
-		case "originalPrice":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPrice"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.OriginalPrice = data
-		case "currency":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Currency = data
-		case "seller":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seller"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Seller = data
-		case "rating":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rating"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Rating = data
-		case "reviewCount":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCount"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ReviewCount = data
-		case "stockStatus":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stockStatus"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.StockStatus = data
 		case "source":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
 			data, err := ec.unmarshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource(ctx, v)
@@ -20348,6 +20373,8 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 			}
 		case "user":
 			out.Values[i] = ec._LoginPayload_user(ctx, field, obj)
+		case "mfaSetup":
+			out.Values[i] = ec._LoginPayload_mfaSetup(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -21890,6 +21917,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_myActivityLog(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "pendingMfaSetup":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pendingMfaSetup(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -24933,6 +24982,13 @@ func (ec *executionContext) marshalOLLMOrgSettings2ᚖgithubᚗcomᚋBusenuryurd
 		return graphql.Null
 	}
 	return ec._LLMOrgSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMFASetupPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMFASetupPayload(ctx context.Context, sel ast.SelectionSet, v *model.MFASetupPayload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MFASetupPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOMarketplaceImportRun2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceImportRun(ctx context.Context, sel ast.SelectionSet, v *model.MarketplaceImportRun) graphql.Marshaler {

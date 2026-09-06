@@ -1546,6 +1546,26 @@ func (r *queryResolver) MyActivityLog(ctx context.Context, limit *int, cursor *s
 	return out, nil
 }
 
+// PendingMfaSetup is the resolver for the pendingMfaSetup field.
+func (r *queryResolver) PendingMfaSetup(ctx context.Context) (*model.MFASetupPayload, error) {
+	req, ok := httpx.RequestFrom(ctx)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	setupToken, ok := cookies.Get(req, cookies.SetupCookie)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	setup, err := r.Auth.MFASetupForToken(ctx, setupToken)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return &model.MFASetupPayload{
+		Secret:     setup.Secret,
+		OtpauthURL: setup.OTPAuthURL,
+	}, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

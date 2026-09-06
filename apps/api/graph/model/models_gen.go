@@ -106,16 +106,6 @@ type CreateProductInput struct {
 	Brand           *string           `json:"brand,omitempty"`
 	Category        *string           `json:"category,omitempty"`
 	Description     *string           `json:"description,omitempty"`
-	TargetAge       *string           `json:"targetAge,omitempty"`
-	Materials       *string           `json:"materials,omitempty"`
-	SafetyWarnings  *string           `json:"safetyWarnings,omitempty"`
-	CurrentPrice    *string           `json:"currentPrice,omitempty"`
-	OriginalPrice   *string           `json:"originalPrice,omitempty"`
-	Currency        *string           `json:"currency,omitempty"`
-	Seller          *string           `json:"seller,omitempty"`
-	Rating          *string           `json:"rating,omitempty"`
-	ReviewCount     *string           `json:"reviewCount,omitempty"`
-	StockStatus     *string           `json:"stockStatus,omitempty"`
 	Source          MarketplaceSource `json:"source"`
 	SourceProductID string            `json:"sourceProductId"`
 	SourceURL       *string           `json:"sourceUrl,omitempty"`
@@ -335,8 +325,9 @@ type LoginInput struct {
 }
 
 type LoginPayload struct {
-	Status LoginStatus `json:"status"`
-	User   *User       `json:"user,omitempty"`
+	Status   LoginStatus      `json:"status"`
+	User     *User            `json:"user,omitempty"`
+	MfaSetup *MFASetupPayload `json:"mfaSetup,omitempty"`
 }
 
 type MFASetupPayload struct {

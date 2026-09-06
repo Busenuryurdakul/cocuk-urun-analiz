@@ -41,9 +41,9 @@ export default function LoginPage() {
     const fingerprint = await deviceFingerprintAsync();
     const version = await appVersion();
     try {
-      const data = await graphqlRequest<{ login: { status: LoginStatus } }>(
+      const data = await graphqlRequest<{ login: { status: LoginStatus; mfaSetup?: { secret: string; otpauthUrl: string } } }>(
         `mutation Login($input: LoginInput!) {
-          login(input: $input) { status }
+          login(input: $input) { status mfaSetup { secret otpauthUrl } }
         }`,
         {
           input: {
@@ -61,6 +61,9 @@ export default function LoginPage() {
           router.push("/auth/email-otp");
           break;
         case "MFA_SETUP_REQUIRED":
+          if (data.login.mfaSetup) {
+            sessionStorage.setItem("miyuna_mfa_setup", JSON.stringify(data.login.mfaSetup));
+          }
           router.push("/auth/mfa");
           break;
         case "MFA_REQUIRED":

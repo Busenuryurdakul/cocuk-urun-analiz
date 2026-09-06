@@ -305,6 +305,24 @@ func (s *Service) beginMFASetup(ctx context.Context, userID primitive.ObjectID) 
 	}, nil
 }
 
+func (s *Service) MFASetupForToken(ctx context.Context, setupToken string) (*MFASetupInfo, error) {
+	hash := HashToken(setupToken)
+	challenge, err := s.MFASetup.FindByTokenHash(ctx, hash)
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+	user, err := s.Users.FindByID(ctx, challenge.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &MFASetupInfo{
+		Token:      setupToken,
+		Secret:     challenge.Secret,
+		OTPAuthURL: OTPAuthURL(s.MFAIssuer, user.Email, challenge.Secret),
+		ExpiresAt:  challenge.ExpiresAt,
+	}, nil
+}
+
 func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) error {
 	hash := HashToken(setupToken)
 	challenge, err := s.MFASetup.FindByTokenHash(ctx, hash)

@@ -122,6 +122,12 @@ func toModelLoginPayload(result *auth.LoginResult) *model.LoginPayload {
 	if result.User != nil {
 		payload.User = toModelUser(result.User)
 	}
+	if result.MFASetup != nil {
+		payload.MfaSetup = &model.MFASetupPayload{
+			Secret:     result.MFASetup.Secret,
+			OtpauthURL: result.MFASetup.OTPAuthURL,
+		}
+	}
 	return payload
 }
 
