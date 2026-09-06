@@ -128,6 +128,7 @@ input ResendEmailVerificationInput {
 
 input ConfirmMFAInput {
   code: String!
+  setupToken: String
 }
 
 enum ClientPlatform {
@@ -298,6 +299,7 @@ type RegisterPayload {
 type MFASetupPayload {
   secret: String!
   otpauthUrl: String!
+  setupToken: String!
 }
 
 type LoginPayload {

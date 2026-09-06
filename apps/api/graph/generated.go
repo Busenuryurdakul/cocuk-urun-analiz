@@ -295,6 +295,7 @@ type ComplexityRoot struct {
 	MFASetupPayload struct {
 		OtpauthURL func(childComplexity int) int
 		Secret     func(childComplexity int) int
+		SetupToken func(childComplexity int) int
 	}
 
 	MarketplaceImportRun struct {
@@ -1649,6 +1650,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.MFASetupPayload.Secret(childComplexity), true
+	case "MFASetupPayload.setupToken":
+		if e.complexity.MFASetupPayload.SetupToken == nil {
+			break
+		}
+
+		return e.complexity.MFASetupPayload.SetupToken(childComplexity), true
 
 	case "MarketplaceImportRun.accessMode":
 		if e.complexity.MarketplaceImportRun.AccessMode == nil {
@@ -9003,6 +9010,8 @@ func (ec *executionContext) fieldContext_LoginPayload_mfaSetup(_ context.Context
 				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
 			case "otpauthUrl":
 				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			case "setupToken":
+				return ec.fieldContext_MFASetupPayload_setupToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
 		},
@@ -9056,6 +9065,35 @@ func (ec *executionContext) _MFASetupPayload_otpauthUrl(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_MFASetupPayload_otpauthUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MFASetupPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MFASetupPayload_setupToken(ctx context.Context, field graphql.CollectedField, obj *model.MFASetupPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MFASetupPayload_setupToken,
+		func(ctx context.Context) (any, error) {
+			return obj.SetupToken, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MFASetupPayload_setupToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "MFASetupPayload",
 		Field:      field,
@@ -9854,6 +9892,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyEmail(ctx context.Contex
 				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
 			case "otpauthUrl":
 				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			case "setupToken":
+				return ec.fieldContext_MFASetupPayload_setupToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
 		},
@@ -15050,6 +15090,8 @@ func (ec *executionContext) fieldContext_Query_pendingMfaSetup(_ context.Context
 				return ec.fieldContext_MFASetupPayload_secret(ctx, field)
 			case "otpauthUrl":
 				return ec.fieldContext_MFASetupPayload_otpauthUrl(ctx, field)
+			case "setupToken":
+				return ec.fieldContext_MFASetupPayload_setupToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MFASetupPayload", field.Name)
 		},
@@ -17440,7 +17482,7 @@ func (ec *executionContext) unmarshalInputConfirmMFAInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"code"}
+	fieldsInOrder := [...]string{"code", "setupToken"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17454,6 +17496,13 @@ func (ec *executionContext) unmarshalInputConfirmMFAInput(ctx context.Context, o
 				return it, err
 			}
 			it.Code = data
+		case "setupToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("setupToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SetupToken = data
 		}
 	}
 
@@ -20416,6 +20465,11 @@ func (ec *executionContext) _MFASetupPayload(ctx context.Context, sel ast.Select
 			}
 		case "otpauthUrl":
 			out.Values[i] = ec._MFASetupPayload_otpauthUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setupToken":
+			out.Values[i] = ec._MFASetupPayload_setupToken(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

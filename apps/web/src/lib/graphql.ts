@@ -35,6 +35,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "E-posta adresiniz henüz doğrulanmadı. Kayıt sırasında gönderilen bağlantıyı açın, ardından tekrar giriş yapın.",
   INVALID_CREDENTIALS: "E-posta veya şifre hatalı.",
   INVALID_TOKEN: "Bağlantı geçersiz veya süresi dolmuş.",
+  INVALID_CODE: "Authenticator kodu hatalı. Uygulamadaki güncel kodu girin.",
   CHALLENGE_LOCKED: "Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.",
   DUPLICATE: "Bu e-posta ile zaten bir hesap var.",
   DESKTOP_SESSION_ACTIVE:

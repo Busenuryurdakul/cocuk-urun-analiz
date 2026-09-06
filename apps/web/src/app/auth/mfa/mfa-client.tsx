@@ -11,6 +11,7 @@ import { authErrorMessage, deviceFingerprintAsync, graphqlRequest } from "@/lib/
 type MfaSetupInfo = {
   secret: string;
   otpauthUrl: string;
+  setupToken: string;
 };
 
 export default function MFAPageClient() {
@@ -40,7 +41,7 @@ export default function MFAPageClient() {
     }
     graphqlRequest<{ pendingMfaSetup: MfaSetupInfo }>(
       `query PendingMfaSetup {
-        pendingMfaSetup { secret otpauthUrl }
+        pendingMfaSetup { secret otpauthUrl setupToken }
       }`,
     )
       .then((data) => {
@@ -53,9 +54,10 @@ export default function MFAPageClient() {
   async function confirmSetup(code: string) {
     setState("loading");
     try {
+      const setupToken = setup?.setupToken ?? null;
       await graphqlRequest(`mutation ConfirmMFA($input: ConfirmMFAInput!) {
         confirmMFA(input: $input)
-      }`, { input: { code } });
+      }`, { input: { code, setupToken } });
       sessionStorage.removeItem("miyuna_mfa_setup");
       router.push("/auth/login");
     } catch (err) {

@@ -73,7 +73,8 @@ type CompliancePolicy struct {
 }
 
 type ConfirmMFAInput struct {
-	Code string `json:"code"`
+	Code       string  `json:"code"`
+	SetupToken *string `json:"setupToken,omitempty"`
 }
 
 type Consent struct {
@@ -333,6 +334,7 @@ type LoginPayload struct {
 type MFASetupPayload struct {
 	Secret     string `json:"secret"`
 	OtpauthURL string `json:"otpauthUrl"`
+	SetupToken string `json:"setupToken"`
 }
 
 type MarketplaceImportRun struct {

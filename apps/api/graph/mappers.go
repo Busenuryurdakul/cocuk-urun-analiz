@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
@@ -23,6 +24,15 @@ var (
 	errUnauthorized = errors.New("unauthorized")
 	errForbidden    = errors.New("forbidden")
 )
+
+func setupTokenFromRequest(req *http.Request, fallback *string) (string, bool) {
+	if fallback != nil {
+		if token := strings.TrimSpace(*fallback); token != "" {
+			return token, true
+		}
+	}
+	return cookies.Get(req, cookies.SetupCookie)
+}
 
 func gqlError(code string, err error) error {
 	return &gqlerror.Error{
@@ -126,6 +136,7 @@ func toModelLoginPayload(result *auth.LoginResult) *model.LoginPayload {
 		payload.MfaSetup = &model.MFASetupPayload{
 			Secret:     result.MFASetup.Secret,
 			OtpauthURL: result.MFASetup.OTPAuthURL,
+			SetupToken: result.MFASetup.Token,
 		}
 	}
 	return payload

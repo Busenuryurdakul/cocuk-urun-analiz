@@ -15,21 +15,23 @@ export default function VerifyEmailClient() {
   const [state, setState] = useState<"loading" | "success" | "error" | "empty">("loading");
   const [secret, setSecret] = useState("");
   const [otpauthUrl, setOtpauthUrl] = useState("");
+  const [setupToken, setSetupToken] = useState("");
 
   useEffect(() => {
     if (!token) {
       setState("empty");
       return;
     }
-    graphqlRequest<{ verifyEmail: { secret: string; otpauthUrl: string } }>(
+    graphqlRequest<{ verifyEmail: { secret: string; otpauthUrl: string; setupToken: string } }>(
       `mutation VerifyEmail($token: String!) {
-        verifyEmail(token: $token) { secret otpauthUrl }
+        verifyEmail(token: $token) { secret otpauthUrl setupToken }
       }`,
       { token },
     )
       .then((data) => {
         setSecret(data.verifyEmail.secret);
         setOtpauthUrl(data.verifyEmail.otpauthUrl);
+        setSetupToken(data.verifyEmail.setupToken);
         setState("success");
       })
       .catch(() => setState("error"));
@@ -39,7 +41,7 @@ export default function VerifyEmailClient() {
     try {
       await graphqlRequest(`mutation ConfirmMFA($input: ConfirmMFAInput!) {
         confirmMFA(input: $input)
-      }`, { input: { code } });
+      }`, { input: { code, setupToken: setupToken || null } });
       router.push("/auth/login");
     } catch {
       setState("error");

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
@@ -358,6 +359,9 @@ func (a *App) Ready(ctx context.Context) error {
 func (a *App) CookieOptions() cookies.Options {
 	opts := cookies.DefaultOptions()
 	opts.Secure = a.Config.CookieSecure
+	if opts.Secure {
+		opts.SameSite = http.SameSiteNoneMode
+	}
 	return opts
 }
 

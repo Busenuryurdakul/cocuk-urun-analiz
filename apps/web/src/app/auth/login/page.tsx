@@ -41,9 +41,9 @@ export default function LoginPage() {
     const fingerprint = await deviceFingerprintAsync();
     const version = await appVersion();
     try {
-      const data = await graphqlRequest<{ login: { status: LoginStatus; mfaSetup?: { secret: string; otpauthUrl: string } } }>(
+      const data = await graphqlRequest<{ login: { status: LoginStatus; mfaSetup?: { secret: string; otpauthUrl: string; setupToken: string } } }>(
         `mutation Login($input: LoginInput!) {
-          login(input: $input) { status mfaSetup { secret otpauthUrl } }
+          login(input: $input) { status mfaSetup { secret otpauthUrl setupToken } }
         }`,
         {
           input: {

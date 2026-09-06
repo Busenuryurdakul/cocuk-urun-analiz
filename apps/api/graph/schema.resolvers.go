@@ -60,6 +60,7 @@ func (r *mutationResolver) VerifyEmail(ctx context.Context, token string) (*mode
 	return &model.MFASetupPayload{
 		Secret:     setup.Secret,
 		OtpauthURL: setup.OTPAuthURL,
+		SetupToken: setup.Token,
 	}, nil
 }
 
@@ -69,7 +70,7 @@ func (r *mutationResolver) ConfirmMfa(ctx context.Context, input model.ConfirmMF
 	if !ok {
 		return false, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
-	setupToken, ok := cookies.Get(req, cookies.SetupCookie)
+	setupToken, ok := setupTokenFromRequest(req, input.SetupToken)
 	if !ok {
 		return false, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
@@ -1563,6 +1564,7 @@ func (r *queryResolver) PendingMfaSetup(ctx context.Context) (*model.MFASetupPay
 	return &model.MFASetupPayload{
 		Secret:     setup.Secret,
 		OtpauthURL: setup.OTPAuthURL,
+		SetupToken: setup.Token,
 	}, nil
 }
 
