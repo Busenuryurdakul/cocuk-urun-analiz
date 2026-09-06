@@ -251,11 +251,11 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 			PolicyRepo: policyRepo,
 			Snapshots:  configSnapshotsRepo,
 		},
-		Mock:        mockProvider,
-		HTTP:        llm.NewHTTPProvider(cfg.LLMRequestTimeout),
-		UseMock:     cfg.LLMUseMock,
-		MaxRetries:  cfg.LLMMaxRetries,
-		Timeout:     cfg.LLMRequestTimeout,
+		Mock:       mockProvider,
+		HTTP:       llm.NewHTTPProvider(cfg.LLMRequestTimeout),
+		UseMock:    cfg.LLMUseMock,
+		MaxRetries: cfg.LLMMaxRetries,
+		Timeout:    cfg.LLMRequestTimeout,
 	})
 	llmSvc := &llm.Service{
 		Providers:   llmProvidersRepo,
@@ -313,7 +313,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		WebBaseURL:       cfg.WebBaseURL,
 		MFAIssuer:        cfg.MFAIssuer,
 		Activity:         &auth.ActivityLogger{Logs: activityLogs},
-		Turnstile:          turnstile.NewVerifier(cfg.TurnstileSecretKey, cfg.TurnstileEnabled),
+		Turnstile:        turnstile.NewVerifier(cfg.TurnstileSecretKey, cfg.TurnstileEnabled),
 	}
 
 	app := &App{

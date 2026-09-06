@@ -25,7 +25,7 @@ const (
 type DevicePlatform string
 
 const (
-	DevicePlatformWeb        DevicePlatform = "WEB"
+	DevicePlatformWeb         DevicePlatform = "WEB"
 	DevicePlatformElectronWin DevicePlatform = "ELECTRON_WIN"
 	DevicePlatformElectronMac DevicePlatform = "ELECTRON_MAC"
 )
@@ -41,17 +41,17 @@ const (
 type SecurityEventType string
 
 const (
-	EventCrossTenantAccess  SecurityEventType = "CROSS_TENANT_ACCESS"
-	EventAuthFailure        SecurityEventType = "AUTH_FAILURE"
-	EventMFAFailure         SecurityEventType = "MFA_FAILURE"
-	EventRefreshTokenReplay SecurityEventType = "REFRESH_TOKEN_REPLAY"
-	EventOTPAttemptLimit    SecurityEventType = "OTP_ATTEMPT_LIMIT"
-	EventEmailVerified      SecurityEventType = "EMAIL_VERIFIED"
-	EventLoginSuccess       SecurityEventType = "LOGIN_SUCCESS"
-	EventLogout             SecurityEventType = "LOGOUT"
-	EventDeviceRevoked           SecurityEventType = "DEVICE_REVOKED"
-	EventLoginEmailOTPSent       SecurityEventType = "LOGIN_EMAIL_OTP_SENT"
-	EventDesktopSessionBlocked   SecurityEventType = "DESKTOP_SESSION_BLOCKED"
+	EventCrossTenantAccess     SecurityEventType = "CROSS_TENANT_ACCESS"
+	EventAuthFailure           SecurityEventType = "AUTH_FAILURE"
+	EventMFAFailure            SecurityEventType = "MFA_FAILURE"
+	EventRefreshTokenReplay    SecurityEventType = "REFRESH_TOKEN_REPLAY"
+	EventOTPAttemptLimit       SecurityEventType = "OTP_ATTEMPT_LIMIT"
+	EventEmailVerified         SecurityEventType = "EMAIL_VERIFIED"
+	EventLoginSuccess          SecurityEventType = "LOGIN_SUCCESS"
+	EventLogout                SecurityEventType = "LOGOUT"
+	EventDeviceRevoked         SecurityEventType = "DEVICE_REVOKED"
+	EventLoginEmailOTPSent     SecurityEventType = "LOGIN_EMAIL_OTP_SENT"
+	EventDesktopSessionBlocked SecurityEventType = "DESKTOP_SESSION_BLOCKED"
 )
 
 func IsElectronPlatform(p DevicePlatform) bool {

@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/redis"
+	"github.com/alicebob/miniredis/v2"
 )
 
 func testRouterWithMiniRedis(t *testing.T) (*Router, func()) {

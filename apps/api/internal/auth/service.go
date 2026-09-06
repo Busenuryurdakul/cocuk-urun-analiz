@@ -70,13 +70,13 @@ const (
 )
 
 type Service struct {
-	Users        *repository.UserRepository
-	Orgs         *repository.OrganizationRepository
-	Members      *repository.MemberRepository
-	Devices      *repository.DeviceRepository
-	Sessions     *repository.SessionRepository
-	Rotated      *repository.RotatedRefreshRepository
-	Pending      *repository.PendingAuthRepository
+	Users            *repository.UserRepository
+	Orgs             *repository.OrganizationRepository
+	Members          *repository.MemberRepository
+	Devices          *repository.DeviceRepository
+	Sessions         *repository.SessionRepository
+	Rotated          *repository.RotatedRefreshRepository
+	Pending          *repository.PendingAuthRepository
 	EmailVerify      *repository.EmailVerificationRepository
 	LoginEmailVerify *repository.LoginEmailVerificationRepository
 	DeviceVerify     *repository.DeviceVerificationRepository

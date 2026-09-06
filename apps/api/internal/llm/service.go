@@ -14,19 +14,19 @@ import (
 )
 
 type Service struct {
-	Providers  *repository.LLMProviderRepository
-	Models     *repository.LLMModelRepository
-	Routing    *repository.LLMRoutingPolicyRepository
-	Personas   *repository.LLMPersonaRepository
-	Drafts     *repository.LLMConfigurationDraftRepository
+	Providers   *repository.LLMProviderRepository
+	Models      *repository.LLMModelRepository
+	Routing     *repository.LLMRoutingPolicyRepository
+	Personas    *repository.LLMPersonaRepository
+	Drafts      *repository.LLMConfigurationDraftRepository
 	OrgSettings *repository.LLMOrgSettingsRepository
-	Snapshots  *repository.ConfigSnapshotRepository
+	Snapshots   *repository.ConfigSnapshotRepository
 	ConfigAudit *repository.ConfigAuditRepository
-	Calls      *repository.LLMCallRepository
-	Usage      *repository.LLMUsageDailyRepository
-	Gateway    *Gateway
-	Tenant     *tenant.Guard
-	Security   *repository.SecurityEventRepository
+	Calls       *repository.LLMCallRepository
+	Usage       *repository.LLMUsageDailyRepository
+	Gateway     *Gateway
+	Tenant      *tenant.Guard
+	Security    *repository.SecurityEventRepository
 }
 
 type DraftInput struct {
@@ -317,9 +317,9 @@ func (s *Service) SetOrganizationModels(ctx context.Context, actorID, orgID prim
 	}
 
 	settings := &domain.LLMOrgSettings{
-		OrganizationID: orgID,
-		UpdatedBy:      actorID,
-		DefaultModelKey: defaultModelKey,
+		OrganizationID:   orgID,
+		UpdatedBy:        actorID,
+		DefaultModelKey:  defaultModelKey,
 		FallbackModelKey: fallbackModelKey,
 	}
 	if existing, err := s.OrgSettings.FindByOrg(ctx, orgID); err == nil {

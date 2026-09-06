@@ -39,23 +39,23 @@ func setupAuthService(t *testing.T) (*Service, func()) {
 	policy := DefaultSecurityPolicy()
 	policy.RefreshTokenTTL = time.Hour
 	svc := &Service{
-		Users:        repository.NewUserRepository(db),
-		Orgs:         repository.NewOrganizationRepository(db),
-		Members:      repository.NewMemberRepository(db),
-		Devices:      repository.NewDeviceRepository(db),
-		Sessions:     repository.NewSessionRepository(db),
-		Rotated:      repository.NewRotatedRefreshRepository(db),
-		Pending:      repository.NewPendingAuthRepository(db),
-		EmailVerify:  repository.NewEmailVerificationRepository(db),
+		Users:            repository.NewUserRepository(db),
+		Orgs:             repository.NewOrganizationRepository(db),
+		Members:          repository.NewMemberRepository(db),
+		Devices:          repository.NewDeviceRepository(db),
+		Sessions:         repository.NewSessionRepository(db),
+		Rotated:          repository.NewRotatedRefreshRepository(db),
+		Pending:          repository.NewPendingAuthRepository(db),
+		EmailVerify:      repository.NewEmailVerificationRepository(db),
 		LoginEmailVerify: repository.NewLoginEmailVerificationRepository(db),
 		DeviceVerify:     repository.NewDeviceVerificationRepository(db),
-		MFASetup:     repository.NewMFASetupRepository(db),
-		Security:     security,
-		BruteForce:   &BruteForceGuard{Redis: rc, Policy: policy, Security: security},
-		JWT:          NewJWTManager("test-jwt-secret-key-32chars!", policy.AccessTokenTTL),
-		Policy:       policy,
-		WebBaseURL:   "http://localhost:3000",
-		MFAIssuer:    "Miyuna",
+		MFASetup:         repository.NewMFASetupRepository(db),
+		Security:         security,
+		BruteForce:       &BruteForceGuard{Redis: rc, Policy: policy, Security: security},
+		JWT:              NewJWTManager("test-jwt-secret-key-32chars!", policy.AccessTokenTTL),
+		Policy:           policy,
+		WebBaseURL:       "http://localhost:3000",
+		MFAIssuer:        "Miyuna",
 	}
 
 	cleanup := func() {

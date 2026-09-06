@@ -28,25 +28,25 @@ type GatewayRequest struct {
 }
 
 type GatewayResponse struct {
-	CallID           string  `json:"callId"`
-	Content          string  `json:"content"`
-	ModelKey         string  `json:"modelKey"`
-	ProviderKey      string  `json:"providerKey"`
-	FallbackUsed     bool    `json:"fallbackUsed"`
-	EscalationUsed   bool    `json:"escalationUsed"`
-	RoutingReason    string  `json:"routingReason"`
-	PersonaKey       string  `json:"personaKey"`
-	PersonaVersion   string  `json:"personaVersion"`
-	CorrelationID    string  `json:"correlationId"`
-	InputTokens      int     `json:"inputTokens"`
-	OutputTokens     int     `json:"outputTokens"`
-	LatencyMS        int64   `json:"latencyMs"`
-	EstimatedCostUSD          float64 `json:"estimatedCostUsd"`
-	RedactionApplied          bool    `json:"redactionApplied"`
-	ComplianceProfile         string  `json:"complianceProfile,omitempty"`
-	CompliancePolicyVersion   string  `json:"compliancePolicyVersion,omitempty"`
-	ComplianceReflexVersion   string  `json:"complianceReflexVersion,omitempty"`
-	SafetyResult              string  `json:"safetyResult,omitempty"`
+	CallID                  string  `json:"callId"`
+	Content                 string  `json:"content"`
+	ModelKey                string  `json:"modelKey"`
+	ProviderKey             string  `json:"providerKey"`
+	FallbackUsed            bool    `json:"fallbackUsed"`
+	EscalationUsed          bool    `json:"escalationUsed"`
+	RoutingReason           string  `json:"routingReason"`
+	PersonaKey              string  `json:"personaKey"`
+	PersonaVersion          string  `json:"personaVersion"`
+	CorrelationID           string  `json:"correlationId"`
+	InputTokens             int     `json:"inputTokens"`
+	OutputTokens            int     `json:"outputTokens"`
+	LatencyMS               int64   `json:"latencyMs"`
+	EstimatedCostUSD        float64 `json:"estimatedCostUsd"`
+	RedactionApplied        bool    `json:"redactionApplied"`
+	ComplianceProfile       string  `json:"complianceProfile,omitempty"`
+	CompliancePolicyVersion string  `json:"compliancePolicyVersion,omitempty"`
+	ComplianceReflexVersion string  `json:"complianceReflexVersion,omitempty"`
+	SafetyResult            string  `json:"safetyResult,omitempty"`
 }
 
 type GatewayDeps struct {
@@ -238,7 +238,7 @@ func (g *Gateway) Complete(ctx context.Context, req GatewayRequest) (GatewayResp
 		RedactionApplied:        enforced.RedactionApplied,
 		ComplianceProfile:       string(enforced.Compliance.Profile),
 		CompliancePolicyVersion: enforced.Compliance.PolicyVersion,
-		ComplianceReflexVersion:   enforced.Compliance.ReflexVersion,
+		ComplianceReflexVersion: enforced.Compliance.ReflexVersion,
 		SafetyResult:            postResult.SafetyResult,
 	}, nil
 }
@@ -349,7 +349,7 @@ func filterModelsForOrg(models []domain.LLMModel, orgID primitive.ObjectID) []do
 
 func (g *Gateway) buildCall(req GatewayRequest, persona *domain.LLMPersona, policyVersion string, decision RouteDecision, modelKey string, fallbackUsed bool, retryCount, inTokens, outTokens int, latency int64, status domain.LLMCallStatus, enforced EnforcementResult, errCode string) *domain.LLMCall {
 	call := &domain.LLMCall{
-		OrganizationID:            req.OrganizationID,
+		OrganizationID:          req.OrganizationID,
 		UserID:                  req.UserID,
 		AnalysisRunID:           req.AnalysisRunID,
 		CorrelationID:           req.CorrelationID,
@@ -389,21 +389,21 @@ func (g *Gateway) persistCall(ctx context.Context, call *domain.LLMCall) error {
 
 func (g *Gateway) recordBlocked(ctx context.Context, req GatewayRequest, persona *domain.LLMPersona, complianceCtx ComplianceContext, blockErr error) (GatewayResponse, error) {
 	call := &domain.LLMCall{
-		OrganizationID:            req.OrganizationID,
-		UserID:                    req.UserID,
-		AnalysisRunID:             req.AnalysisRunID,
-		CorrelationID:             req.CorrelationID,
-		IdempotencyKey:            req.IdempotencyKey,
-		ConfigSnapshotID:          req.ConfigSnapshotID,
-		PersonaKey:                persona.PersonaKey,
-		PersonaVersion:            persona.Version,
-		Status:                    domain.LLMCallBlocked,
-		InputHash:                 HashContent(req.UserPrompt),
-		ErrorCode:                 blockErr.Error(),
-		SafetyResult:              "blocked",
-		ComplianceProfile:         string(complianceCtx.Profile),
+		OrganizationID:          req.OrganizationID,
+		UserID:                  req.UserID,
+		AnalysisRunID:           req.AnalysisRunID,
+		CorrelationID:           req.CorrelationID,
+		IdempotencyKey:          req.IdempotencyKey,
+		ConfigSnapshotID:        req.ConfigSnapshotID,
+		PersonaKey:              persona.PersonaKey,
+		PersonaVersion:          persona.Version,
+		Status:                  domain.LLMCallBlocked,
+		InputHash:               HashContent(req.UserPrompt),
+		ErrorCode:               blockErr.Error(),
+		SafetyResult:            "blocked",
+		ComplianceProfile:       string(complianceCtx.Profile),
 		CompliancePolicyVersion: complianceCtx.PolicyVersion,
-		ComplianceReflexVersion:   complianceCtx.ReflexVersion,
+		ComplianceReflexVersion: complianceCtx.ReflexVersion,
 	}
 	_ = g.deps.Calls.Insert(ctx, call)
 	return GatewayResponse{}, blockErr
@@ -426,7 +426,7 @@ func gatewayResponseFromCall(call *domain.LLMCall) GatewayResponse {
 		RedactionApplied:        call.RedactionApplied,
 		ComplianceProfile:       call.ComplianceProfile,
 		CompliancePolicyVersion: call.CompliancePolicyVersion,
-		ComplianceReflexVersion:   call.ComplianceReflexVersion,
+		ComplianceReflexVersion: call.ComplianceReflexVersion,
 		SafetyResult:            call.SafetyResult,
 	}
 }

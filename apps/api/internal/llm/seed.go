@@ -50,8 +50,8 @@ func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProvider
 		DefaultForPlatform:  true,
 		HealthStatus:        domain.LLMHealthUnknown,
 		Capabilities: domain.LLMModelCapabilities{
-			Chat:              true,
-			JSON:              true,
+			Chat:               true,
+			JSON:               true,
 			SupportedTaskTypes: []string{"analysis", "review", "explanation"},
 		},
 	}
@@ -69,8 +69,8 @@ func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProvider
 		FallbackForPlatform: true,
 		HealthStatus:        domain.LLMHealthUnknown,
 		Capabilities: domain.LLMModelCapabilities{
-			Chat:              true,
-			JSON:              true,
+			Chat:               true,
+			JSON:               true,
 			SupportedTaskTypes: []string{"analysis", "review", "decision_support"},
 		},
 	}

@@ -22,21 +22,21 @@ type EnforcementInput struct {
 }
 
 type ComplianceContext struct {
-	Profile             domain.ComplianceProfile
-	PolicyVersion       string
-	ReflexVersion       string
-	ReflexInstruction   string
-	ForbiddenPatterns   []string
-	Policy              *domain.CompliancePolicyVersion
+	Profile           domain.ComplianceProfile
+	PolicyVersion     string
+	ReflexVersion     string
+	ReflexInstruction string
+	ForbiddenPatterns []string
+	Policy            *domain.CompliancePolicyVersion
 }
 
 type EnforcementResult struct {
-	UserPrompt          string
-	PersonaInstruction  string
-	RedactionApplied    bool
-	Blocked             bool
-	BlockReason         string
-	Compliance          ComplianceContext
+	UserPrompt         string
+	PersonaInstruction string
+	RedactionApplied   bool
+	Blocked            bool
+	BlockReason        string
+	Compliance         ComplianceContext
 }
 
 type PostCallResult struct {
