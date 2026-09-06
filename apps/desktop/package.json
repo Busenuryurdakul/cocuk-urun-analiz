@@ -27,8 +27,16 @@
     },
     "files": ["main.js", "preload.js", "offline.html", "assets/**/*"],
     "win": {
-      "target": ["nsis"],
-      "icon": "assets/icon.png"
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.png",
+      "artifactName": "Miyuna-Setup-${version}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "shortcutName": "Miyuna"
     },
     "mac": {
       "target": ["dmg"],

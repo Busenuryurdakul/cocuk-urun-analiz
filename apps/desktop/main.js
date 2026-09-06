@@ -18,12 +18,12 @@ try {
   machineId = null;
 }
 
-const WEB_URL = (process.env.MIYUNA_WEB_URL || "http://localhost:3000").replace(/\/+$/, "");
-const API_URL = (process.env.MIYUNA_API_URL || "http://localhost:8080").replace(/\/+$/, "");
+const isDev = !app.isPackaged;
+const WEB_URL = (process.env.MIYUNA_WEB_URL || (isDev ? "http://localhost:3000" : "https://miyuna-web.vercel.app")).replace(/\/+$/, "");
+const API_URL = (process.env.MIYUNA_API_URL || (isDev ? "http://localhost:8080" : "https://miyuna-api.onrender.com")).replace(/\/+$/, "");
 const KEYTAR_SERVICE = "miyuna-desktop";
 const KEYTAR_ACCOUNT = "refresh-token";
 const SESSION_PARTITION = "miyuna-live";
-const isDev = !app.isPackaged;
 
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
