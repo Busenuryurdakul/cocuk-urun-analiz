@@ -74,11 +74,15 @@ func (r *mutationResolver) ConfirmMfa(ctx context.Context, input model.ConfirmMF
 	if !ok {
 		return false, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
-	if err := r.Auth.ConfirmMFA(ctx, setupToken, input.Code); err != nil {
+	result, err := r.Auth.ConfirmMFA(ctx, setupToken, input.Code)
+	if err != nil {
 		return false, mapAuthError(err)
 	}
 	if w, ok := responseWriter(ctx); ok {
 		cookies.Clear(w, cookies.SetupCookie, r.CookieOpts)
+	}
+	if result != nil {
+		applyLoginCookies(ctx, r.CookieOpts, result)
 	}
 	return true, nil
 }

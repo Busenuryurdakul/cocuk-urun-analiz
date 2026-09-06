@@ -172,14 +172,17 @@ type DeviceVerification struct {
 }
 
 type MFASetupChallenge struct {
-	ID             primitive.ObjectID `bson:"_id,omitempty"`
-	UserID         primitive.ObjectID `bson:"userId"`
-	TokenHash      string             `bson:"tokenHash"`
-	Secret         string             `bson:"secret"`
-	FailedAttempts int                `bson:"failedAttempts"`
-	Locked         bool               `bson:"locked"`
-	ExpiresAt      time.Time          `bson:"expiresAt"`
-	CreatedAt      time.Time          `bson:"createdAt"`
+	ID                primitive.ObjectID `bson:"_id,omitempty"`
+	UserID            primitive.ObjectID `bson:"userId"`
+	TokenHash         string             `bson:"tokenHash"`
+	Secret            string             `bson:"secret"`
+	DeviceFingerprint string             `bson:"deviceFingerprint,omitempty"`
+	Platform          DevicePlatform     `bson:"platform,omitempty"`
+	AppVersion        string             `bson:"appVersion,omitempty"`
+	FailedAttempts    int                `bson:"failedAttempts"`
+	Locked            bool               `bson:"locked"`
+	ExpiresAt         time.Time          `bson:"expiresAt"`
+	CreatedAt         time.Time          `bson:"createdAt"`
 }
 
 type LoginEmailVerification struct {

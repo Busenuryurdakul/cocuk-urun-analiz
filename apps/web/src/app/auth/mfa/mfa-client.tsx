@@ -59,7 +59,7 @@ export default function MFAPageClient() {
         confirmMFA(input: $input)
       }`, { input: { code, setupToken } });
       sessionStorage.removeItem("miyuna_mfa_setup");
-      router.push("/auth/login");
+      router.push("/auth/email-otp");
     } catch (err) {
       setError(authErrorMessage(err, "MFA doğrulama başarısız"));
       setState("error");

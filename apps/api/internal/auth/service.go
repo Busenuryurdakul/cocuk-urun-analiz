@@ -272,10 +272,10 @@ func (s *Service) VerifyEmail(ctx context.Context, token string) (*MFASetupInfo,
 		Severity:  domain.SeverityInfo,
 		Details:   map[string]string{"stage": "register"},
 	})
-	return s.beginMFASetup(ctx, ev.UserID)
+	return s.beginMFASetup(ctx, ev.UserID, nil)
 }
 
-func (s *Service) beginMFASetup(ctx context.Context, userID primitive.ObjectID) (*MFASetupInfo, error) {
+func (s *Service) beginMFASetup(ctx context.Context, userID primitive.ObjectID, req *LoginRequest) (*MFASetupInfo, error) {
 	user, err := s.Users.FindByID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -293,6 +293,11 @@ func (s *Service) beginMFASetup(ctx context.Context, userID primitive.ObjectID) 
 		TokenHash: tokenHash,
 		Secret:    secret,
 		ExpiresAt: time.Now().UTC().Add(s.Policy.MFASetupTTL),
+	}
+	if req != nil {
+		challenge.DeviceFingerprint = req.DeviceFingerprint
+		challenge.Platform = req.Platform
+		challenge.AppVersion = req.AppVersion
 	}
 	if err := s.MFASetup.Create(ctx, challenge); err != nil {
 		return nil, err
@@ -323,11 +328,11 @@ func (s *Service) MFASetupForToken(ctx context.Context, setupToken string) (*MFA
 	}, nil
 }
 
-func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) error {
+func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) (*LoginResult, error) {
 	hash := HashToken(setupToken)
 	challenge, err := s.MFASetup.FindByTokenHash(ctx, hash)
 	if err != nil {
-		return ErrInvalidToken
+		return nil, ErrInvalidToken
 	}
 	if !ValidateTOTP(challenge.Secret, code) {
 		uid := challenge.UserID
@@ -338,7 +343,7 @@ func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) error
 				Severity:  domain.SeverityWarning,
 				Details:   map[string]string{"stage": "mfa_setup"},
 			})
-			return ErrChallengeLocked
+			return nil, ErrChallengeLocked
 		}
 		_, _ = s.BruteForce.RecordOTPFailure(ctx, "mfa_setup", hash, &uid)
 		_ = s.Security.Record(ctx, domain.SecurityEvent{
@@ -347,14 +352,32 @@ func (s *Service) ConfirmMFA(ctx context.Context, setupToken, code string) error
 			Severity:  domain.SeverityWarning,
 			Details:   map[string]string{"stage": "mfa_setup"},
 		})
-		return ErrInvalidCode
+		return nil, ErrInvalidCode
 	}
-	consumed, err := s.MFASetup.ConsumeByTokenHash(ctx, hash)
-	if err != nil {
-		return ErrInvalidToken
+	if err := s.Users.EnableMFA(ctx, challenge.UserID, challenge.Secret); err != nil {
+		return nil, err
 	}
 	_ = s.BruteForce.ResetOTPFailures(ctx, "mfa_setup", hash)
-	return s.Users.EnableMFA(ctx, consumed.UserID, consumed.Secret)
+
+	var continued *LoginResult
+	if challenge.DeviceFingerprint != "" {
+		user, err := s.Users.FindByID(ctx, challenge.UserID)
+		if err != nil {
+			return nil, err
+		}
+		continued, err = s.beginEmailOTPLogin(ctx, user, LoginRequest{
+			DeviceFingerprint: challenge.DeviceFingerprint,
+			Platform:          challenge.Platform,
+			AppVersion:        challenge.AppVersion,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if _, err := s.MFASetup.ConsumeByTokenHash(ctx, hash); err != nil {
+		return nil, ErrInvalidToken
+	}
+	return continued, nil
 }
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResult, error) {
@@ -393,7 +416,7 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResult, er
 		return nil, ErrEmailNotVerified
 	}
 	if !user.MFAEnabled {
-		setup, err := s.beginMFASetup(ctx, user.ID)
+		setup, err := s.beginMFASetup(ctx, user.ID, &req)
 		if err != nil {
 			return nil, err
 		}
