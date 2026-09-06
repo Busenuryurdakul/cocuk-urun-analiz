@@ -129,15 +129,20 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 
 	guard := &tenant.Guard{Members: members, Events: security}
-	smtpInner := mail.NewSMTP(mail.SMTPConfig{
-		Host:     cfg.MailSMTPHost,
-		Port:     cfg.MailSMTPPort,
+	mailInner := mail.NewProvider(mail.ProviderConfig{
+		Provider: cfg.MailProvider,
+		APIKey:   cfg.MailSMTPPass,
 		From:     cfg.MailFrom,
-		User:     cfg.MailSMTPUser,
-		Password: cfg.MailSMTPPass,
-		UseTLS:   cfg.MailSMTPTLS,
+		SMTP: mail.SMTPConfig{
+			Host:     cfg.MailSMTPHost,
+			Port:     cfg.MailSMTPPort,
+			From:     cfg.MailFrom,
+			User:     cfg.MailSMTPUser,
+			Password: cfg.MailSMTPPass,
+			UseTLS:   cfg.MailSMTPTLS,
+		},
 	})
-	mailer := mail.NewQueuedService(smtpInner, redisClient, cfg.MailQueueEnabled, cfg.MailRetryMax)
+	mailer := mail.NewQueuedService(mailInner, redisClient, cfg.MailQueueEnabled, cfg.MailRetryMax)
 
 	orgSvc := &org.Service{
 		Orgs:        orgs,

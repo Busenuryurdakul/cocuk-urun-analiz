@@ -34,6 +34,7 @@ $mailVars = @{
     MAIL_SMTP_PORT = $env:MAIL_SMTP_PORT
     MAIL_FROM      = $env:MAIL_FROM
     MAIL_SMTP_TLS  = if ($env:MAIL_SMTP_TLS) { $env:MAIL_SMTP_TLS } else { 'true' }
+    MAIL_PROVIDER  = if ($env:MAIL_PROVIDER) { $env:MAIL_PROVIDER } else { 'resend' }
     MAIL_QUEUE_ENABLED = if ($env:MAIL_QUEUE_ENABLED) { $env:MAIL_QUEUE_ENABLED } else { 'true' }
 }
 if ($env:MAIL_SMTP_USER) { $mailVars['MAIL_SMTP_USER'] = $env:MAIL_SMTP_USER }

@@ -23,6 +23,7 @@ type Config struct {
 	MailSMTPPass           string
 	MailSMTPTLS            bool
 	MailFrom               string
+	MailProvider           string
 	MailQueueEnabled       bool
 	MailRetryMax           int
 	TurnstileSecretKey     string
@@ -65,6 +66,7 @@ func Load() Config {
 		MailSMTPPass:           getEnv("MAIL_SMTP_PASS", ""),
 		MailSMTPTLS:            getEnv("MAIL_SMTP_TLS", "false") == "true",
 		MailFrom:               getEnv("MAIL_FROM", "noreply@miyuna.local"),
+		MailProvider:           getEnv("MAIL_PROVIDER", ""),
 		MailQueueEnabled:       getEnv("MAIL_QUEUE_ENABLED", "true") == "true",
 		MailRetryMax:           intEnv("MAIL_RETRY_MAX", 3),
 		TurnstileSecretKey:     getEnv("TURNSTILE_SECRET_KEY", ""),
