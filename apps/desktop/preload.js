@@ -8,8 +8,11 @@ contextBridge.exposeInMainWorld("miyunaDesktop", {
   getRefreshToken: () => ipcRenderer.invoke("token:get"),
   clearTokens: () => ipcRenderer.invoke("token:clear"),
   onDeepLink: (callback) => {
-    ipcRenderer.on("deep-link", (_event, url) => callback(url));
+    const listener = (_event, url) => callback(url);
+    ipcRenderer.on("deep-link", listener);
+    return () => ipcRenderer.removeListener("deep-link", listener);
   },
+  retryConnection: () => ipcRenderer.send("app:retry"),
   minimize: () => ipcRenderer.send("window:minimize"),
   maximize: () => ipcRenderer.send("window:maximize"),
   close: () => ipcRenderer.send("window:close"),

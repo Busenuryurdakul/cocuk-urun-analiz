@@ -9,6 +9,7 @@ import (
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
+	llmsvc "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/llm"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -27,6 +28,7 @@ type RunContextResponse struct {
 	ComplianceProfile       string             `json:"complianceProfile"`
 	LLMRoutingPolicyVersion string             `json:"llmRoutingPolicyVersion,omitempty"`
 	RequireEvidence         bool               `json:"requireEvidence"`
+	WorkerRotationPattern   string             `json:"workerRotationPattern"`
 	Capabilities            CapabilitySnapshot `json:"capabilities"`
 	ReviewCount             int                `json:"marketplaceReviewCount"`
 	UGCCount                int                `json:"ugcCount"`
@@ -70,6 +72,7 @@ func (s *Service) RunContext(ctx context.Context, organizationID, runID primitiv
 		ComplianceProfile:       complianceProfile,
 		LLMRoutingPolicyVersion: llmRoutingPolicyVersion,
 		RequireEvidence:         true,
+		WorkerRotationPattern:   llmsvc.WorkerRotationPattern(runID),
 		Capabilities:            s.BuildCapabilitySnapshot(),
 		ReviewCount:             resolved.MarketplaceReviewCount,
 		UGCCount:                resolved.UGCCount,

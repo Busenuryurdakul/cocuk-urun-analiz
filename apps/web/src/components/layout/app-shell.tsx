@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
-import { graphqlRequest } from "@/lib/graphql";
+import { clearDesktopSession, graphqlRequest } from "@/lib/graphql";
 
 type AppShellProps = {
   title: string;
@@ -28,7 +28,8 @@ export function AppShell({
   const pathname = usePathname();
 
   async function logout() {
-    await graphqlRequest(`mutation { logout }`);
+    await graphqlRequest(`mutation { logout }`).catch(() => undefined);
+    await clearDesktopSession();
     window.location.href = "/auth/login";
   }
 

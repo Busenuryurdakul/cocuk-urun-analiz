@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -167,18 +168,20 @@ func (s *Service) ResendEmailVerification(ctx context.Context, email, password s
 		return ack, nil
 	}
 	if !CheckPassword(user.PasswordHash, password) {
-		s.recordEmailResend(ctx, email, &user.ID)
+		s.noteEmailResendFailure(ctx, email, &user.ID)
 		return ack, nil
 	}
 	if user.EmailVerified {
 		return ack, nil
 	}
-	if s.recordEmailResend(ctx, email, &user.ID) {
+	if s.emailResendBlocked(ctx, email) {
+		log.Printf("email verification resend blocked for %s (rate limit)", email)
 		return ack, nil
 	}
 	if err := s.sendEmailVerification(ctx, user.ID, email); err != nil {
 		return nil, err
 	}
+	s.noteEmailResend(ctx, email, &user.ID)
 	return ack, nil
 }
 
@@ -187,10 +190,15 @@ func (s *Service) resendIfUnverified(ctx context.Context, email string) {
 	if err != nil || user.EmailVerified {
 		return
 	}
-	if s.emailResendBlocked(ctx, email) || s.recordEmailResend(ctx, email, &user.ID) {
+	if s.emailResendBlocked(ctx, email) {
+		log.Printf("email verification resend blocked for %s (rate limit)", email)
 		return
 	}
-	_ = s.sendEmailVerification(ctx, user.ID, email)
+	if err := s.sendEmailVerification(ctx, user.ID, email); err != nil {
+		log.Printf("email verification resend failed for %s: %v", email, err)
+		return
+	}
+	s.noteEmailResend(ctx, email, &user.ID)
 }
 
 func (s *Service) emailResendBlocked(ctx context.Context, email string) bool {
@@ -201,12 +209,18 @@ func (s *Service) emailResendBlocked(ctx context.Context, email string) bool {
 	return blocked
 }
 
-func (s *Service) recordEmailResend(ctx context.Context, email string, userID *primitive.ObjectID) bool {
+func (s *Service) noteEmailResendFailure(ctx context.Context, email string, userID *primitive.ObjectID) {
 	if s.BruteForce == nil {
-		return false
+		return
 	}
-	locked, _ := s.BruteForce.RecordOTPFailure(ctx, "email_resend", email, userID)
-	return locked
+	_, _ = s.BruteForce.RecordOTPFailure(ctx, "email_resend_fail", email, userID)
+}
+
+func (s *Service) noteEmailResend(ctx context.Context, email string, userID *primitive.ObjectID) {
+	if s.BruteForce == nil {
+		return
+	}
+	_, _ = s.BruteForce.RecordOTPFailure(ctx, "email_resend", email, userID)
 }
 
 func (s *Service) sendEmailVerification(ctx context.Context, userID primitive.ObjectID, email string) error {

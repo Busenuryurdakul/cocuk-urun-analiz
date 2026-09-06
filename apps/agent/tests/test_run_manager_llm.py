@@ -297,3 +297,33 @@ def test_long_analysis_escalates_to_heavy_model() -> None:
     assert escalated_call["task_type"] == "deep_analysis"
     phases = [call.kwargs["phase"] for call in go_client.record_event.call_args_list]
     assert PHASE_LLM_ESCALATED in phases
+
+
+def test_run_b_rotation_swaps_worker_and_reviewer() -> None:
+    go_client = MagicMock()
+    go_client.fetch_run_context.return_value = _run_context(worker_rotation_pattern="RUN_B")
+    go_client.cancellation_requested.return_value = False
+    go_client.authorize_tool.return_value = MagicMock(
+        allowed=True, grant_nonce="nonce", tool_execution_id="exec"
+    )
+    go_client.execute_tool.return_value = MagicMock(status="OK", payload={})
+
+    llm_client = MagicMock()
+    llm_client.complete.side_effect = [
+        _llm_result(content="worker output", persona_key=PERSONA_REVIEWER),
+        _llm_result(
+            call_id="call-2",
+            content="review output",
+            model_key="careful_analyst",
+            provider_key="primary",
+            persona_key=PERSONA_WORKER,
+        ),
+    ]
+
+    _start_manager(go_client, llm_client)
+
+    worker_call = llm_client.complete.call_args_list[0].kwargs
+    reviewer_call = llm_client.complete.call_args_list[1].kwargs
+    assert worker_call["persona_key"] == PERSONA_REVIEWER
+    assert reviewer_call["persona_key"] == PERSONA_WORKER
+    assert worker_call["persona_key"] != reviewer_call["persona_key"]

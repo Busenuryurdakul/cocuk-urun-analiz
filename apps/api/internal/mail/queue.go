@@ -91,6 +91,8 @@ func (q *QueuedService) StartWorker(ctx context.Context, interval time.Duration)
 				} else {
 					log.Printf("mail delivery failed after %d attempts to %s: %v", item.Attempts, item.To, err)
 				}
+			} else {
+				log.Printf("mail sent to %s subject=%q", item.To, item.Subject)
 			}
 		}
 	}()

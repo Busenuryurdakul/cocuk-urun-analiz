@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"net/mail"
 	"net/smtp"
 	"strings"
 )
@@ -33,14 +34,26 @@ func NewSMTPFromHostPort(host, port, from string) *SMTPService {
 func (s *SMTPService) Send(ctx context.Context, msg Message) error {
 	_ = ctx
 	addr := net.JoinHostPort(s.cfg.Host, s.cfg.Port)
-	body := buildMIME(msg)
+	envelopeFrom, headerFrom := parseFrom(s.cfg.From)
+	body := buildMIME(headerFrom, msg)
 	if s.cfg.UseTLS && s.cfg.User != "" {
-		return s.sendTLS(addr, msg.To, body)
+		return s.sendTLS(addr, envelopeFrom, msg.To, body)
 	}
-	return smtp.SendMail(addr, nil, s.cfg.From, []string{msg.To}, []byte(body))
+	return smtp.SendMail(addr, nil, envelopeFrom, []string{msg.To}, []byte(body))
 }
 
-func (s *SMTPService) sendTLS(addr, to, body string) error {
+func parseFrom(raw string) (envelope, header string) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return raw, raw
+	}
+	if addr, err := mail.ParseAddress(raw); err == nil {
+		return addr.Address, raw
+	}
+	return raw, raw
+}
+
+func (s *SMTPService) sendTLS(addr, from, to, body string) error {
 	host := s.cfg.Host
 	conn, err := tls.Dial("tcp", addr, &tls.Config{ServerName: host})
 	if err != nil {
@@ -55,7 +68,7 @@ func (s *SMTPService) sendTLS(addr, to, body string) error {
 	if err := client.Auth(smtp.PlainAuth("", s.cfg.User, s.cfg.Password, host)); err != nil {
 		return fmt.Errorf("smtp auth: %w", err)
 	}
-	if err := client.Mail(s.cfg.From); err != nil {
+	if err := client.Mail(from); err != nil {
 		return err
 	}
 	if err := client.Rcpt(to); err != nil {
@@ -71,15 +84,19 @@ func (s *SMTPService) sendTLS(addr, to, body string) error {
 	return w.Close()
 }
 
-func buildMIME(msg Message) string {
+func buildMIME(from string, msg Message) string {
+	fromLine := ""
+	if from != "" {
+		fromLine = fmt.Sprintf("From: %s\r\n", from)
+	}
 	if msg.HTMLBody != "" {
 		boundary := "miyuna-mail-boundary"
 		var b strings.Builder
-		fmt.Fprintf(&b, "To: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=%q\r\n\r\n", msg.To, msg.Subject, boundary)
+		fmt.Fprintf(&b, "%sTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=%q\r\n\r\n", fromLine, msg.To, msg.Subject, boundary)
 		fmt.Fprintf(&b, "--%s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s\r\n", boundary, msg.Body)
 		fmt.Fprintf(&b, "--%s\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s\r\n", boundary, msg.HTMLBody)
 		fmt.Fprintf(&b, "--%s--\r\n", boundary)
 		return b.String()
 	}
-	return fmt.Sprintf("To: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", msg.To, msg.Subject, msg.Body)
+	return fmt.Sprintf("%sTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s", fromLine, msg.To, msg.Subject, msg.Body)
 }

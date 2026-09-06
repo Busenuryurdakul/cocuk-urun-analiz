@@ -93,6 +93,13 @@ func (s *Service) ActiveConfiguration(ctx context.Context, actorID, orgID primit
 	return s.Snapshots.FindLatestPublished(ctx, &orgID, domain.ConfigSnapshotKindPhase6LLM)
 }
 
+func (s *Service) ConfigurationHistory(ctx context.Context, actorID, orgID primitive.ObjectID, limit int64) ([]domain.ConfigSnapshot, error) {
+	if _, err := s.requireRead(ctx, actorID, orgID); err != nil {
+		return nil, err
+	}
+	return s.Snapshots.ListPublished(ctx, &orgID, domain.ConfigSnapshotKindPhase6LLM, limit)
+}
+
 func (s *Service) CreateDraft(ctx context.Context, actorID primitive.ObjectID, in DraftInput) (*domain.LLMConfigurationDraft, error) {
 	orgID := in.OrganizationID
 	if orgID != nil {

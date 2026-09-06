@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Miyuna</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #14352f;
+        color: #fffdf9;
+        font-family: "Segoe UI", sans-serif;
+      }
+      main {
+        width: min(420px, calc(100vw - 48px));
+        text-align: center;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 12px;
+      }
+      p {
+        margin: 0 0 24px;
+        line-height: 1.5;
+        color: rgba(255, 253, 249, 0.78);
+      }
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 18px;
+        background: #1e4d45;
+        color: #fffdf9;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Miyuna açılamadı</h1>
+      <p>Web uygulamasına bağlanılamadı. Yerel geliştirmede önce API ve Next.js sunucularının çalıştığından emin olun.</p>
+      <button type="button" id="retry">Tekrar dene</button>
+    </main>
+    <script>
+      document.getElementById("retry").addEventListener("click", () => {
+        if (window.miyunaDesktop?.retryConnection) {
+          window.miyunaDesktop.retryConnection();
+        } else {
+          location.reload();
+        }
+      });
+    </script>
+  </body>
+</html>

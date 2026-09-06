@@ -15,22 +15,6 @@ export default function VerifyEmailClient() {
   const [secret, setSecret] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.miyunaDesktop?.onDeepLink) {
-      window.miyunaDesktop.onDeepLink((url: string) => {
-        try {
-          const parsed = new URL(url);
-          const deepToken = parsed.searchParams.get("token");
-          if (deepToken && parsed.pathname.includes("verify-email")) {
-            window.location.href = `/auth/verify-email?token=${encodeURIComponent(deepToken)}`;
-          }
-        } catch {
-          /* ignore malformed deep links */
-        }
-      });
-    }
-  }, []);
-
-  useEffect(() => {
     if (!token) {
       setState("empty");
       return;

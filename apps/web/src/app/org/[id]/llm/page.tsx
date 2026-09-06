@@ -31,6 +31,19 @@ type Config = {
   defaultModelKey: string;
   fallbackModelKey: string;
   publishedAt: string;
+  reason?: string;
+};
+
+type Draft = {
+  id: string;
+  status: string;
+  routingPolicyVersion: string;
+  personaKey: string;
+  personaVersion: string;
+  defaultModelKey: string;
+  fallbackModelKey: string;
+  validationErrors: string[];
+  updatedAt: string;
 };
 
 type OrgSettings = {
@@ -58,6 +71,12 @@ function OrgLLMPageContent() {
   const [models, setModels] = useState<Model[]>([]);
   const [health, setHealth] = useState<Health[]>([]);
   const [config, setConfig] = useState<Config | null>(null);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [snapshotHistory, setSnapshotHistory] = useState<Config[]>([]);
+  const [draftReason, setDraftReason] = useState("Organizasyon LLM yapılandırması güncellemesi");
+  const [rollbackSnapshotId, setRollbackSnapshotId] = useState("");
+  const [rollbackReason, setRollbackReason] = useState("Önceki yapılandırmaya geri dön");
+  const [configBusy, setConfigBusy] = useState(false);
   const [orgSettings, setOrgSettings] = useState<OrgSettings | null>(null);
   const [usage, setUsage] = useState<UsageDashboardData | null>(null);
   const [personaKey, setPersonaKey] = useState("careful_analyst");
@@ -78,6 +97,7 @@ function OrgLLMPageContent() {
         llmModels: Model[];
         llmHealth: Health[];
         activeLLMConfiguration: Config | null;
+        llmConfigurationDrafts: Draft[];
         llmOrgSettings: OrgSettings | null;
         llmUsageDashboard: UsageDashboardData;
       }>(
@@ -85,7 +105,10 @@ function OrgLLMPageContent() {
           llmModels(organizationId: $id) { modelKey displayName status healthStatus defaultForPlatform fallbackForPlatform }
           llmHealth(organizationId: $id) { modelKey displayName healthStatus providerKey }
           activeLLMConfiguration(organizationId: $id) {
-            id routingPolicyVersion personaKey defaultModelKey fallbackModelKey publishedAt
+            id routingPolicyVersion personaKey defaultModelKey fallbackModelKey publishedAt reason
+          }
+          llmConfigurationDrafts(organizationId: $id, limit: 10) {
+            id status routingPolicyVersion personaKey personaVersion defaultModelKey fallbackModelKey validationErrors updatedAt
           }
           llmOrgSettings(organizationId: $id) { organizationId personaKey defaultModelKey fallbackModelKey }
           llmUsageDashboard(organizationId: $id, fromDate: $fromDate, recentLimit: 12) {
@@ -99,6 +122,20 @@ function OrgLLMPageContent() {
       setModels(data.llmModels);
       setHealth(data.llmHealth);
       setConfig(data.activeLLMConfiguration);
+      setDrafts(data.llmConfigurationDrafts);
+      if (data.activeLLMConfiguration) {
+        const historyKey = `miyuna:llm-snapshots:${orgId}`;
+        const stored = typeof window !== "undefined" ? window.localStorage.getItem(historyKey) : null;
+        const previous = stored ? (JSON.parse(stored) as Config[]) : [];
+        const merged = [
+          data.activeLLMConfiguration,
+          ...previous.filter((item) => item.id !== data.activeLLMConfiguration?.id),
+        ].slice(0, 8);
+        setSnapshotHistory(merged);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(historyKey, JSON.stringify(merged));
+        }
+      }
       setOrgSettings(data.llmOrgSettings);
       setUsage(data.llmUsageDashboard);
       const settings = data.llmOrgSettings;
@@ -118,6 +155,116 @@ function OrgLLMPageContent() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function createDraft() {
+    setConfigBusy(true);
+    setSaveError("");
+    setSaveMessage("");
+    try {
+      await graphqlRequest(
+        `mutation($input: CreateLLMConfigurationDraftInput!) {
+          createLLMConfigurationDraft(input: $input) { id status }
+        }`,
+        {
+          input: {
+            organizationId: orgId,
+            personaKey,
+            defaultModelKey,
+            fallbackModelKey,
+            reason: draftReason,
+          },
+        },
+      );
+      setSaveMessage("Taslak oluşturuldu.");
+      await load();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Taslak oluşturulamadı");
+    } finally {
+      setConfigBusy(false);
+    }
+  }
+
+  async function validateDraft(draftId: string) {
+    setConfigBusy(true);
+    setSaveError("");
+    setSaveMessage("");
+    try {
+      const data = await graphqlRequest<{ validateLLMConfiguration: Draft }>(
+        `mutation($input: ValidateLLMConfigurationInput!) {
+          validateLLMConfiguration(input: $input) { id status validationErrors }
+        }`,
+        { input: { organizationId: orgId, draftId } },
+      );
+      if (data.validateLLMConfiguration.validationErrors.length > 0) {
+        setSaveError(data.validateLLMConfiguration.validationErrors.join(", "));
+      } else {
+        setSaveMessage("Taslak doğrulandı.");
+      }
+      await load();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Doğrulama başarısız");
+    } finally {
+      setConfigBusy(false);
+    }
+  }
+
+  async function publishDraft(draftId: string) {
+    setConfigBusy(true);
+    setSaveError("");
+    setSaveMessage("");
+    try {
+      const data = await graphqlRequest<{ publishLLMConfiguration: Config }>(
+        `mutation($input: PublishLLMConfigurationInput!) {
+          publishLLMConfiguration(input: $input) {
+            id routingPolicyVersion personaKey defaultModelKey fallbackModelKey publishedAt reason
+          }
+        }`,
+        { input: { organizationId: orgId, draftId, reason: draftReason } },
+      );
+      const published = data.publishLLMConfiguration;
+      const historyKey = `miyuna:llm-snapshots:${orgId}`;
+      const merged = [published, ...snapshotHistory.filter((item) => item.id !== published.id)].slice(0, 8);
+      setSnapshotHistory(merged);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(historyKey, JSON.stringify(merged));
+      }
+      setSaveMessage(`Yapılandırma yayınlandı (snapshot ${published.id}).`);
+      await load();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Yayınlama başarısız");
+    } finally {
+      setConfigBusy(false);
+    }
+  }
+
+  async function rollbackSnapshot(e: FormEvent) {
+    e.preventDefault();
+    if (!rollbackSnapshotId.trim()) return;
+    setConfigBusy(true);
+    setSaveError("");
+    setSaveMessage("");
+    try {
+      await graphqlRequest(
+        `mutation($input: RollbackLLMConfigurationInput!) {
+          rollbackLLMConfiguration(input: $input) { id publishedAt }
+        }`,
+        {
+          input: {
+            organizationId: orgId,
+            snapshotId: rollbackSnapshotId.trim(),
+            reason: rollbackReason,
+          },
+        },
+      );
+      setSaveMessage("Yapılandırma geri alındı.");
+      setRollbackSnapshotId("");
+      await load();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Geri alma başarısız");
+    } finally {
+      setConfigBusy(false);
+    }
+  }
 
   async function savePersona(e: FormEvent) {
     e.preventDefault();
@@ -205,6 +352,23 @@ function OrgLLMPageContent() {
   }
 
   const modelName = (key: string) => models.find((model) => model.modelKey === key)?.displayName ?? key;
+
+  const draftPreview = {
+    personaKey,
+    defaultModelKey,
+    fallbackModelKey,
+  };
+
+  function compareRow(label: string, oldValue: string, newValue: string) {
+    const changed = oldValue !== newValue;
+    return (
+      <li className="grid gap-2 rounded-xl border border-sand/70 px-3 py-2 text-sm sm:grid-cols-3">
+        <span className="text-muted">{label}</span>
+        <span className={changed ? "line-through text-muted" : ""}>{oldValue || "—"}</span>
+        <span className={changed ? "font-medium text-forest" : ""}>{newValue || "—"}</span>
+      </li>
+    );
+  }
 
   return (
     <AppShell
@@ -309,13 +473,145 @@ function OrgLLMPageContent() {
             </div>
           </section>
 
+          <section className="card space-y-5">
+            <div>
+              <p className="kicker">Manual control</p>
+              <h2 className="font-display text-xl">Yapılandırma yönetimi</h2>
+              <p className="mt-1 text-sm text-muted">
+                Taslak oluştur → doğrula → yayınla. Otomatik job routing policy üzerinden çalışır; bu panel snapshot
+                sürümlemesini yönetir.
+              </p>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-sand bg-cream/40 p-4">
+                <p className="text-xs uppercase tracking-wide text-muted">OLD (aktif snapshot)</p>
+                {config ? (
+                  <ul className="mt-3 space-y-1 text-sm">
+                    <li>Persona: {config.personaKey}</li>
+                    <li>Model: {modelName(config.defaultModelKey)}</li>
+                    <li>Yedek: {modelName(config.fallbackModelKey)}</li>
+                    <li className="font-mono text-xs text-muted">{config.id}</li>
+                  </ul>
+                ) : (
+                  <p className="mt-3 text-sm text-muted">Aktif snapshot yok.</p>
+                )}
+              </div>
+              <div className="rounded-2xl border border-forest/30 bg-white p-4">
+                <p className="text-xs uppercase tracking-wide text-muted">NEW (taslak önizleme)</p>
+                <ul className="mt-3 space-y-1 text-sm">
+                  <li>Persona: {draftPreview.personaKey}</li>
+                  <li>Model: {modelName(draftPreview.defaultModelKey)}</li>
+                  <li>Yedek: {modelName(draftPreview.fallbackModelKey)}</li>
+                </ul>
+              </div>
+            </div>
+
+            {config && (
+              <ul className="space-y-2">
+                {compareRow("Persona", config.personaKey, draftPreview.personaKey)}
+                {compareRow("Varsayılan model", modelName(config.defaultModelKey), modelName(draftPreview.defaultModelKey))}
+                {compareRow("Yedek model", modelName(config.fallbackModelKey), modelName(draftPreview.fallbackModelKey))}
+              </ul>
+            )}
+
+            <label className="label">
+              Değişiklik gerekçesi
+              <input className="input" value={draftReason} onChange={(e) => setDraftReason(e.target.value)} />
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn-primary" disabled={configBusy} onClick={() => void createDraft()}>
+                Taslak oluştur
+              </button>
+            </div>
+
+            {drafts.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-sand text-left text-xs uppercase tracking-wide text-muted">
+                      <th className="py-2 pr-4">Durum</th>
+                      <th className="py-2 pr-4">Persona</th>
+                      <th className="py-2 pr-4">Modeller</th>
+                      <th className="py-2 pr-4">İşlem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {drafts.map((draft) => (
+                      <tr key={draft.id} className="border-b border-sand/70">
+                        <td className="py-3 pr-4">{draft.status}</td>
+                        <td className="py-3 pr-4">{draft.personaKey}</td>
+                        <td className="py-3 pr-4">
+                          {modelName(draft.defaultModelKey)} → {modelName(draft.fallbackModelKey)}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <div className="flex flex-wrap gap-2">
+                            {draft.status === "DRAFT" && (
+                              <button
+                                type="button"
+                                className="btn-ghost !px-2 !py-1 text-xs"
+                                disabled={configBusy}
+                                onClick={() => void validateDraft(draft.id)}
+                              >
+                                Doğrula
+                              </button>
+                            )}
+                            {draft.status === "VALIDATED" && (
+                              <button
+                                type="button"
+                                className="btn-secondary !px-2 !py-1 text-xs"
+                                disabled={configBusy}
+                                onClick={() => void publishDraft(draft.id)}
+                              >
+                                Yayınla
+                              </button>
+                            )}
+                          </div>
+                          {draft.validationErrors.length > 0 && (
+                            <p className="mt-1 text-xs text-red-700">{draft.validationErrors.join(", ")}</p>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <form onSubmit={(e) => void rollbackSnapshot(e)} className="grid gap-3 border-t border-sand pt-4 lg:grid-cols-3">
+              <label className="label lg:col-span-1">
+                Geri alınacak snapshot
+                <select className="input" value={rollbackSnapshotId} onChange={(e) => setRollbackSnapshotId(e.target.value)}>
+                  <option value="">Seçin…</option>
+                  {snapshotHistory
+                    .filter((item) => item.id !== config?.id)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.publishedAt.slice(0, 16)} — {item.personaKey}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label className="label lg:col-span-1">
+                Geri alma gerekçesi
+                <input className="input" value={rollbackReason} onChange={(e) => setRollbackReason(e.target.value)} />
+              </label>
+              <div className="flex items-end">
+                <button type="submit" className="btn-secondary" disabled={configBusy || !rollbackSnapshotId}>
+                  Snapshot&apos;a geri dön
+                </button>
+              </div>
+            </form>
+          </section>
+
           <section className="grid gap-6 lg:grid-cols-3">
             <form onSubmit={(e) => void saveModels(e)} className="card space-y-4">
               <div>
                 <p className="kicker">Organizasyon</p>
-                <h2 className="font-display text-xl">Model seçimi</h2>
+                <h2 className="font-display text-xl">Manuel model tercihi</h2>
                 <p className="mt-1 text-sm text-muted">
-                  Analizler {modelName(defaultModelKey)} ile başlar, gerektiğinde {modelName(fallbackModelKey)} modeline geçer.
+                  Snapshot yayınlamadan önce taslak alanlarını doldurur. Otomatik job routing&apos;i etkilemez.
                 </p>
               </div>
 

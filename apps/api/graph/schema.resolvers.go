@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
@@ -102,12 +101,41 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 
 // VerifyLoginEmailOtp is the resolver for the verifyLoginEmailOTP field.
 func (r *mutationResolver) VerifyLoginEmailOtp(ctx context.Context, input model.VerifyLoginEmailOTPInput) (*model.LoginPayload, error) {
-	panic(fmt.Errorf("not implemented: VerifyLoginEmailOtp - verifyLoginEmailOTP"))
+	if err := r.Auth.TurnstileVerify(ctx, ptrStr(input.TurnstileToken)); err != nil {
+		return nil, mapAuthError(auth.ErrInvalidCredentials)
+	}
+	req, ok := httpx.RequestFrom(ctx)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	result, err := r.Auth.VerifyLoginEmailOTP(ctx, pendingToken, input.Code, input.DeviceFingerprint)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	applyLoginCookies(ctx, r.CookieOpts, result)
+	return toModelLoginPayload(result), nil
 }
 
 // ResendLoginEmailOtp is the resolver for the resendLoginEmailOTP field.
 func (r *mutationResolver) ResendLoginEmailOtp(ctx context.Context) (*model.LoginPayload, error) {
-	panic(fmt.Errorf("not implemented: ResendLoginEmailOtp - resendLoginEmailOTP"))
+	req, ok := httpx.RequestFrom(ctx)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	if !ok {
+		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
+	}
+	result, err := r.Auth.ResendLoginEmailOTP(ctx, pendingToken)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	applyLoginCookies(ctx, r.CookieOpts, result)
+	return toModelLoginPayload(result), nil
 }
 
 // VerifyLoginMfa is the resolver for the verifyLoginMFA field.

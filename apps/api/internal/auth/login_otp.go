@@ -52,10 +52,54 @@ func (s *Service) verifyTurnstile(ctx context.Context, token string) error {
 	return s.Turnstile.Verify(ctx, token, info.IPAddress)
 }
 
+func (s *Service) rejectForeignDesktopSession(ctx context.Context, userID primitive.ObjectID, device *domain.Device) error {
+	if !domain.IsElectronPlatform(device.Platform) {
+		return nil
+	}
+	sessions, err := s.Sessions.ListActiveByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+	for _, sess := range sessions {
+		if sess.DeviceID == device.ID {
+			continue
+		}
+		other, findErr := s.Devices.FindByID(ctx, userID, sess.DeviceID)
+		if findErr != nil {
+			continue
+		}
+		if !domain.IsElectronPlatform(other.Platform) {
+			continue
+		}
+		_ = s.Security.Record(ctx, domain.SecurityEvent{
+			UserID:    &userID,
+			EventType: domain.EventDesktopSessionBlocked,
+			Severity:  domain.SeverityWarning,
+			Details: map[string]string{
+				"activeDeviceId":  other.ID.Hex(),
+				"attemptDeviceId": device.ID.Hex(),
+			},
+		})
+		return ErrDesktopSessionActive
+	}
+	return nil
+}
+
+func (s *Service) replaceSameDeviceSessions(ctx context.Context, device *domain.Device) {
+	if s.Sessions == nil || device == nil || device.ID.IsZero() {
+		return
+	}
+	_ = s.Sessions.RevokeByDeviceID(ctx, device.ID)
+}
+
 func (s *Service) completeLogin(ctx context.Context, user *domain.User, device *domain.Device) (*LoginResult, error) {
 	if err := s.Devices.MarkVerified(ctx, device.ID); err != nil {
 		return nil, err
 	}
+	if err := s.rejectForeignDesktopSession(ctx, user.ID, device); err != nil {
+		return nil, err
+	}
+	s.replaceSameDeviceSessions(ctx, device)
 	tokens, err := s.issueAuthTokens(ctx, user, device)
 	if err != nil {
 		return nil, err
@@ -128,6 +172,9 @@ func (s *Service) beginEmailOTPLogin(ctx context.Context, user *domain.User, req
 		Verified:          false,
 	}
 	if err := s.Devices.Upsert(ctx, device); err != nil {
+		return nil, err
+	}
+	if err := s.rejectForeignDesktopSession(ctx, user.ID, device); err != nil {
 		return nil, err
 	}
 

@@ -7,6 +7,12 @@
 #   $env:REDIS_URL = 'redis://...'
 #   $env:HF_TOKEN = 'hf_...'   # optional, for Hugging Face LLM
 #   .\scripts\deploy\configure_render_production.ps1
+#   .\scripts\deploy\configure_render_production.ps1 -LlmBackend render
+
+param(
+    [ValidateSet('huggingface', 'render')]
+    [string]$LlmBackend = 'huggingface'
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -91,19 +97,27 @@ $apiVars = @{
     AGENT_INTERNAL_TOKEN = $internalToken
     AGENT_ORCHESTRATOR_URL = $agentBaseUrl
     GO_INTERNAL_API_URL = $apiBaseUrl
-    LLM_PRIMARY_BASE_URL = 'https://router.huggingface.co/v1'
-    LLM_SECONDARY_BASE_URL = 'https://router.huggingface.co/v1'
-    LLM_PRIMARY_MODEL_NAME = 'Qwen/Qwen2.5-0.5B-Instruct'
-    LLM_SECONDARY_MODEL_NAME = 'meta-llama/Llama-3.2-1B-Instruct'
     CREDENTIALS_ENCRYPTION_KEY = $credKey
     MAIL_SMTP_HOST = if ($env:MAIL_SMTP_HOST) { $env:MAIL_SMTP_HOST } else { 'localhost' }
     MAIL_SMTP_PORT = if ($env:MAIL_SMTP_PORT) { $env:MAIL_SMTP_PORT } else { '1025' }
     MAIL_SMTP_TLS = if ($env:MAIL_SMTP_TLS) { $env:MAIL_SMTP_TLS } else { 'false' }
     MAIL_FROM = if ($env:MAIL_FROM) { $env:MAIL_FROM } else { 'noreply@miyuna.local' }
 }
-if ($hfToken) {
-    $apiVars['LLM_PRIMARY_API_KEY'] = $hfToken
-    $apiVars['LLM_SECONDARY_API_KEY'] = $hfToken
+
+if ($LlmBackend -eq 'render') {
+    $apiVars['LLM_PRIMARY_BASE_URL'] = 'http://miyuna-llm-primary:11434/v1'
+    $apiVars['LLM_SECONDARY_BASE_URL'] = 'http://miyuna-llm-secondary:11434/v1'
+    $apiVars['LLM_PRIMARY_MODEL_NAME'] = 'qwen2.5:0.5b'
+    $apiVars['LLM_SECONDARY_MODEL_NAME'] = 'llama3.2:1b'
+} else {
+    $apiVars['LLM_PRIMARY_BASE_URL'] = 'https://router.huggingface.co/v1'
+    $apiVars['LLM_SECONDARY_BASE_URL'] = 'https://router.huggingface.co/v1'
+    $apiVars['LLM_PRIMARY_MODEL_NAME'] = 'Qwen/Qwen2.5-0.5B-Instruct'
+    $apiVars['LLM_SECONDARY_MODEL_NAME'] = 'meta-llama/Llama-3.2-1B-Instruct'
+    if ($hfToken) {
+        $apiVars['LLM_PRIMARY_API_KEY'] = $hfToken
+        $apiVars['LLM_SECONDARY_API_KEY'] = $hfToken
+    }
 }
 if ($env:MAIL_SMTP_USER) { $apiVars['MAIL_SMTP_USER'] = $env:MAIL_SMTP_USER }
 if ($env:MAIL_SMTP_PASS) { $apiVars['MAIL_SMTP_PASS'] = $env:MAIL_SMTP_PASS }
@@ -122,5 +136,5 @@ Write-Host 'Triggering redeploy...'
 render deploys create $apiServiceId --confirm -o json | Out-Null
 render deploys create $agentServiceId --confirm -o json | Out-Null
 
-Write-Host "Done. API: $apiBaseUrl  Agent: $agentBaseUrl"
-Write-Host "Next: set Vercel NEXT_PUBLIC_API_URL=$apiBaseUrl/graphql and redeploy web."
+Write-Host "Done. API: $apiBaseUrl  Agent: $agentBaseUrl  LLM backend: $LlmBackend"
+Write-Host "Next: set Vercel NEXT_PUBLIC_API_URL=$apiBaseUrl (no /graphql suffix) and redeploy web."

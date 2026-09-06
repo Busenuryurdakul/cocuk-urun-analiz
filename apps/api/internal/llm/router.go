@@ -11,14 +11,12 @@ import (
 )
 
 type RouteRequest struct {
-	TaskType         string
-	SafetyRisk       string
-	RequireEvidence  bool
-	PersonaKey       string
-	OrgDefaultKey    string
-	OrgFallbackKey   string
-	Policy           *domain.LLMRoutingPolicy
-	Models           []domain.LLMModel
+	TaskType        string
+	SafetyRisk      string
+	RequireEvidence bool
+	PersonaKey      string
+	Policy          *domain.LLMRoutingPolicy
+	Models          []domain.LLMModel
 }
 
 type RouteDecision struct {
@@ -40,26 +38,31 @@ func (r *Router) Decide(ctx context.Context, req RouteRequest) (RouteDecision, e
 		return RouteDecision{}, ErrInsufficientModels
 	}
 
-	primary := strings.TrimSpace(req.OrgDefaultKey)
-	if primary == "" {
-		primary = strings.TrimSpace(req.Policy.DefaultModelKey)
-	}
-	fallback := strings.TrimSpace(req.OrgFallbackKey)
-	if fallback == "" {
-		fallback = strings.TrimSpace(req.Policy.FallbackModelKey)
-	}
+	primary := strings.TrimSpace(req.Policy.DefaultModelKey)
+	fallback := strings.TrimSpace(req.Policy.FallbackModelKey)
 
 	preferred := preferredModelsForTask(req.Policy, req.TaskType)
-	if len(preferred) > 0 {
-		if pick := firstAvailable(preferred, candidates); pick != "" {
-			primary = pick
+	primaryCandidates := make([]string, 0, len(preferred))
+	for _, key := range preferred {
+		if containsModelKey(candidates, key) {
+			primaryCandidates = append(primaryCandidates, key)
+		}
+	}
+	if len(primaryCandidates) == 0 {
+		if containsModelKey(candidates, primary) {
+			primaryCandidates = []string{primary}
+		} else {
+			primaryCandidates = []string{candidates[0].ModelKey}
 		}
 	}
 
-	if !containsModelKey(candidates, primary) {
-		primary = candidates[0].ModelKey
+	primary = r.selectByLoadAndRoundRobin(ctx, primaryCandidates)
+	if primary == "" {
+		return RouteDecision{}, ErrInsufficientModels
 	}
-	if fallback == "" || fallback == primary {
+
+	if !containsModelKey(candidates, fallback) || fallback == primary {
+		fallback = ""
 		for _, m := range candidates {
 			if m.ModelKey != primary {
 				fallback = m.ModelKey
@@ -69,27 +72,6 @@ func (r *Router) Decide(ctx context.Context, req RouteRequest) (RouteDecision, e
 	}
 	if fallback == "" {
 		return RouteDecision{}, ErrInsufficientModels
-	}
-
-	// Tie-break using least-loaded then round-robin when multiple equally preferred.
-	if r.Redis != nil && len(preferred) > 1 {
-		loads := make([]modelLoad, 0, len(preferred))
-		for _, key := range preferred {
-			if !containsModelKey(candidates, key) {
-				continue
-			}
-			load, _ := r.Redis.Get(ctx, loadKey(key))
-			loads = append(loads, modelLoad{Key: key, Load: atoi(load)})
-		}
-		if len(loads) > 0 {
-			sort.Slice(loads, func(i, j int) bool {
-				if loads[i].Load == loads[j].Load {
-					return loads[i].Key < loads[j].Key
-				}
-				return loads[i].Load < loads[j].Load
-			})
-			primary = loads[0].Key
-		}
 	}
 
 	reason := fmt.Sprintf("task=%s;primary=%s;fallback=%s;policy=%s", req.TaskType, primary, fallback, req.Policy.Version)
@@ -108,6 +90,55 @@ func (r *Router) Decide(ctx context.Context, req RouteRequest) (RouteDecision, e
 type modelLoad struct {
 	Key  string
 	Load int
+}
+
+func (r *Router) selectByLoadAndRoundRobin(ctx context.Context, keys []string) string {
+	if len(keys) == 0 {
+		return ""
+	}
+	if len(keys) == 1 {
+		if r.Redis != nil {
+			_ = r.Redis.Set(ctx, roundRobinKey(), keys[0], 0)
+		}
+		return keys[0]
+	}
+	if r.Redis == nil {
+		return keys[0]
+	}
+
+	loads := make([]modelLoad, 0, len(keys))
+	minLoad := int(^uint(0) >> 1)
+	for _, key := range keys {
+		load, _ := r.Redis.Get(ctx, loadKey(key))
+		n := atoi(load)
+		loads = append(loads, modelLoad{Key: key, Load: n})
+		if n < minLoad {
+			minLoad = n
+		}
+	}
+
+	tied := make([]string, 0, len(loads))
+	for _, item := range loads {
+		if item.Load == minLoad {
+			tied = append(tied, item.Key)
+		}
+	}
+	sort.Strings(tied)
+	if len(tied) == 1 {
+		r.TouchRoundRobin(ctx, tied[0])
+		return tied[0]
+	}
+
+	last, _ := r.Redis.Get(ctx, roundRobinKey())
+	pick := tied[0]
+	for i, key := range tied {
+		if key == last {
+			pick = tied[(i+1)%len(tied)]
+			break
+		}
+	}
+	r.TouchRoundRobin(ctx, pick)
+	return pick
 }
 
 func preferredModelsForTask(policy *domain.LLMRoutingPolicy, taskType string) []string {

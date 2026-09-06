@@ -39,6 +39,7 @@ export default function LoginPage() {
     setInfo("");
     setPendingVerify(null);
     const fingerprint = await deviceFingerprintAsync();
+    const version = await appVersion();
     try {
       const data = await graphqlRequest<{ login: { status: LoginStatus } }>(
         `mutation Login($input: LoginInput!) {
@@ -50,7 +51,7 @@ export default function LoginPage() {
             password,
             deviceFingerprint: fingerprint,
             platform: clientPlatform(),
-            appVersion: appVersion() ?? null,
+            appVersion: version ?? null,
             turnstileToken: turnstileToken || null,
           },
         },
@@ -131,7 +132,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="card space-y-4">
+      <form method="post" onSubmit={onSubmit} className="card space-y-4">
         <label className="label">
           E-posta
           <input

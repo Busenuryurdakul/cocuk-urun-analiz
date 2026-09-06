@@ -12,3 +12,5 @@ apps/desktop/
 **/*.jsonl
 **/*.csv
 .git/
+models/
+artifacts/

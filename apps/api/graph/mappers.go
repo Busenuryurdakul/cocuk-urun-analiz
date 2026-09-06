@@ -45,6 +45,8 @@ func mapAuthError(err error) error {
 		return gqlError("CHALLENGE_LOCKED", err)
 	case errors.Is(err, auth.ErrRefreshReplay):
 		return gqlError("REFRESH_REPLAY", err)
+	case errors.Is(err, auth.ErrDesktopSessionActive):
+		return gqlError("DESKTOP_SESSION_ACTIVE", err)
 	case errors.Is(err, tenant.ErrCrossTenantAccess), errors.Is(err, orgsvc.ErrForbidden):
 		return gqlError("FORBIDDEN", errForbidden)
 	case errors.Is(err, orgsvc.ErrLastOwner):

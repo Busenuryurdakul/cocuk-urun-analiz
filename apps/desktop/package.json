@@ -25,14 +25,15 @@
     "directories": {
       "output": "dist"
     },
+    "files": ["main.js", "preload.js", "offline.html", "assets/**/*"],
     "win": {
       "target": ["nsis"],
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.png"
     },
     "mac": {
       "target": ["dmg"],
       "category": "public.app-category.productivity",
-      "icon": "assets/icon.icns"
+      "icon": "assets/icon.png"
     },
     "protocols": [
       {

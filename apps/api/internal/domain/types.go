@@ -49,9 +49,14 @@ const (
 	EventEmailVerified      SecurityEventType = "EMAIL_VERIFIED"
 	EventLoginSuccess       SecurityEventType = "LOGIN_SUCCESS"
 	EventLogout             SecurityEventType = "LOGOUT"
-	EventDeviceRevoked      SecurityEventType = "DEVICE_REVOKED"
-	EventLoginEmailOTPSent  SecurityEventType = "LOGIN_EMAIL_OTP_SENT"
+	EventDeviceRevoked           SecurityEventType = "DEVICE_REVOKED"
+	EventLoginEmailOTPSent       SecurityEventType = "LOGIN_EMAIL_OTP_SENT"
+	EventDesktopSessionBlocked   SecurityEventType = "DESKTOP_SESSION_BLOCKED"
 )
+
+func IsElectronPlatform(p DevicePlatform) bool {
+	return p == DevicePlatformElectronWin || p == DevicePlatformElectronMac
+}
 
 type User struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty"`

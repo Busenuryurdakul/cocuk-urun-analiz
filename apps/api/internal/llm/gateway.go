@@ -154,20 +154,11 @@ func (g *Gateway) Complete(ctx context.Context, req GatewayRequest) (GatewayResp
 		return GatewayResponse{}, ErrInsufficientModels
 	}
 
-	orgDefault := ""
-	orgFallback := ""
-	if settings, err := g.deps.OrgSettings.FindByOrg(ctx, req.OrganizationID); err == nil {
-		orgDefault = settings.DefaultModelKey
-		orgFallback = settings.FallbackModelKey
-	}
-
 	decision, err := g.deps.Router.Decide(ctx, RouteRequest{
 		TaskType:        req.TaskType,
 		SafetyRisk:      req.SafetyRisk,
 		RequireEvidence: req.RequireEvidence,
 		PersonaKey:      personaKey,
-		OrgDefaultKey:   orgDefault,
-		OrgFallbackKey:  orgFallback,
 		Policy:          policy,
 		Models:          models,
 	})

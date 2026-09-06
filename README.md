@@ -10,9 +10,10 @@ Architecture source of truth: [`docs/FINAL_MASTER_PROMPT.md`](docs/FINAL_MASTER_
 
 ```text
 apps/
-  web/     Next.js 14+ (App Router, TypeScript, Tailwind)
-  api/     Go GraphQL API (gqlgen) — auth, multi-tenancy, health/readiness
-  agent/   Python Agent Orchestrator (internal, FastAPI stub)
+  web/      Next.js 14+ (App Router, TypeScript, Tailwind)
+  desktop/  Electron (Windows + macOS) — hardened shell around web
+  api/      Go GraphQL API (gqlgen) — auth, multi-tenancy, health/readiness
+  agent/    Python Agent Orchestrator (internal, FastAPI stub)
 infra/
   docker/  Dev stack: MongoDB, Redis, MinIO, MailHog
   scripts/ XCS internal orchestration (Phase 1+)
@@ -68,6 +69,24 @@ cd apps/web
 npm install
 npm run dev
 # http://localhost:3000
+```
+
+### 6. Desktop (Electron)
+
+Web ve API ayaktayken:
+
+```bash
+cd apps/desktop
+npm install
+npm run dev
+```
+
+Masaüstü istemcisi Next.js arayüzünü yükler; refresh token OS Keychain / Credential Manager’da tutulur. İkinci aktif masaüstü oturumu engellenir; aynı cihazdan yeniden giriş yapılabilir.
+
+```powershell
+$env:MIYUNA_WEB_URL="http://localhost:3000"
+$env:MIYUNA_API_URL="http://localhost:8080"
+npm run dev
 ```
 
 ## Phase status

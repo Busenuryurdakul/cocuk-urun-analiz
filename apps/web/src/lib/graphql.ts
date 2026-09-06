@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+function resolveApiBaseUrl(): string {
+  const raw = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").trim().replace(/\/+$/, "");
+  return raw.replace(/\/graphql$/i, "");
+}
+
+const API_URL = resolveApiBaseUrl();
 
 type GraphQLResponse<T> = {
   data?: T;
@@ -32,12 +37,30 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   INVALID_TOKEN: "Bağlantı geçersiz veya süresi dolmuş.",
   CHALLENGE_LOCKED: "Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.",
   DUPLICATE: "Bu e-posta ile zaten bir hesap var.",
+  DESKTOP_SESSION_ACTIVE:
+    "Bu hesapta başka bir masaüstü oturumu açık. Önce diğer cihazdan çıkış yapın veya o cihazı güvenlik ayarlarından kaldırın.",
 };
+
+function isNetworkFailure(err: unknown): boolean {
+  if (err instanceof TypeError) {
+    return true;
+  }
+  const message = err instanceof Error ? err.message : "";
+  return (
+    message === "Failed to fetch" ||
+    message.startsWith("GraphQL HTTP") ||
+    message.includes("NetworkError") ||
+    message.includes("Load failed")
+  );
+}
 
 export function authErrorMessage(err: unknown, fallback = "İşlem başarısız"): string {
   const code = graphqlErrorCode(err);
   if (code && AUTH_ERROR_MESSAGES[code]) {
     return AUTH_ERROR_MESSAGES[code];
+  }
+  if (isNetworkFailure(err)) {
+    return "Sunucuya bağlanılamadı. Lütfen biraz sonra tekrar deneyin.";
   }
   return fallback;
 }
@@ -45,11 +68,12 @@ export function authErrorMessage(err: unknown, fallback = "İşlem başarısız"
 type MiyunaDesktop = {
   platform: string;
   getDeviceFingerprint: () => Promise<string>;
-  getAppVersion: () => string;
+  getAppVersion: () => Promise<string> | string;
   setRefreshToken?: (token: string) => Promise<boolean>;
   getRefreshToken?: () => Promise<string | null>;
   clearTokens?: () => Promise<boolean>;
-  onDeepLink?: (callback: (url: string) => void) => void;
+  onDeepLink?: (callback: (url: string) => void) => (() => void) | void;
+  retryConnection?: () => void;
   minimize?: () => void;
   maximize?: () => void;
   close?: () => void;
@@ -104,8 +128,16 @@ export function deviceFingerprint(): string {
   return fp;
 }
 
-export function appVersion(): string | undefined {
-  return window.miyunaDesktop?.getAppVersion?.();
+export async function appVersion(): Promise<string | undefined> {
+  if (typeof window === "undefined" || !window.miyunaDesktop?.getAppVersion) {
+    return undefined;
+  }
+  return window.miyunaDesktop.getAppVersion();
+}
+
+export async function clearDesktopSession(): Promise<void> {
+  if (typeof window === "undefined") return;
+  await window.miyunaDesktop?.clearTokens?.();
 }
 
 export async function graphqlRequest<T>(

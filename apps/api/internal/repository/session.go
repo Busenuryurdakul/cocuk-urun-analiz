@@ -103,6 +103,23 @@ func (r *SessionRepository) RevokeByDeviceID(ctx context.Context, deviceID primi
 	return err
 }
 
+func (r *SessionRepository) ListActiveByUser(ctx context.Context, userID primitive.ObjectID) ([]domain.Session, error) {
+	cur, err := r.col.Find(ctx, bson.M{
+		"userId":    userID,
+		"revoked":   false,
+		"expiresAt": bson.M{"$gt": time.Now().UTC()},
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	var out []domain.Session
+	if err := cur.All(ctx, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 type RotatedRefreshRepository struct {
 	col *mongo.Collection
 }

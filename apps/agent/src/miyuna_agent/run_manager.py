@@ -35,6 +35,8 @@ DEFAULT_RUN_TIMEOUT_SECONDS = 600
 MAX_TOOL_ATTEMPTS = 3
 PERSONA_WORKER = "careful_analyst"
 PERSONA_REVIEWER = "result_analyst"
+ROTATION_RUN_A = "RUN_A"
+ROTATION_RUN_B = "RUN_B"
 TASK_ANALYSIS = "analysis"
 TASK_REVIEW = "review"
 TASK_DEEP_ANALYSIS = "deep_analysis"
@@ -241,6 +243,8 @@ class RunManager:
             if self._is_terminal(run_id):
                 return
 
+            worker_persona, reviewer_persona = self._rotation_personas(ctx)
+
             worker_prompt = self._worker_prompt(ctx)
             worker_result = self._run_llm_step(
                 org_id=org_id,
@@ -248,7 +252,7 @@ class RunManager:
                 trace_id=trace_id,
                 ctx=ctx,
                 step_key="worker",
-                persona_key=PERSONA_WORKER,
+                persona_key=worker_persona,
                 task_type=TASK_ANALYSIS,
                 user_prompt=worker_prompt,
             )
@@ -272,7 +276,7 @@ class RunManager:
                     trace_id=trace_id,
                     ctx=ctx,
                     step_key="worker-escalated",
-                    persona_key=PERSONA_REVIEWER,
+                    persona_key=self._escalation_persona(worker_persona),
                     task_type=TASK_DEEP_ANALYSIS,
                     user_prompt=worker_prompt,
                 )
@@ -282,7 +286,7 @@ class RunManager:
                 trace_id=trace_id,
                 ctx=ctx,
                 step_key="reviewer",
-                persona_key=PERSONA_REVIEWER,
+                persona_key=reviewer_persona,
                 task_type=TASK_REVIEW,
                 user_prompt=self._reviewer_prompt(ctx, analysis_result.content),
             )
@@ -400,6 +404,17 @@ class RunManager:
             metadata=meta,
         )
 
+    def _rotation_personas(self, ctx: RunContext) -> tuple[str, str]:
+        if ctx.worker_rotation_pattern == ROTATION_RUN_B:
+            return PERSONA_REVIEWER, PERSONA_WORKER
+        return PERSONA_WORKER, PERSONA_REVIEWER
+
+    @staticmethod
+    def _escalation_persona(worker_persona: str) -> str:
+        if worker_persona == PERSONA_WORKER:
+            return PERSONA_REVIEWER
+        return PERSONA_WORKER
+
     def _worker_prompt(self, ctx: RunContext) -> str:
         return (
             f"Analyze product {ctx.product_id} for organization {ctx.organization_id}. "
@@ -461,6 +476,8 @@ class RunManager:
             "configSnapshotId": ctx.config_snapshot_id,
             "complianceProfile": ctx.compliance_profile,
         }
+        if step_key == "worker":
+            request_meta["workerRotationPattern"] = ctx.worker_rotation_pattern
         self._emit(
             org_id,
             run_id,
