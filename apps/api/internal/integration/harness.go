@@ -122,6 +122,9 @@ func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 		AccessTokenTTL:       15 * time.Minute,
 		RefreshTokenTTL:      time.Hour,
 		LLMUseMock:           true,
+		MailQueueEnabled:     true,
+		MailSMTPHost:         "localhost",
+		MailSMTPPort:         "1025",
 	}
 
 	application, err := app.New(ctx, appCfg)
