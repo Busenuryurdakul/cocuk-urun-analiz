@@ -76,9 +76,14 @@ def _start_manager(go_client: MagicMock, llm_client: MagicMock) -> RunManager:
     finished = threading.Event()
 
     def worker_factory(target):
-        thread = threading.Thread(target=target, daemon=True)
+        def wrapped() -> None:
+            try:
+                target()
+            finally:
+                finished.set()
+
+        thread = threading.Thread(target=wrapped, daemon=True)
         thread.start()
-        finished.set()
         return thread
 
     manager = RunManager(
@@ -96,7 +101,7 @@ def _start_manager(go_client: MagicMock, llm_client: MagicMock) -> RunManager:
             capabilities={},
         )
     )
-    assert finished.wait(timeout=2)
+    assert finished.wait(timeout=5)
     return manager
 
 
