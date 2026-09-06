@@ -327,11 +327,8 @@ type ActivityLogEntry {
 type ProductFieldMeta {
   value: String
   missing: Boolean!
-  missingReason: String
   source: String
   sourceRecordId: String
-  confidence: Float
-  extractedAt: String
 }
 
 type Product {
@@ -341,18 +338,6 @@ type Product {
   brand: ProductFieldMeta!
   category: ProductFieldMeta!
   description: ProductFieldMeta!
-  targetAge: ProductFieldMeta!
-  materials: ProductFieldMeta!
-  safetyWarnings: ProductFieldMeta!
-  currentPrice: ProductFieldMeta!
-  originalPrice: ProductFieldMeta!
-  currency: ProductFieldMeta!
-  seller: ProductFieldMeta!
-  rating: ProductFieldMeta!
-  reviewCount: ProductFieldMeta!
-  attributes: ProductFieldMeta!
-  imageRefs: ProductFieldMeta!
-  stockStatus: ProductFieldMeta!
   sku: ProductFieldMeta!
   createdAt: String!
   updatedAt: String!
@@ -523,16 +508,6 @@ input CreateProductInput {
   brand: String
   category: String
   description: String
-  targetAge: String
-  materials: String
-  safetyWarnings: String
-  currentPrice: String
-  originalPrice: String
-  currency: String
-  seller: String
-  rating: String
-  reviewCount: String
-  stockStatus: String
   source: MarketplaceSource!
   sourceProductId: String!
   sourceUrl: String
