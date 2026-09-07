@@ -310,6 +310,36 @@ class GoAgentClient:
                 error=raw.get("error", ""),
             )
 
+    def finalize_analysis(
+        self,
+        *,
+        organization_id: str,
+        analysis_run_id: str,
+        trace_id: str,
+        worker: dict[str, Any],
+        reviewer: dict[str, Any],
+        compliance_max: str = "",
+    ) -> dict[str, Any]:
+        payload = {
+            "organizationId": organization_id,
+            "analysisRunId": analysis_run_id,
+            "traceId": trace_id,
+            "complianceMax": compliance_max,
+            "worker": worker,
+            "reviewer": reviewer,
+        }
+        with httpx.Client(timeout=self._timeout) as client:
+            resp = client.post(
+                f"{self._base_url}/internal/agent/v1/runs/finalize",
+                json=payload,
+                headers=self._headers(),
+            )
+            resp.raise_for_status()
+            raw = resp.json()
+            if not isinstance(raw, dict):
+                return {}
+            return raw
+
 
 def hash_tool_input(
     *,

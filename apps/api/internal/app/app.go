@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/analysis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/config"
@@ -22,6 +23,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/queue"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/redis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/reviewinsight"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety"
 	safetycpsc "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety/cpsc"
 	safetygubis "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety/gubis"
@@ -48,6 +50,7 @@ type App struct {
 	Dataset        *dataset.Service
 	Evidence       *evidence.Service
 	Safety         *safety.Service
+	Analysis       *analysis.Service
 	Agent          *agent.Service
 	LLM            *llm.Service
 	ImportConsumer *marketplace.Consumer
@@ -106,6 +109,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	evidenceValidationsRepo := repository.NewEvidenceClaimValidationRepository(db)
 	safetyFindingsRepo := repository.NewSafetyFindingRepository(db)
 	recallMatchesRepo := repository.NewRecallMatchRepository(db)
+	reviewInsightsRepo := repository.NewReviewInsightRepository(db)
 	llmProvidersRepo := repository.NewLLMProviderRepository(db)
 	llmModelsRepo := repository.NewLLMModelRepository(db)
 	llmRoutingRepo := repository.NewLLMRoutingPolicyRepository(db)
@@ -239,7 +243,19 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Tenant:    guard,
 		Adapters:  []safety.SourceAdapter{safetycpsc.NewAdapter(), safetygubis.NewAdapter()},
 	}
-	agentExecutor := &agent.Executor{Registry: agentRegistry, Compliance: complianceEngine, Evidence: evidenceSvc, Safety: safetySvc}
+	reviewSvc := &reviewinsight.Service{Insights: reviewInsightsRepo, Runs: analysisRunsRepo}
+	analysisSvc := &analysis.Service{
+		Runs:        analysisRunsRepo,
+		Evidences:   evidencesRepo,
+		Validations: evidenceValidationsRepo,
+		Findings:    safetyFindingsRepo,
+		Matches:     recallMatchesRepo,
+		Reviews:     reviewSvc,
+		Products:    productsRepo,
+		Mappings:    mappingsRepo,
+		Tenant:      guard,
+	}
+	agentExecutor := &agent.Executor{Registry: agentRegistry, Compliance: complianceEngine, Evidence: evidenceSvc, Safety: safetySvc, Reviews: reviewSvc}
 	agentAuthorizer := &agent.Authorizer{Registry: agentRegistry, Security: security}
 	grantStore := &agent.GrantStore{Redis: redisClient, Security: security, TTL: 5 * time.Minute}
 	leaseStore := &agent.LeaseStore{Redis: redisClient, TTL: 2 * time.Minute}
@@ -260,6 +276,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Leases:       leaseStore,
 		Security:     security,
 		Tenant:       guard,
+		Analysis:     analysisSvc,
 	})
 	recoveryWorker := agent.NewRecoveryWorker(agentSvc, leaseStore, 30*time.Second)
 
@@ -364,6 +381,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Dataset:        datasetSvc,
 		Evidence:       evidenceSvc,
 		Safety:         safetySvc,
+		Analysis:       analysisSvc,
 		Agent:          agentSvc,
 		LLM:            llmSvc,
 		ImportConsumer: importConsumer,

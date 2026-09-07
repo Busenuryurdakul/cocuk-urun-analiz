@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/analysis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/queue"
@@ -38,6 +39,7 @@ type Service struct {
 	Leases        *LeaseStore
 	Security      *repository.SecurityEventRepository
 	Tenant        *tenant.Guard
+	Analysis      *analysis.Service
 	grantMu       sync.Mutex
 	resolvedCache map[string]ResolvedInput
 }
@@ -67,6 +69,7 @@ func NewService(deps ServiceDeps) *Service {
 		Leases:        deps.Leases,
 		Security:      deps.Security,
 		Tenant:        deps.Tenant,
+		Analysis:      deps.Analysis,
 		resolvedCache: make(map[string]ResolvedInput),
 	}
 	if s.Registry == nil {
@@ -91,6 +94,7 @@ type ServiceDeps struct {
 	Leases       *LeaseStore
 	Security     *repository.SecurityEventRepository
 	Tenant       *tenant.Guard
+	Analysis     *analysis.Service
 }
 
 func (s *Service) StartRun(ctx context.Context, input StartRunInput) (*domain.AnalysisRun, error) {

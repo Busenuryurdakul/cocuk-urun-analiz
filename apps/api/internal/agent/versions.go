@@ -15,13 +15,16 @@ func RegistryVersion(reg *Registry) string {
 }
 
 func PlannerRulesVersion() string {
-	rules := []byte(`phase5-deterministic-planner-v1
+	rules := []byte(`phase5-deterministic-planner-v2
 step1:policy_evaluator
 step2:compliance_checker
 step3:review_sampler_if_reviews
-step4:dataset_validator
-step5:pii_redactor_metadata
-exclude:import_planner,ecommerce_fetcher,product_normalizer,analyzers,report,evidence
+step4:review_analyzer
+step5:safety_analyzer
+step6:evidence_validator
+step7:dataset_validator
+step8:pii_redactor_metadata
+exclude:import_planner,ecommerce_fetcher,product_normalizer,age_analyzer,material_analyzer,market_analyzer,price_history,report
 `)
 	return HashVersion(rules)
 }

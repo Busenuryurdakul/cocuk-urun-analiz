@@ -27,3 +27,7 @@ models:
         resolver: true
       recalls:
         resolver: true
+      reviewInsights:
+        resolver: true
+      finalResult:
+        resolver: true

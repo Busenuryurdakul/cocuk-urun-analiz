@@ -41,5 +41,5 @@ func (s *Service) BuildCapabilitySnapshot() CapabilitySnapshot {
 
 // PythonPlannerVersion is the canonical planner version label exposed to Python orchestrator.
 func PythonPlannerVersion() string {
-	return "python-deterministic-planner-v1"
+	return "python-deterministic-planner-v2"
 }

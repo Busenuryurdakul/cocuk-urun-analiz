@@ -79,10 +79,14 @@ type AnalysisRun struct {
 	LastHeartbeatAt          *time.Time          `bson:"lastHeartbeatAt,omitempty"`
 	TerminalError            string              `bson:"terminalError,omitempty"`
 	TerminalReason           string              `bson:"terminalReason,omitempty"`
-	StartedAt                *time.Time          `bson:"startedAt,omitempty"`
-	CompletedAt              *time.Time          `bson:"completedAt,omitempty"`
-	CreatedAt                time.Time           `bson:"createdAt"`
-	UpdatedAt                time.Time           `bson:"updatedAt"`
+	StartedAt                *time.Time           `bson:"startedAt,omitempty"`
+	CompletedAt              *time.Time           `bson:"completedAt,omitempty"`
+	WorkerResult             *AnalysisLLMResult   `bson:"workerResult,omitempty"`
+	ReviewerResult           *AnalysisLLMResult   `bson:"reviewerResult,omitempty"`
+	FinalResult              *FinalAnalysisResult `bson:"finalResult,omitempty"`
+	FinalResultSchemaVersion string               `bson:"finalResultSchemaVersion,omitempty"`
+	CreatedAt                time.Time            `bson:"createdAt"`
+	UpdatedAt                time.Time            `bson:"updatedAt"`
 }
 
 type AgentRunEvent struct {

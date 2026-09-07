@@ -27,6 +27,7 @@ func (h *InternalHandler) Register(r chi.Router) {
 		r.Get("/capabilities", h.handleCapabilities)
 		r.Post("/tools/authorize", h.handleAuthorize)
 		r.Post("/tools/execute", h.handleExecute)
+		r.Post("/runs/finalize", h.handleFinalize)
 		r.Get("/runs/cancellation", h.handleCancellation)
 		r.Post("/runs/heartbeat", h.handleHeartbeat)
 		r.Post("/runs/lease/claim", h.handleLeaseClaim)
@@ -155,15 +156,20 @@ func (h *InternalHandler) handleAuthorize(w http.ResponseWriter, r *http.Request
 }
 
 type executeRequest struct {
-	OrganizationID  string `json:"organizationId"`
-	AnalysisRunID   string `json:"analysisRunId"`
-	TraceID         string `json:"traceId"`
-	ToolName        string `json:"toolName"`
-	ToolVersion     string `json:"toolVersion"`
-	InputHash       string `json:"inputHash"`
-	GrantNonce      string `json:"grantNonce"`
-	ToolExecutionID string `json:"toolExecutionId"`
-	StepIndex       int    `json:"stepIndex"`
+	OrganizationID  string   `json:"organizationId"`
+	AnalysisRunID   string   `json:"analysisRunId"`
+	TraceID         string   `json:"traceId"`
+	ToolName        string   `json:"toolName"`
+	ToolVersion     string   `json:"toolVersion"`
+	InputHash       string   `json:"inputHash"`
+	GrantNonce      string   `json:"grantNonce"`
+	ToolExecutionID string   `json:"toolExecutionId"`
+	StepIndex       int      `json:"stepIndex"`
+	ClaimID         string   `json:"claimId,omitempty"`
+	ClaimText       string   `json:"claimText,omitempty"`
+	EvidenceIDs     []string `json:"evidenceIds,omitempty"`
+	ReviewIDs       []string `json:"reviewIds,omitempty"`
+	RecallIDs       []string `json:"recallIds,omitempty"`
 }
 
 type executeResponse struct {
@@ -183,12 +189,85 @@ func (h *InternalHandler) handleExecute(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "invalid ids", http.StatusBadRequest)
 		return
 	}
-	resp, err := h.Service.ExecuteToolForOrchestrator(r.Context(), orgID, runID, req.TraceID, req.ToolName, req.ToolVersion, req.InputHash, req.GrantNonce, req.ToolExecutionID, req.StepIndex)
+	resp, err := h.Service.ExecuteToolForOrchestrator(r.Context(), orgID, runID, req.TraceID, req.ToolName, req.ToolVersion, req.InputHash, req.GrantNonce, req.ToolExecutionID, req.StepIndex, orchestratorExecuteExtras{
+		ClaimID:     req.ClaimID,
+		ClaimText:   req.ClaimText,
+		EvidenceIDs: req.EvidenceIDs,
+		ReviewIDs:   req.ReviewIDs,
+		RecallIDs:   req.RecallIDs,
+	})
 	if err != nil {
 		writeAgentError(w, err)
 		return
 	}
 	writeJSON(w, resp)
+}
+
+type llmResultPayload struct {
+	Provider             string   `json:"provider"`
+	Model                string   `json:"model"`
+	Persona              string   `json:"persona"`
+	RoutingPolicyVersion string   `json:"routingPolicyVersion,omitempty"`
+	ConfigSnapshotID     string   `json:"configSnapshotId,omitempty"`
+	Output               string   `json:"output"`
+	Flags                []string `json:"flags,omitempty"`
+}
+
+type finalizeRequest struct {
+	OrganizationID string           `json:"organizationId"`
+	AnalysisRunID  string           `json:"analysisRunId"`
+	TraceID        string           `json:"traceId"`
+	ComplianceMax  string           `json:"complianceMax,omitempty"`
+	Worker         llmResultPayload `json:"worker"`
+	Reviewer       llmResultPayload `json:"reviewer"`
+}
+
+func (h *InternalHandler) handleFinalize(w http.ResponseWriter, r *http.Request) {
+	var req finalizeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	orgID, runID, err := parseOrgRun(req.OrganizationID, req.AnalysisRunID)
+	if err != nil {
+		http.Error(w, "invalid ids", http.StatusBadRequest)
+		return
+	}
+	run, err := h.Service.Runs.FindByID(r.Context(), orgID, runID)
+	if err != nil {
+		writeAgentError(w, err)
+		return
+	}
+	if run.TraceID != req.TraceID {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	final, err := h.Service.FinalizeForOrchestrator(r.Context(), orgID, runID, domain.AnalysisLLMResult{
+		Provider:             req.Worker.Provider,
+		Model:                req.Worker.Model,
+		Persona:              req.Worker.Persona,
+		RoutingPolicyVersion: req.Worker.RoutingPolicyVersion,
+		ConfigSnapshotID:     req.Worker.ConfigSnapshotID,
+		Output:               req.Worker.Output,
+	}, domain.AnalysisLLMResult{
+		Provider:             req.Reviewer.Provider,
+		Model:                req.Reviewer.Model,
+		Persona:              req.Reviewer.Persona,
+		RoutingPolicyVersion: req.Reviewer.RoutingPolicyVersion,
+		ConfigSnapshotID:     req.Reviewer.ConfigSnapshotID,
+		Output:               req.Reviewer.Output,
+		Flags:                req.Reviewer.Flags,
+	}, req.ComplianceMax)
+	if err != nil {
+		writeAgentError(w, err)
+		return
+	}
+	writeJSON(w, map[string]any{
+		"schemaVersion": final.SchemaVersion,
+		"decision":      final.Decision,
+		"confidence":    final.Confidence,
+		"overallRisk":   final.OverallRisk,
+	})
 }
 
 func (h *InternalHandler) handleCancellation(w http.ResponseWriter, r *http.Request) {

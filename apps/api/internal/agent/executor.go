@@ -15,6 +15,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/fetch"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/rbac"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/reviewinsight"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -31,6 +32,7 @@ type ToolInput struct {
 	ClaimText      string
 	EvidenceIDs    []string
 	RecallIDs      []string
+	ReviewIDs      []string
 }
 
 type ToolOutput struct {
@@ -43,6 +45,7 @@ type Executor struct {
 	Compliance *compliance.Engine
 	Evidence   *evidence.Service
 	Safety     *safety.Service
+	Reviews    *reviewinsight.Service
 }
 
 func (e *Executor) Execute(ctx context.Context, toolName string, input ToolInput) (*ToolOutput, error) {
@@ -71,6 +74,8 @@ func (e *Executor) Execute(ctx context.Context, toolName string, input ToolInput
 		return e.runEvidenceValidator(ctx, input)
 	case "safety_analyzer":
 		return e.runSafetyAnalyzer(ctx, input)
+	case "review_analyzer":
+		return e.runReviewAnalyzer(ctx, input)
 	default:
 		return nil, ErrToolUnavailable
 	}
@@ -240,6 +245,46 @@ func (e *Executor) runSafetyAnalyzer(ctx context.Context, input ToolInput) (*Too
 	}
 	payload := map[string]any{"findings": findings, "issues": issues}
 	if err := ValidateToolOutput("safety_analyzer", "OK", payload); err != nil {
+		return nil, err
+	}
+	return &ToolOutput{Status: "OK", Payload: payload}, nil
+}
+
+func (e *Executor) runReviewAnalyzer(ctx context.Context, input ToolInput) (*ToolOutput, error) {
+	if e.Reviews == nil {
+		return nil, ErrToolUnavailable
+	}
+	if err := ValidateReviewAnalyzerInput(input); err != nil {
+		return nil, err
+	}
+	result, err := e.Reviews.Analyze(ctx, reviewinsight.AnalyzeInput{
+		OrganizationID: input.OrganizationID,
+		AnalysisRunID:  input.RunID,
+		ProductID:      input.ProductID,
+		ReviewIDs:      input.ReviewIDs,
+		Reviews:        input.Resolved.MarketplaceReviews,
+		Experiences:    input.Resolved.UserExperiences,
+	})
+	if err != nil {
+		return nil, err
+	}
+	issues := result.Issues
+	if issues == nil {
+		issues = []string{}
+	}
+	payload := map[string]any{
+		"positiveSignals":    result.PositiveSignals,
+		"negativeSignals":    result.NegativeSignals,
+		"safetySignals":      result.SafetySignals,
+		"qualityIssues":      result.QualityIssues,
+		"durabilityIssues":   result.DurabilityIssues,
+		"usabilityIssues":    result.UsabilityIssues,
+		"assemblyIssues":     result.AssemblyIssues,
+		"ageMismatchSignals": result.AgeMismatchSignals,
+		"repeatedComplaints": result.RepeatedComplaints,
+		"issues":             issues,
+	}
+	if err := ValidateToolOutput("review_analyzer", "OK", payload); err != nil {
 		return nil, err
 	}
 	return &ToolOutput{Status: "OK", Payload: payload}, nil

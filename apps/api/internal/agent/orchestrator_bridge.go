@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/analysis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	llmsvc "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/llm"
@@ -249,7 +250,33 @@ func (s *Service) AuthorizeToolForOrchestrator(ctx context.Context, organization
 	}, nil
 }
 
-func (s *Service) ExecuteToolForOrchestrator(ctx context.Context, organizationID, runID primitive.ObjectID, traceID, toolName, toolVersion, inputHash, grantNonce, toolExecutionIDHex string, stepIndex int) (*executeResponse, error) {
+type orchestratorExecuteExtras struct {
+	ClaimID     string
+	ClaimText   string
+	EvidenceIDs []string
+	ReviewIDs   []string
+	RecallIDs   []string
+}
+
+func applyExecuteExtras(input *ToolInput, extras orchestratorExecuteExtras) {
+	if extras.ClaimID != "" {
+		input.ClaimID = extras.ClaimID
+	}
+	if extras.ClaimText != "" {
+		input.ClaimText = extras.ClaimText
+	}
+	if extras.EvidenceIDs != nil {
+		input.EvidenceIDs = extras.EvidenceIDs
+	}
+	if extras.ReviewIDs != nil {
+		input.ReviewIDs = extras.ReviewIDs
+	}
+	if extras.RecallIDs != nil {
+		input.RecallIDs = extras.RecallIDs
+	}
+}
+
+func (s *Service) ExecuteToolForOrchestrator(ctx context.Context, organizationID, runID primitive.ObjectID, traceID, toolName, toolVersion, inputHash, grantNonce, toolExecutionIDHex string, stepIndex int, extras orchestratorExecuteExtras) (*executeResponse, error) {
 	run, err := s.Runs.FindByID(ctx, organizationID, runID)
 	if err != nil {
 		return nil, err
@@ -290,6 +317,8 @@ func (s *Service) ExecuteToolForOrchestrator(ctx context.Context, organizationID
 		Resolved:       resolved,
 		Role:           domain.RoleAnalyst,
 	}
+	applyExecuteExtras(&toolInput, extras)
+	s.enrichPipelineInput(ctx, toolName, &toolInput)
 
 	execCtx, cancel := context.WithTimeout(ctx, perToolTimeout(toolName))
 	defer cancel()
@@ -412,9 +441,74 @@ func isTerminalPhase(phase string) bool {
 	}
 }
 
+func (s *Service) enrichPipelineInput(ctx context.Context, toolName string, input *ToolInput) {
+	if input == nil {
+		return
+	}
+	switch toolName {
+	case "review_analyzer":
+		if input.ReviewIDs == nil {
+			ids := make([]string, 0, len(input.Resolved.MarketplaceReviews))
+			for _, rv := range input.Resolved.MarketplaceReviews {
+				ids = append(ids, rv.ID.Hex())
+			}
+			input.ReviewIDs = ids
+		}
+	case "safety_analyzer":
+		if input.EvidenceIDs == nil && s.Executor != nil && s.Executor.Evidence != nil {
+			items, err := s.Executor.Evidence.ListByAnalysisRun(ctx, input.OrganizationID, input.RunID, 50)
+			if err == nil {
+				ids := make([]string, 0, len(items))
+				for _, ev := range items {
+					ids = append(ids, ev.ID.Hex())
+				}
+				input.EvidenceIDs = ids
+			} else {
+				input.EvidenceIDs = []string{}
+			}
+		}
+		if input.EvidenceIDs == nil {
+			input.EvidenceIDs = []string{}
+		}
+	case "evidence_validator":
+		if strings.TrimSpace(input.ClaimID) == "" {
+			input.ClaimID = "analysis-primary"
+		}
+		if strings.TrimSpace(input.ClaimText) == "" {
+			input.ClaimText = "Product safety and quality assessment"
+		}
+		if input.EvidenceIDs == nil && s.Executor != nil && s.Executor.Evidence != nil {
+			items, err := s.Executor.Evidence.ListByAnalysisRun(ctx, input.OrganizationID, input.RunID, 50)
+			if err == nil {
+				ids := make([]string, 0, len(items))
+				for _, ev := range items {
+					ids = append(ids, ev.ID.Hex())
+				}
+				input.EvidenceIDs = ids
+			}
+		}
+		if input.EvidenceIDs == nil {
+			input.EvidenceIDs = []string{}
+		}
+	}
+}
+
+func (s *Service) FinalizeForOrchestrator(ctx context.Context, organizationID, runID primitive.ObjectID, worker, reviewer domain.AnalysisLLMResult, complianceMax string) (*domain.FinalAnalysisResult, error) {
+	if s.Analysis == nil {
+		return nil, ErrInvalidInput
+	}
+	return s.Analysis.Finalize(ctx, analysis.FinalizeInput{
+		OrganizationID: organizationID,
+		AnalysisRunID:  runID,
+		Worker:         worker,
+		Reviewer:       reviewer,
+		ComplianceMax:  complianceMax,
+	})
+}
+
 func perToolTimeout(toolName string) time.Duration {
 	switch toolName {
-	case "review_sampler", "dataset_validator":
+	case "review_sampler", "dataset_validator", "review_analyzer", "safety_analyzer":
 		return 30 * time.Second
 	default:
 		return 15 * time.Second

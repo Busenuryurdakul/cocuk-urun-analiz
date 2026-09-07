@@ -30,7 +30,21 @@ func TestCapabilitySnapshotExcludesUnavailableTools(t *testing.T) {
 }
 
 func TestPythonPlannerVersionLabel(t *testing.T) {
-	if PythonPlannerVersion() == "" {
-		t.Fatal("planner version required")
+	if PythonPlannerVersion() != "python-deterministic-planner-v2" {
+		t.Fatalf("planner version: %s", PythonPlannerVersion())
+	}
+}
+
+func TestCapabilitySnapshotIncludesP0Analyzers(t *testing.T) {
+	svc := &Service{Registry: NewRegistry()}
+	snap := svc.BuildCapabilitySnapshot()
+	got := map[string]string{}
+	for _, tool := range snap.AvailableTools {
+		got[tool.Name] = tool.Availability
+	}
+	for _, name := range []string{"review_analyzer", "evidence_validator", "safety_analyzer"} {
+		if got[name] != string(ToolAvailable) {
+			t.Fatalf("%s must be AVAILABLE, snapshot=%v", name, got[name])
+		}
 	}
 }

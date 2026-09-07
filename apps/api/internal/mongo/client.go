@@ -214,6 +214,8 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 		{"safety_findings", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "type", Value: 1}}}},
 		{"recall_matches", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "analysisRunId", Value: 1}}}},
 		{"recall_matches", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "productId", Value: 1}}}},
+		{"review_insights", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "analysisRunId", Value: 1}}}},
+		{"review_insights", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "productId", Value: 1}}}},
 	}
 	for _, idx := range safetyIndexes {
 		if _, err := c.DB.Collection(idx.collection).Indexes().CreateOne(ctx, idx.model); err != nil {

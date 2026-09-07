@@ -6,6 +6,7 @@ import (
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/analysis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/evidence"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety"
@@ -16,9 +17,9 @@ func mapPhase5Error(err error) error {
 	switch {
 	case errors.Is(err, agent.ErrForbidden):
 		return gqlError("FORBIDDEN", errForbidden)
-	case errors.Is(err, evidence.ErrForbidden), errors.Is(err, safety.ErrForbidden):
+	case errors.Is(err, evidence.ErrForbidden), errors.Is(err, safety.ErrForbidden), errors.Is(err, analysis.ErrForbidden):
 		return gqlError("FORBIDDEN", errForbidden)
-	case errors.Is(err, agent.ErrInvalidInput), errors.Is(err, evidence.ErrInvalidInput), errors.Is(err, safety.ErrInvalidInput):
+	case errors.Is(err, agent.ErrInvalidInput), errors.Is(err, evidence.ErrInvalidInput), errors.Is(err, safety.ErrInvalidInput), errors.Is(err, analysis.ErrInvalidInput):
 		return gqlError("INVALID_INPUT", err)
 	case errors.Is(err, agent.ErrComplianceRejected):
 		return gqlError("COMPLIANCE_REJECTED", err)
@@ -140,6 +141,58 @@ func toModelEvidenceList(items []domain.Evidence) []*model.Evidence {
 		out = append(out, toModelEvidence(&items[i]))
 	}
 	return out
+}
+
+func toModelReviewInsights(items []domain.ReviewSignal) []*model.ReviewInsight {
+	out := make([]*model.ReviewInsight, 0, len(items))
+	for _, item := range items {
+		out = append(out, &model.ReviewInsight{
+			Topic:   item.Topic,
+			Count:   item.Count,
+			Summary: item.Summary,
+			Kind:    string(item.Kind),
+		})
+	}
+	return out
+}
+
+func toModelFinalResult(final *domain.FinalAnalysisResult) *model.FinalAnalysisResult {
+	if final == nil {
+		return nil
+	}
+	limitations := final.Limitations
+	if limitations == nil {
+		limitations = []string{}
+	}
+	flags := final.HallucinationFlags
+	if flags == nil {
+		flags = []string{}
+	}
+	return &model.FinalAnalysisResult{
+		SchemaVersion:      final.SchemaVersion,
+		Summary:            final.Summary,
+		OverallRisk:        final.OverallRisk,
+		Confidence:         final.Confidence,
+		Decision:           string(final.Decision),
+		Recommendation:     final.Recommendation,
+		Limitations:        limitations,
+		HallucinationFlags: flags,
+		CreatedAt:          final.CreatedAt.UTC().Format(time.RFC3339),
+	}
+}
+
+func attachEvidenceSupportStatus(items []*model.Evidence, vals []domain.EvidenceClaimValidation) {
+	byID := map[string]string{}
+	for _, v := range vals {
+		for _, id := range v.EvidenceIDs {
+			byID[id.Hex()] = string(v.SupportStatus)
+		}
+	}
+	for _, ev := range items {
+		if s, ok := byID[ev.ID]; ok {
+			ev.SupportStatus = &s
+		}
+	}
 }
 
 func parseOrgRunLimit(organizationID, analysisRunID string, limit *int) (primitive.ObjectID, primitive.ObjectID, int, error) {

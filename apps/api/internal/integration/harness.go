@@ -207,6 +207,7 @@ func (h *Phase5Harness) startHTTPServer(t *testing.T) {
 		DatasetService:     h.App.Dataset,
 		EvidenceService:    h.App.Evidence,
 		SafetyService:      h.App.Safety,
+		AnalysisService:    h.App.Analysis,
 		AgentService:       h.App.Agent,
 		CookieOpts:         h.App.CookieOptions(),
 	}
