@@ -32,29 +32,31 @@ type AgentRunEvent struct {
 }
 
 type AnalysisRun struct {
-	ID                      string            `json:"id"`
-	OrganizationID          string            `json:"organizationId"`
-	ProductID               string            `json:"productId"`
-	MarketplaceImportRunID  *string           `json:"marketplaceImportRunId,omitempty"`
-	ClientRequestID         string            `json:"clientRequestId"`
-	Status                  AnalysisRunStatus `json:"status"`
-	CurrentPhase            *string           `json:"currentPhase,omitempty"`
-	TraceID                 string            `json:"traceId"`
-	ConfigSnapshotID        string            `json:"configSnapshotId"`
-	ToolRegistryVersion     string            `json:"toolRegistryVersion"`
-	ToolPolicyVersion       string            `json:"toolPolicyVersion"`
-	CompliancePolicyVersion string            `json:"compliancePolicyVersion"`
-	PlannerVersion          string            `json:"plannerVersion"`
-	IterationCount          int               `json:"iterationCount"`
-	TerminalError           *string           `json:"terminalError,omitempty"`
-	TerminalReason          *string           `json:"terminalReason,omitempty"`
-	StartedAt               *string           `json:"startedAt,omitempty"`
-	CompletedAt             *string           `json:"completedAt,omitempty"`
-	CreatedAt               string            `json:"createdAt"`
-	UpdatedAt               string            `json:"updatedAt"`
-	Evidence                []*Evidence       `json:"evidence"`
-	SafetyFindings          []*SafetyFinding  `json:"safetyFindings"`
-	Recalls                 []*RecallMatch    `json:"recalls"`
+	ID                      string               `json:"id"`
+	OrganizationID          string               `json:"organizationId"`
+	ProductID               string               `json:"productId"`
+	MarketplaceImportRunID  *string              `json:"marketplaceImportRunId,omitempty"`
+	ClientRequestID         string               `json:"clientRequestId"`
+	Status                  AnalysisRunStatus    `json:"status"`
+	CurrentPhase            *string              `json:"currentPhase,omitempty"`
+	TraceID                 string               `json:"traceId"`
+	ConfigSnapshotID        string               `json:"configSnapshotId"`
+	ToolRegistryVersion     string               `json:"toolRegistryVersion"`
+	ToolPolicyVersion       string               `json:"toolPolicyVersion"`
+	CompliancePolicyVersion string               `json:"compliancePolicyVersion"`
+	PlannerVersion          string               `json:"plannerVersion"`
+	IterationCount          int                  `json:"iterationCount"`
+	TerminalError           *string              `json:"terminalError,omitempty"`
+	TerminalReason          *string              `json:"terminalReason,omitempty"`
+	StartedAt               *string              `json:"startedAt,omitempty"`
+	CompletedAt             *string              `json:"completedAt,omitempty"`
+	CreatedAt               string               `json:"createdAt"`
+	UpdatedAt               string               `json:"updatedAt"`
+	Evidence                []*Evidence          `json:"evidence"`
+	SafetyFindings          []*SafetyFinding     `json:"safetyFindings"`
+	Recalls                 []*RecallMatch       `json:"recalls"`
+	ReviewInsights          []*ReviewInsight     `json:"reviewInsights"`
+	FinalResult             *FinalAnalysisResult `json:"finalResult,omitempty"`
 }
 
 type BuildDatasetDraftInput struct {
@@ -188,10 +190,23 @@ type Evidence struct {
 	Claim          string  `json:"claim"`
 	Snippet        *string `json:"snippet,omitempty"`
 	Reference      *string `json:"reference,omitempty"`
+	SupportStatus  *string `json:"supportStatus,omitempty"`
 	Reliability    float64 `json:"reliability"`
 	Freshness      float64 `json:"freshness"`
 	RetrievedAt    string  `json:"retrievedAt"`
 	CreatedAt      string  `json:"createdAt"`
+}
+
+type FinalAnalysisResult struct {
+	SchemaVersion      string   `json:"schemaVersion"`
+	Summary            string   `json:"summary"`
+	OverallRisk        string   `json:"overallRisk"`
+	Confidence         float64  `json:"confidence"`
+	Decision           string   `json:"decision"`
+	Recommendation     string   `json:"recommendation"`
+	Limitations        []string `json:"limitations"`
+	HallucinationFlags []string `json:"hallucinationFlags"`
+	CreatedAt          string   `json:"createdAt"`
 }
 
 type GrantConsentInput struct {
@@ -491,6 +506,13 @@ type ResendEmailVerificationInput struct {
 	Email          string  `json:"email"`
 	Password       string  `json:"password"`
 	TurnstileToken *string `json:"turnstileToken,omitempty"`
+}
+
+type ReviewInsight struct {
+	Topic   string `json:"topic"`
+	Count   int    `json:"count"`
+	Summary string `json:"summary"`
+	Kind    string `json:"kind"`
 }
 
 type RollbackLLMConfigurationInput struct {

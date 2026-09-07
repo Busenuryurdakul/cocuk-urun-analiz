@@ -50,6 +50,54 @@ func (r *analysisRunResolver) Recalls(ctx context.Context, obj *model.AnalysisRu
 	return r.Query().AnalysisRecallMatches(ctx, obj.OrganizationID, obj.ID, limit)
 }
 
+// ReviewInsights is the resolver for the reviewInsights field.
+func (r *analysisRunResolver) ReviewInsights(ctx context.Context, obj *model.AnalysisRun) ([]*model.ReviewInsight, error) {
+	if obj == nil || r.AnalysisService == nil {
+		return []*model.ReviewInsight{}, nil
+	}
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(obj.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	runID, err := parseObjectID(obj.ID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	items, err := r.AnalysisService.ListReviewInsightsForActor(ctx, actorID, orgID, runID)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelReviewInsights(items), nil
+}
+
+// FinalResult is the resolver for the finalResult field.
+func (r *analysisRunResolver) FinalResult(ctx context.Context, obj *model.AnalysisRun) (*model.FinalAnalysisResult, error) {
+	if obj == nil || r.AnalysisService == nil {
+		return nil, nil
+	}
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(obj.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	runID, err := parseObjectID(obj.ID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	final, err := r.AnalysisService.GetFinalForActor(ctx, actorID, orgID, runID)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelFinalResult(final), nil
+}
+
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error) {
 	if err := r.Auth.TurnstileVerify(ctx, ptrStr(input.TurnstileToken)); err != nil {
@@ -1331,7 +1379,13 @@ func (r *queryResolver) AnalysisEvidence(ctx context.Context, organizationID str
 	if err != nil {
 		return nil, mapPhase5Error(err)
 	}
-	return toModelEvidenceList(items), nil
+	out := toModelEvidenceList(items)
+	if r.EvidenceService.Validations != nil {
+		if vals, verr := r.EvidenceService.Validations.ListByAnalysisRun(ctx, orgID, runID, lim); verr == nil {
+			attachEvidenceSupportStatus(out, vals)
+		}
+	}
+	return out, nil
 }
 
 // AnalysisSafetyFindings is the resolver for the analysisSafetyFindings field.

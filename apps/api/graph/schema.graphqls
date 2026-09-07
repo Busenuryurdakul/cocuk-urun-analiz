@@ -627,6 +627,27 @@ type AnalysisRun {
   evidence(limit: Int = 50): [Evidence!]!
   safetyFindings(limit: Int = 50): [SafetyFinding!]!
   recalls(limit: Int = 50): [RecallMatch!]!
+  reviewInsights: [ReviewInsight!]!
+  finalResult: FinalAnalysisResult
+}
+
+type ReviewInsight {
+  topic: String!
+  count: Int!
+  summary: String!
+  kind: String!
+}
+
+type FinalAnalysisResult {
+  schemaVersion: String!
+  summary: String!
+  overallRisk: String!
+  confidence: Float!
+  decision: String!
+  recommendation: String!
+  limitations: [String!]!
+  hallucinationFlags: [String!]!
+  createdAt: String!
 }
 
 type SafetyFinding {
@@ -662,6 +683,7 @@ type Evidence {
   claim: String!
   snippet: String
   reference: String
+  supportStatus: String
   reliability: Float!
   freshness: Float!
   retrievedAt: String!

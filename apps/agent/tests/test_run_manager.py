@@ -4,18 +4,29 @@ from unittest.mock import MagicMock
 from miyuna_agent.run_manager import CancelRunPayload, RunManager, StartRunPayload
 
 
+def _tool(name: str):
+    tool = MagicMock()
+    tool.name = name
+    tool.version = "frozen-v1"
+    tool.availability = "AVAILABLE"
+    return tool
+
+
 def test_run_manager_starts_lifecycle_thread() -> None:
     go_client = MagicMock()
     go_client.fetch_run_context.return_value = MagicMock(
         trace_id="trace-1",
         product_id="prod-1",
         marketplace_review_count=0,
+        compliance_profile="",
+        config_snapshot_id="snap-1",
+        llm_routing_policy_version="v1",
         capabilities=MagicMock(
             available_tools=(
-                MagicMock(name="policy_evaluator", version="frozen-v1", availability="AVAILABLE"),
-                MagicMock(name="compliance_checker", version="frozen-v1", availability="AVAILABLE"),
-                MagicMock(name="dataset_validator", version="frozen-v1", availability="AVAILABLE"),
-                MagicMock(name="pii_redactor", version="frozen-v1", availability="AVAILABLE"),
+                _tool("policy_evaluator"),
+                _tool("compliance_checker"),
+                _tool("dataset_validator"),
+                _tool("pii_redactor"),
             )
         ),
     )
@@ -76,6 +87,12 @@ def test_run_manager_starts_lifecycle_thread() -> None:
     threading.Event().wait(0.5)
     assert go_client.update_run_status.called
     assert go_client.record_event.called
+    assert go_client.finalize_analysis.called
+    worker, reviewer = go_client.finalize_analysis.call_args.kwargs["worker"], go_client.finalize_analysis.call_args.kwargs["reviewer"]
+    assert worker["output"] == "worker"
+    assert reviewer["output"] == "review"
+    assert worker["provider"] == "primary"
+    assert reviewer["provider"] == "secondary"
 
 
 def test_cancel_run_signals_active_worker() -> None:

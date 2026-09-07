@@ -7,6 +7,50 @@ import { RunEventTimeline } from "@/components/llm/run-event-timeline";
 import { graphqlRequest } from "@/lib/graphql";
 import { summarizeRunLlm } from "@/lib/llm-events";
 
+type ReviewInsight = {
+  topic: string;
+  count: number;
+  summary: string;
+  kind: string;
+};
+
+type SafetyFinding = {
+  id: string;
+  type: string;
+  severity: string;
+  confidence: number;
+  rationale: string;
+};
+
+type RecallMatch = {
+  source: string;
+  sourceRecordId: string;
+  matched: boolean;
+  confidence: number;
+  method: string;
+  reference?: string | null;
+  requiresReview: boolean;
+};
+
+type EvidenceItem = {
+  source: string;
+  claim: string;
+  supportStatus?: string | null;
+  reference?: string | null;
+};
+
+type FinalAnalysisResult = {
+  schemaVersion: string;
+  summary: string;
+  overallRisk: string;
+  confidence: number;
+  decision: string;
+  recommendation: string;
+  limitations: string[];
+  hallucinationFlags: string[];
+  createdAt: string;
+};
+
 type AnalysisRun = {
   id: string;
   status: string;
@@ -18,7 +62,40 @@ type AnalysisRun = {
   productId: string;
   createdAt: string;
   completedAt?: string | null;
+  reviewInsights?: ReviewInsight[];
+  safetyFindings?: SafetyFinding[];
+  recalls?: RecallMatch[];
+  evidence?: EvidenceItem[];
+  finalResult?: FinalAnalysisResult | null;
 };
+
+const RUN_FIELDS = `
+  id status currentPhase terminalReason terminalError traceId clientRequestId productId createdAt completedAt
+  reviewInsights { topic count summary kind }
+  safetyFindings { id type severity confidence rationale }
+  recalls { source sourceRecordId matched confidence method reference requiresReview }
+  evidence { source claim supportStatus reference }
+  finalResult { schemaVersion summary overallRisk confidence decision recommendation limitations hallucinationFlags createdAt }
+`;
+
+function decisionLabel(decision: string) {
+  switch (decision) {
+    case "ALLOW":
+      return "İzin verildi";
+    case "ALLOW_WITH_WARNING":
+      return "Uyarı ile izin";
+    case "REVIEW_REQUIRED":
+      return "İnceleme gerekli";
+    case "BLOCK":
+      return "Engellendi";
+    default:
+      return decision;
+  }
+}
+
+function isHighSeverity(severity: string) {
+  return severity === "CRITICAL" || severity === "HIGH";
+}
 
 type AgentRunEvent = {
   id: string;
@@ -121,9 +198,7 @@ export function AnalysisPanel({
     async (runId: string) => {
       const data = await graphqlRequest<{ agentRun: AnalysisRun }>(
         `query($orgId: ID!, $runId: ID!) {
-          agentRun(organizationId: $orgId, analysisRunId: $runId) {
-            id status currentPhase terminalReason terminalError traceId clientRequestId productId createdAt completedAt
-          }
+          agentRun(organizationId: $orgId, analysisRunId: $runId) { ${RUN_FIELDS} }
         }`,
         { orgId, runId },
       );
@@ -145,13 +220,14 @@ export function AnalysisPanel({
       );
       const latest = data.analysisRuns.find((item) => item.productId === productId);
       if (!latest) return;
-      setRun(latest);
+      const detailed = await refreshRun(latest.id);
+      setRun(detailed ?? latest);
       const next = await loadEvents(latest.id, 0);
       setAfterSequence(next);
     } catch {
       // Ignore — user can start a fresh run.
     }
-  }, [loadEvents, orgId, productId]);
+  }, [loadEvents, orgId, productId, refreshRun]);
 
   useEffect(() => {
     void loadLlmContext();
@@ -313,6 +389,113 @@ export function AnalysisPanel({
             </div>
           )}
         </dl>
+      )}
+
+      {run?.finalResult && (
+        <div className="space-y-4 rounded-2xl bg-cream p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Politika sonucu</p>
+          <dl className="grid gap-2">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Karar</dt>
+              <dd className={`font-semibold ${run.finalResult.decision === "BLOCK" ? "text-clay" : ""}`}>
+                {decisionLabel(run.finalResult.decision)}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Genel risk</dt>
+              <dd className={isHighSeverity(run.finalResult.overallRisk) ? "font-semibold text-clay" : "font-semibold"}>
+                {run.finalResult.overallRisk}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Güven</dt>
+              <dd>{Math.round(run.finalResult.confidence * 100)}%</dd>
+            </div>
+          </dl>
+          <p>{run.finalResult.summary}</p>
+          {run.finalResult.recommendation && (
+            <p className="text-muted">{run.finalResult.recommendation}</p>
+          )}
+        </div>
+      )}
+
+      {run?.safetyFindings && run.safetyFindings.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">Güvenlik bulguları</h3>
+          <ul className="space-y-2 text-sm">
+            {run.safetyFindings.map((finding) => (
+              <li
+                key={finding.id}
+                className={`rounded-2xl bg-cream p-3 ${isHighSeverity(finding.severity) ? "text-clay" : ""}`}
+              >
+                <p className="font-semibold">
+                  {finding.severity} · {finding.type}
+                </p>
+                <p>{finding.rationale}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {run?.recalls && run.recalls.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">Geri çağırma eşleşmeleri</h3>
+          <ul className="space-y-2 text-sm">
+            {run.recalls.map((match) => (
+              <li key={`${match.source}-${match.sourceRecordId}`} className="rounded-2xl bg-cream p-3">
+                <p className="font-semibold">
+                  {match.source} {match.requiresReview ? "(inceleme gerekli)" : "(doğrulandı)"}
+                </p>
+                {match.reference && <p className="text-muted">{match.reference}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {run?.evidence && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">Kanıt</h3>
+          <p className="text-sm text-muted">{run.evidence.length} kaynak</p>
+          <ul className="space-y-2 text-sm">
+            {run.evidence.slice(0, 8).map((item, index) => (
+              <li key={`${item.source}-${index}`} className="rounded-2xl bg-cream p-3">
+                <p className="font-semibold">{item.source}</p>
+                <p>{item.claim}</p>
+                <p className="text-muted">{item.supportStatus ?? "DURUM YOK"}</p>
+                {item.reference && <p className="text-muted">{item.reference}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {run?.reviewInsights && run.reviewInsights.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">Yorum içgörüleri</h3>
+          <ul className="space-y-2 text-sm">
+            {run.reviewInsights.map((insight, index) => (
+              <li key={`${insight.kind}-${insight.topic}-${index}`} className="rounded-2xl bg-cream p-3">
+                <p className="font-semibold">
+                  {insight.kind} · {insight.topic} ({insight.count})
+                </p>
+                <p className="text-muted">{insight.summary}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {run?.finalResult?.limitations && run.finalResult.limitations.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">Sınırlamalar</h3>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+            {run.finalResult.limitations.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {view === "polling" && run && !TERMINAL.has(run.status) && <AsyncView state="loading" />}

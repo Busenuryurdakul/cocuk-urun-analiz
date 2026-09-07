@@ -290,7 +290,14 @@ class RunManager:
                 task_type=TASK_REVIEW,
                 user_prompt=self._reviewer_prompt(ctx, analysis_result.content),
             )
-            _ = reviewer_result
+            self.go_client.finalize_analysis(
+                organization_id=org_id,
+                analysis_run_id=run_id,
+                trace_id=trace_id,
+                worker=self._llm_persist_payload(analysis_result, ctx),
+                reviewer=self._llm_persist_payload(reviewer_result, ctx),
+                compliance_max=ctx.compliance_profile or "",
+            )
 
             if self._is_terminal(run_id):
                 return
@@ -418,13 +425,18 @@ class RunManager:
     def _worker_prompt(self, ctx: RunContext) -> str:
         return (
             f"Analyze product {ctx.product_id} for organization {ctx.organization_id}. "
-            f"Use evidence-backed reasoning for marketplace review count={ctx.marketplace_review_count} "
-            f"and ugc count={ctx.ugc_count}. Compliance profile={ctx.compliance_profile or 'default'}."
+            f"Use only persisted reviews, evidence, and official recall matches. "
+            f"Do not invent recalls or treat unsupported claims as confirmed facts. "
+            f"Marketplace review count={ctx.marketplace_review_count} "
+            f"ugc count={ctx.ugc_count}. Compliance profile={ctx.compliance_profile or 'default'}."
         )
 
     def _reviewer_prompt(self, ctx: RunContext, worker_content: str) -> str:
         return (
-            f"Review the worker analysis for product {ctx.product_id} and produce a concise decision summary.\n\n"
+            f"Review the worker analysis for product {ctx.product_id}. "
+            f"Compare worker claims with persisted evidence, safety findings, and recall matches. "
+            f"Flag invented recalls, unsupported claims, contradictions, source mismatch, and overconfidence. "
+            f"Produce a concise synthesis. Do not invent recalls.\n\n"
             f"Worker output:\n{worker_content}"
         )
 
@@ -547,6 +559,20 @@ class RunManager:
             metadata=completion_meta,
         )
         return result
+
+    @staticmethod
+    def _llm_persist_payload(result: LLMCompletionResult, ctx: RunContext) -> dict[str, str]:
+        output = (result.content or "").strip()
+        if not output:
+            output = "LLM output was empty; deterministic analysis used persisted tool results only."
+        return {
+            "provider": result.provider_key,
+            "model": result.model_key,
+            "persona": result.persona_key,
+            "routingPolicyVersion": ctx.llm_routing_policy_version,
+            "configSnapshotId": ctx.config_snapshot_id,
+            "output": output,
+        }
 
     @staticmethod
     def _llm_result_metadata(result: LLMCompletionResult, *, task_type: str) -> dict[str, str]:

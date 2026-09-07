@@ -86,19 +86,30 @@ Persist                       ← MongoDB + audit events
 | `fetch_policy_checker` | Enforce fetch security policies |
 | `import_diff_generator` | Diff between import versions |
 | `review_sampler` | Sample reviews (max 100) |
-| `review_analyzer` | Analyze sampled reviews |
+| `review_analyzer` | Analyze sampled reviews (AVAILABLE; planner-wired in PR-A3) |
 | `price_history_analyzer` | Deterministic price analytics |
-| `safety_analyzer` | Deterministic safety findings + official recall matching (AVAILABLE via Executor; planner wiring deferred) |
+| `safety_analyzer` | Deterministic safety findings + official recall matching (AVAILABLE; planner-wired in PR-A3) |
 | `age_analyzer` | Target age group assessment |
 | `material_analyzer` | Material composition analysis |
 | `market_analyzer` | Market/risk signal assessment |
 | `compliance_checker` | KVKK/GDPR compliance validation |
 | `pii_redactor` | PII detection and redaction |
 | `policy_evaluator` | Evaluate against versioned policy profiles |
-| `evidence_validator` | Validate claim-evidence linkage (AVAILABLE via Executor; planner wiring deferred) |
+| `evidence_validator` | Validate claim-evidence linkage (AVAILABLE; planner-wired in PR-A3) |
 | `report_generator` | Generate final analysis report |
 
 **New tool = Change Request.** Registry genişletmesi master prompt değişikliği gerektirir.
+
+P0 analysis planner (PR-A3, `python-deterministic-planner-v2`):
+
+```text
+policy_evaluator → compliance_checker → review_sampler?
+  → review_analyzer → safety_analyzer → evidence_validator
+  → dataset_validator → pii_redactor
+  → worker LLM → reviewer LLM → finalize (hallucination/confidence/decision)
+```
+
+Unavailable or excluded tools never enter the plan. `report_generator`, age/material/market/price analyzers remain excluded. Real dual-LLM final E2E is deferred to PR-C.
 
 ## 7. Tool Authorization Chain
 
@@ -124,7 +135,8 @@ LLM Tool Intent
 
 `safety_analyzer` = **Verified Knowledge + Deterministic Rules + Normalized Data**
 
-- P0 PR-A2: Executor implementation is AVAILABLE. Python/Go planner still excludes it (`SAFETY_ANALYZER_PLANNER_WIRING: DEFERRED_TO_PR_A3`).
+- P0 PR-A3: `review_analyzer`, `safety_analyzer`, and `evidence_validator` are AVAILABLE and included in the Python planner (`python-deterministic-planner-v2`) when the registry marks them AVAILABLE.
+- Official CPSC/GÜBİS records are normalized and matched deterministically. Weak/fuzzy matches are `requiresReview` and cannot become CRITICAL confirmed findings.
 - Official CPSC/GÜBİS records are normalized and matched deterministically. Weak/fuzzy matches are `requiresReview` and cannot become CRITICAL confirmed findings.
 - LLM role: explain/summarize — **not** verdict engine
 - Evidence yoksa status: **UNVERIFIED** / `INSUFFICIENT_EVIDENCE`

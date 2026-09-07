@@ -33,7 +33,7 @@ var frozenRegistry = []ToolDefinition{
 	{Name: "fetch_policy_checker", Version: "frozen-v1", Purpose: "Enforce fetch security policies", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "import_diff_generator", Version: "frozen-v1", Purpose: "Diff import versions", Availability: ToolUnavailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "review_sampler", Version: "frozen-v1", Purpose: "Sample reviews max 100", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
-	{Name: "review_analyzer", Version: "frozen-v1", Purpose: "Analyze sampled reviews", Availability: ToolUnavailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
+	{Name: "review_analyzer", Version: "frozen-v1", Purpose: "Analyze sampled reviews", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "price_history_analyzer", Version: "frozen-v1", Purpose: "Deterministic price analytics", Availability: ToolUnavailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "safety_analyzer", Version: "frozen-v1", Purpose: "Safety signals", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "age_analyzer", Version: "frozen-v1", Purpose: "Target age assessment", Availability: ToolUnavailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},

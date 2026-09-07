@@ -216,6 +216,6 @@ Aynı ürün, farklı config → farklı evidence/confidence mümkün.
 
 | Item | Status |
 |------|--------|
-| Confidence score calculation formula | UNRESOLVED — Phase 1+ |
+| Confidence score calculation formula | RESOLVED in PR-A3 — deterministic 0–1 engine (`apps/api/internal/analysis`); LLM self-score is not used |
 | Verified knowledge base format | UNRESOLVED — safety phase |
 | Evidence retention vs source data retention | UNRESOLVED — Phase 1+ |

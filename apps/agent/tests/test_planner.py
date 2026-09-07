@@ -46,3 +46,47 @@ def test_unavailable_tool_not_in_plan() -> None:
 def test_excluded_tools_constant() -> None:
     assert "import_planner" in EXCLUDED_FROM_ANALYSIS_PLAN
     assert "product_normalizer" in EXCLUDED_FROM_ANALYSIS_PLAN
+    assert "review_analyzer" not in EXCLUDED_FROM_ANALYSIS_PLAN
+    assert "evidence_validator" not in EXCLUDED_FROM_ANALYSIS_PLAN
+    assert "safety_analyzer" not in EXCLUDED_FROM_ANALYSIS_PLAN
+
+
+def test_planner_includes_available_p0_analyzers() -> None:
+    plan = build_deterministic_plan(
+        marketplace_review_count=1,
+        available_tools=_available(
+            "policy_evaluator",
+            "compliance_checker",
+            "review_sampler",
+            "review_analyzer",
+            "safety_analyzer",
+            "evidence_validator",
+            "dataset_validator",
+            "pii_redactor",
+        ),
+    )
+    names = [step.tool_name for step in plan]
+    assert names.index("review_sampler") < names.index("review_analyzer")
+    assert names.index("review_analyzer") < names.index("safety_analyzer")
+    assert names.index("safety_analyzer") < names.index("evidence_validator")
+    assert "review_analyzer" in names
+    assert "evidence_validator" in names
+    assert "safety_analyzer" in names
+    assert "age_analyzer" not in names
+    assert "market_analyzer" not in names
+
+
+def test_planner_skips_unavailable_analyzers() -> None:
+    plan = build_deterministic_plan(
+        marketplace_review_count=0,
+        available_tools=_available(
+            "policy_evaluator",
+            "compliance_checker",
+            "dataset_validator",
+            "pii_redactor",
+        ),
+    )
+    names = {step.tool_name for step in plan}
+    assert "review_analyzer" not in names
+    assert "safety_analyzer" not in names
+    assert "evidence_validator" not in names

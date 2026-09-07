@@ -20,7 +20,7 @@ from miyuna_agent.run_manager import (
 
 
 def _tool(name: str, version: str = "frozen-v1"):
-    tool = MagicMock(name=name, version=version, availability="AVAILABLE")
+    tool = MagicMock()
     tool.name = name
     tool.version = version
     tool.availability = "AVAILABLE"

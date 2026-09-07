@@ -157,6 +157,7 @@ Detay implementasyon Phase fine-tune fazında.
 | Routing independence | Auto routing ≠ manual control |
 | Snapshot immutability | Published snapshots never mutated |
 | Report binding | Reports bound to snapshot at run time |
+| Worker/reviewer persist | PR-A3 stores `workerResult` and `reviewerResult` on `analysis_runs`. Product ALLOW/BLOCK is a policy engine result, not an LLM verdict. |
 
 ## 9. Failure Modes
 

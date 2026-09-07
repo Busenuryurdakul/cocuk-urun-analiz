@@ -10,13 +10,10 @@ EXCLUDED_FROM_ANALYSIS_PLAN = frozenset(
         "ecommerce_fetcher",
         "product_normalizer",
         "import_diff_generator",
-        "review_analyzer",
         "price_history_analyzer",
-        "safety_analyzer",
         "age_analyzer",
         "material_analyzer",
         "market_analyzer",
-        "evidence_validator",
         "report_generator",
     }
 )
@@ -42,6 +39,9 @@ def build_deterministic_plan(
         candidates.append(("review_sampler", available_tools.get("review_sampler", "")))
     candidates.extend(
         [
+            ("review_analyzer", available_tools.get("review_analyzer", "")),
+            ("safety_analyzer", available_tools.get("safety_analyzer", "")),
+            ("evidence_validator", available_tools.get("evidence_validator", "")),
             ("dataset_validator", available_tools.get("dataset_validator", "")),
             ("pii_redactor", available_tools.get("pii_redactor", "")),
         ]

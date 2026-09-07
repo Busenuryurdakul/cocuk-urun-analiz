@@ -44,6 +44,7 @@ func main() {
 		DatasetService:     application.Dataset,
 		EvidenceService:    application.Evidence,
 		SafetyService:      application.Safety,
+		AnalysisService:    application.Analysis,
 		AgentService:       application.Agent,
 		LLMService:         application.LLM,
 		CookieOpts:         application.CookieOptions(),

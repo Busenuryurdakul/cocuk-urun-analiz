@@ -1,10 +1,10 @@
 # Miyuna — Safety Findings and Official Recall Sources
 
-> Implementation state for **P0 PR-A2**. This is not Phase 7 complete.
+> Implementation state for **P0 PR-A2 + PR-A3**. This is not Phase 7 complete until PR-C real dual-LLM verification.
 
 ## 1. Scope
 
-PR-A2 implements:
+PR-A2 implemented:
 
 - Safety finding domain + Mongo persistence
 - Deterministic `safety_analyzer` via Executor
@@ -13,12 +13,13 @@ PR-A2 implements:
 - Confirmed recall → Evidence via PR-A1 `EvidenceService`
 - GraphQL read: `analysisSafetyFindings`, `analysisRecallMatches`, `AnalysisRun.safetyFindings`, `AnalysisRun.recalls`
 
-Deferred to PR-A3:
+PR-A3 added:
 
-- planner / orchestrator wiring
-- `review_analyzer`
-- final structured analysis, confidence engine, ALLOW/BLOCK
-- Safety/Evidence UI
+- planner / orchestrator wiring for `safety_analyzer`
+- `review_analyzer` implementation (AVAILABLE)
+- structured `finalResult` on `analysis_runs` (schema `1.0.0`)
+- hallucination guard, confidence engine, ALLOW/BLOCK policy engine
+- minimum Product/Analysis UI
 
 ## 2. Safety Analyzer
 
@@ -34,7 +35,7 @@ Rules:
 - no supporting evidence → `INSUFFICIENT_EVIDENCE` / `NO_EVIDENCE`
 - cross-org evidence → `WRONG_TENANT`
 
-`safety_analyzer` is AVAILABLE for `Executor.Execute`. Python planner still excludes it.
+`safety_analyzer` is AVAILABLE and planner-included when the registry marks it AVAILABLE.
 
 ## 3. Official sources
 
@@ -60,9 +61,20 @@ Confirmed match = matched + not `requiresReview` + confidence ≥ 0.90.
 
 Low-confidence fuzzy matches stay review-required signals only.
 
-## 5. Security
+## 5. Decision policy (PR-A3)
 
-- tenant-scoped finding and match reads
+LLM output cannot set the product decision. Deterministic rules:
+
+- confirmed critical official recall → `BLOCK`
+- high severity + strong evidence → `BLOCK`
+- weak/fuzzy recall or unsupported claim → `REVIEW_REQUIRED` (never `BLOCK`)
+- contradictory evidence → `REVIEW_REQUIRED`
+- medium supported warning → `ALLOW_WITH_WARNING`
+- no significant supported risk → `ALLOW`
+
+## 6. Security
+
+- tenant-scoped finding, match, and finalResult reads
 - adapters never fetch arbitrary user URLs
 - host allowlist, redirect cap, timeout, bounded retries, response size limit
 - private/internal targets are not accepted as official sources
