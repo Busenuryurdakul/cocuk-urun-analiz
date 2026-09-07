@@ -66,3 +66,21 @@ func DeviceLoginNoticeEmail(label, ip string) (subject, plain, html string) {
 </body></html>`, label, ip)
 	return subject, plain, html
 }
+
+func AccountDeletionEmail(code string) (subject, plain, html string) {
+	subject = "Miyuna — hesap silme onay kodu"
+	plain = fmt.Sprintf("Hesabınızı silmek için onay kodunuz: %s\n\nKod 15 dakika geçerlidir. Bu isteği siz yapmadıysanız hemen şifrenizi değiştirin.", code)
+	html = fmt.Sprintf(`<!DOCTYPE html>
+<html lang="tr">
+<head><meta charset="UTF-8"><title>%s</title></head>
+<body style="font-family:system-ui,sans-serif;background:#f5f0e8;margin:0;padding:32px">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;border:1px solid #e0d8cc">
+    <h1 style="color:#14352f;font-size:22px;margin:0 0 16px">Miyuna</h1>
+    <p style="color:#333;line-height:1.6">Hesabınızı kalıcı olarak silmek için aşağıdaki 6 haneli kodu kullanın:</p>
+    <p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#c0392b;margin:24px 0">%s</p>
+    <p style="color:#666;font-size:13px">Kod 15 dakika geçerlidir. Bu isteği siz yapmadıysanız kodu kullanmayın ve hesabınızı kontrol edin.</p>
+  </div>
+</body>
+</html>`, subject, code)
+	return subject, plain, html
+}

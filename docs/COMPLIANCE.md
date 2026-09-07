@@ -72,11 +72,24 @@ Platform architecture must support (implementation in auth/data phases):
 
 | Right | Mechanism |
 |-------|-----------|
-| Access | User/org data export |
+| Access | `exportMyData` JSON export (schema `1.0.0`) |
 | Rectification | Profile/data update flows |
-| Erasure | Account & org deletion (see §29 master prompt) |
-| Portability | Structured export format |
+| Erasure | `requestAccountDeletion` + `confirmAccountDeletion` |
+| Portability | Structured JSON export (`UserDataExport.payload`) |
 | Restriction | Tenant-scoped data isolation |
+
+### 6.1 Account deletion policy (PR-B)
+
+- **Request:** authenticated user receives a single-use, expiring 6-digit code (hashed at rest).
+- **Confirm:** revokes all sessions/devices, removes memberships, anonymizes user PII.
+- **Owner guard:** if user is `OWNER` of a team org with other active members → `OWNERSHIP_TRANSFER_REQUIRED` (no auto owner assignment).
+- **Sole-member org:** personal or team org where user is the only member → membership removed and organization deleted.
+- **Analysis records:** org/business records retained; `createdByUserId` / `cancelledByUserId` pseudonymized to `AnonymizedActorUserID`.
+- **Retained for audit:** `security_events`, compliance audit trails (no raw deletion codes, passwords, or secrets).
+
+### 6.2 Export scope (PR-B)
+
+User export includes only the authenticated user's data: profile metadata, consents, memberships (no other member PII), devices, own analysis activity metadata, activity log entries. Excludes password hashes, TOTP secrets, token hashes, and other credentials.
 
 Detay: [MONGODB_SCHEMA.md](./MONGODB_SCHEMA.md), [SECURITY.md](./SECURITY.md)
 

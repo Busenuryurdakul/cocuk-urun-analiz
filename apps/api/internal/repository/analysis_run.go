@@ -100,6 +100,39 @@ func (r *AnalysisRunRepository) ListByOrg(ctx context.Context, organizationID pr
 	return runs, nil
 }
 
+func (r *AnalysisRunRepository) ListByCreatedByUser(ctx context.Context, userID primitive.ObjectID, limit int) ([]domain.AnalysisRun, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}}).SetLimit(int64(limit))
+	cur, err := r.col.Find(ctx, bson.M{"createdByUserId": userID}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	var runs []domain.AnalysisRun
+	if err := cur.All(ctx, &runs); err != nil {
+		return nil, err
+	}
+	return runs, nil
+}
+
+func (r *AnalysisRunRepository) AnonymizeUserActor(ctx context.Context, userID primitive.ObjectID) error {
+	anon := domain.AnonymizedActorUserID
+	_, err := r.col.UpdateMany(ctx, bson.M{"createdByUserId": userID}, bson.M{"$set": bson.M{
+		"createdByUserId": anon,
+		"updatedAt":       time.Now().UTC(),
+	}})
+	if err != nil {
+		return err
+	}
+	_, err = r.col.UpdateMany(ctx, bson.M{"cancelledByUserId": userID}, bson.M{"$set": bson.M{
+		"cancelledByUserId": anon,
+		"updatedAt":         time.Now().UTC(),
+	}})
+	return err
+}
+
 func (r *AnalysisRunRepository) ListStaleRunning(ctx context.Context, limit int) ([]domain.AnalysisRun, error) {
 	if limit <= 0 {
 		limit = 50

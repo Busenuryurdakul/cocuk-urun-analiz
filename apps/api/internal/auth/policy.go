@@ -14,6 +14,7 @@ type SecurityPolicy struct {
 	MFASetupTTL          time.Duration
 	DeviceVerifyTTL      time.Duration
 	LoginEmailOTPTTL     time.Duration
+	AccountDeletionTTL   time.Duration
 }
 
 func DefaultSecurityPolicy() SecurityPolicy {
@@ -28,5 +29,6 @@ func DefaultSecurityPolicy() SecurityPolicy {
 		MFASetupTTL:          30 * time.Minute,
 		DeviceVerifyTTL:      15 * time.Minute,
 		LoginEmailOTPTTL:     10 * time.Minute,
+		AccountDeletionTTL:   15 * time.Minute,
 	}
 }

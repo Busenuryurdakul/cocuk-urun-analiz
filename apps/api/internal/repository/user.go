@@ -79,3 +79,17 @@ func (r *UserRepository) EnableMFA(ctx context.Context, id primitive.ObjectID, s
 	}})
 	return err
 }
+
+func (r *UserRepository) AnonymizeDeleted(ctx context.Context, id primitive.ObjectID, anonymizedEmail string) error {
+	now := time.Now().UTC()
+	_, err := r.col.UpdateByID(ctx, id, bson.M{"$set": bson.M{
+		"email":         anonymizedEmail,
+		"passwordHash":  "",
+		"emailVerified": false,
+		"mfaEnabled":    false,
+		"mfaSecret":     "",
+		"deletedAt":     now,
+		"updatedAt":     now,
+	}})
+	return err
+}

@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+type AccountDeletionRequestResult struct {
+	Status    string  `json:"status"`
+	ExpiresAt *string `json:"expiresAt,omitempty"`
+}
+
 type ActivityLogEntry struct {
 	ID         string  `json:"id"`
 	Action     string  `json:"action"`
@@ -603,6 +608,12 @@ type User struct {
 	EmailVerified bool   `json:"emailVerified"`
 	MfaEnabled    bool   `json:"mfaEnabled"`
 	PersonalOrgID string `json:"personalOrgId"`
+}
+
+type UserDataExport struct {
+	SchemaVersion string `json:"schemaVersion"`
+	ExportedAt    string `json:"exportedAt"`
+	Payload       string `json:"payload"`
 }
 
 type UserExperience struct {

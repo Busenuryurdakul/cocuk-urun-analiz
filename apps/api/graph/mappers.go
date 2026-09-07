@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/account"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
@@ -83,6 +84,12 @@ func mapAuthError(err error) error {
 		return gqlError("CONSENT_REQUIRED", err)
 	case errors.Is(err, repository.ErrDuplicate):
 		return gqlError("DUPLICATE", err)
+	case errors.Is(err, account.ErrOwnershipTransferRequired):
+		return gqlError("OWNERSHIP_TRANSFER_REQUIRED", err)
+	case errors.Is(err, account.ErrInvalidDeletionCode):
+		return gqlError("INVALID_TOKEN", err)
+	case errors.Is(err, account.ErrAccountDeleted):
+		return gqlError("ACCOUNT_DELETED", err)
 	default:
 		return err
 	}

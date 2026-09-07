@@ -50,3 +50,8 @@ func (r *OrganizationRepository) UpdateCompliance(ctx context.Context, orgID pri
 	}})
 	return err
 }
+
+func (r *OrganizationRepository) Delete(ctx context.Context, orgID primitive.ObjectID) error {
+	_, err := r.col.DeleteOne(ctx, bson.M{"_id": orgID})
+	return err
+}

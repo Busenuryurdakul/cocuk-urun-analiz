@@ -103,6 +103,14 @@ func (r *SessionRepository) RevokeByDeviceID(ctx context.Context, deviceID primi
 	return err
 }
 
+func (r *SessionRepository) RevokeAllByUser(ctx context.Context, userID primitive.ObjectID) error {
+	_, err := r.col.UpdateMany(ctx, bson.M{"userId": userID, "revoked": false}, bson.M{"$set": bson.M{
+		"revoked":   true,
+		"updatedAt": time.Now().UTC(),
+	}})
+	return err
+}
+
 func (r *SessionRepository) ListActiveByUser(ctx context.Context, userID primitive.ObjectID) ([]domain.Session, error) {
 	cur, err := r.col.Find(ctx, bson.M{
 		"userId":    userID,

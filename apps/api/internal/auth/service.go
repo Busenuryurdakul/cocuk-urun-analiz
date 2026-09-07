@@ -410,6 +410,10 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResult, er
 		return nil, ErrInvalidCredentials
 	}
 
+	if user.IsDeleted() {
+		return nil, ErrInvalidCredentials
+	}
+
 	_ = s.BruteForce.ResetLoginFailures(ctx, email)
 
 	if !user.EmailVerified {

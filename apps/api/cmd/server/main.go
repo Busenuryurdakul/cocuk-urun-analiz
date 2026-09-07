@@ -34,6 +34,7 @@ func main() {
 
 	resolver := &graph.Resolver{
 		Auth:               application.Auth,
+		Account:            application.Account,
 		Org:                application.Org,
 		Consent:            application.Consent,
 		Compliance:         application.Compliance,

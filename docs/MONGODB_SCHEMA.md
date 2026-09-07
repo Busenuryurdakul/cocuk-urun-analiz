@@ -44,12 +44,32 @@ User
   emailVerified: boolean,
   mfaEnabled: boolean,
   personalOrgId: ObjectId,
+  deletedAt: Date | null,                 // set when account erasure completes
   createdAt: Date,
   updatedAt: Date
 }
 ```
 
 **Indexes:** `{ email: 1 }` unique
+
+**Erasure:** credentials cleared; email replaced with `deleted+<userId>@anonymized.invalid` to release unique index.
+
+### account_deletion_requests
+
+Short-lived hashed confirmation codes for account erasure (TTL index on `expiresAt`).
+
+```text
+{
+  _id: ObjectId,
+  userId: ObjectId,
+  codeHash: string,                       // SHA-256; raw code never stored
+  locked: boolean,
+  expiresAt: Date,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ userId: 1 }`, `{ codeHash: 1 }` unique, TTL `{ expiresAt: 1 }`
 
 ### organizations
 

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/account"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/analysis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
@@ -40,6 +41,7 @@ type App struct {
 	Redis          *redis.Client
 	MailQueue      *mail.QueuedService
 	Auth           *auth.Service
+	Account        *account.Service
 	Org            *org.Service
 	Compliance     *compliance.Engine
 	Consent        *compliance.ConsentService
@@ -85,6 +87,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	loginEmailVerify := repository.NewLoginEmailVerificationRepository(db)
 	deviceVerify := repository.NewDeviceVerificationRepository(db)
 	activityLogs := repository.NewUserActivityLogRepository(db)
+	accountDeletion := repository.NewAccountDeletionRepository(db)
 	mfaSetup := repository.NewMFASetupRepository(db)
 	security := repository.NewSecurityEventRepository(db)
 	invitations := repository.NewInvitationRepository(db)
@@ -334,6 +337,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		MFASetupTTL:          30 * time.Minute,
 		DeviceVerifyTTL:      15 * time.Minute,
 		LoginEmailOTPTTL:     cfg.LoginEmailOTPTTL,
+		AccountDeletionTTL:   15 * time.Minute,
 	}
 
 	bruteForce := &auth.BruteForceGuard{
@@ -366,11 +370,27 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Turnstile:        turnstile.NewVerifier(cfg.TurnstileSecretKey, cfg.TurnstileEnabled),
 	}
 
+	accountSvc := &account.Service{
+		Users:        users,
+		Orgs:         orgs,
+		Members:      members,
+		Devices:      devices,
+		Sessions:     sessions,
+		DeletionReqs: accountDeletion,
+		Consents:     consents,
+		AnalysisRuns: analysisRunsRepo,
+		ActivityLogs: activityLogs,
+		Security:     security,
+		Mail:         mailer,
+		Policy:       policy,
+	}
+
 	app := &App{
 		Config:         cfg,
 		Mongo:          mongoClient,
 		Redis:          redisClient,
 		Auth:           authSvc,
+		Account:        accountSvc,
 		Org:            orgSvc,
 		Compliance:     complianceEngine,
 		Consent:        consentSvc,
