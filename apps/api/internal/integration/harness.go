@@ -213,6 +213,7 @@ func (h *Phase5Harness) startHTTPServer(t *testing.T) {
 	t.Helper()
 	resolver := &graph.Resolver{
 		Auth:               h.App.Auth,
+		Account:            h.App.Account,
 		Org:                h.App.Org,
 		Consent:            h.App.Consent,
 		Compliance:         h.App.Compliance,
