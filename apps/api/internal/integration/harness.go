@@ -25,6 +25,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/config"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mail"
 	mongoclient "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mongo"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/product"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/redis"
@@ -132,6 +133,11 @@ func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 		t.Fatalf("app init: %v", err)
 	}
 	h.App = application
+	// Integration tests must not depend on a live MailHog/SMTP listener.
+	h.App.Auth.Mail = harnessImmediateMail{}
+	if h.App.Org != nil {
+		h.App.Org.Mail = harnessImmediateMail{}
+	}
 	h.startHTTPServer(t)
 
 	if cfg.startPython {
@@ -554,3 +560,9 @@ func errHasCode(errs []map[string]any, code string) bool {
 var _ = httptest.NewRecorder
 
 func stringsContains(s, sub string) bool { return strings.Contains(s, sub) }
+
+type harnessImmediateMail struct{}
+
+func (harnessImmediateMail) Send(context.Context, mail.Message) error { return nil }
+
+func (harnessImmediateMail) SendImmediate(context.Context, mail.Message) error { return nil }
