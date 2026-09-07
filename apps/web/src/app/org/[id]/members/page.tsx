@@ -112,7 +112,10 @@ export default function OrgMembersPage() {
         await sendInvite(trimmed);
       }
       setEmail("");
-      setStatus({ kind: "success", text: "Davet gönderildi. Kişi e-postasındaki bağlantıyı açarak katılabilir." });
+      setStatus({
+        kind: "success",
+        text: `Davet ${trimmed} adresine gönderildi. Gelen kutusu ve spam klasörünü kontrol edin.`,
+      });
       await load({ silent: true });
     } catch (err) {
       setStatus({ kind: "error", text: authErrorMessage(err, "Davet gönderilemedi") });
@@ -184,7 +187,9 @@ export default function OrgMembersPage() {
             </div>
             <input
               className="input"
-              type="email"
+              type="text"
+              inputMode="email"
+              autoComplete="email"
               placeholder="E-posta"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

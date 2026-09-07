@@ -62,6 +62,14 @@ func (r *InvitationRepository) MarkExpired(ctx context.Context, id primitive.Obj
 	return err
 }
 
+func (r *InvitationRepository) RefreshPending(ctx context.Context, id primitive.ObjectID, tokenHash string, expiresAt time.Time) error {
+	_, err := r.col.UpdateByID(ctx, id, bson.M{"$set": bson.M{
+		"tokenHash": tokenHash,
+		"expiresAt": expiresAt,
+	}})
+	return err
+}
+
 func (r *InvitationRepository) FindPendingByOrgAndEmail(ctx context.Context, orgID primitive.ObjectID, email string) (*domain.OrganizationInvitation, error) {
 	var inv domain.OrganizationInvitation
 	err := r.col.FindOne(ctx, bson.M{

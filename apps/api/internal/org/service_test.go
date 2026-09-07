@@ -169,8 +169,8 @@ func TestInviteMemberAndRejectDuplicatePending(t *testing.T) {
 	if err := svc.InviteMember(ctx, ownerID, teamID, invitee, "VIEWER"); err != nil {
 		t.Fatalf("expected first invite to succeed, got %v", err)
 	}
-	if err := svc.InviteMember(ctx, ownerID, teamID, invitee, "ADMIN"); err != org.ErrInvitationPending {
-		t.Fatalf("expected pending invitation, got %v", err)
+	if err := svc.InviteMember(ctx, ownerID, teamID, invitee, "VIEWER"); err != nil {
+		t.Fatalf("expected pending invite resend to succeed, got %v", err)
 	}
 }
 

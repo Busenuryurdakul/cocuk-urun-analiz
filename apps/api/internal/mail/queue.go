@@ -43,6 +43,12 @@ func NewQueuedService(inner Service, redis QueueRedis, enabled bool, maxRetries 
 	}
 }
 
+// SendImmediate delivers through the inner provider, bypassing the queue.
+// Use for auth-critical mail so delivery failures surface to the caller.
+func (q *QueuedService) SendImmediate(ctx context.Context, msg Message) error {
+	return q.inner.Send(ctx, msg)
+}
+
 func (q *QueuedService) Send(ctx context.Context, msg Message) error {
 	if !q.enabled || q.redis == nil {
 		return q.inner.Send(ctx, msg)

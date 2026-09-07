@@ -169,12 +169,6 @@ func (s *Service) InviteMember(ctx context.Context, actorID, orgID primitive.Obj
 		return userErr
 	}
 
-	if _, invErr := s.Invitations.FindPendingByOrgAndEmail(ctx, orgID, email); invErr == nil {
-		return ErrInvitationPending
-	} else if !errors.Is(invErr, repository.ErrNotFound) {
-		return invErr
-	}
-
 	s.grantRequiredConsents(ctx, actorID, orgID, domain.ComplianceProfile(org.ComplianceProfile), org.CompliancePolicyVersion)
 
 	fields := map[string]string{"email": email, "role": string(role)}
@@ -191,27 +185,31 @@ func (s *Service) InviteMember(ctx context.Context, actorID, orgID primitive.Obj
 	if err != nil {
 		return err
 	}
+	expiresAt := time.Now().UTC().Add(invitationTTL)
 
-	inv := &domain.OrganizationInvitation{
-		OrganizationID: orgID,
-		Email:          email,
-		Role:           role,
-		InviterID:      actorID,
-		TokenHash:      tokenHash,
-		Status:         domain.InvitationPending,
-		ExpiresAt:      time.Now().UTC().Add(invitationTTL),
+	if pending, invErr := s.Invitations.FindPendingByOrgAndEmail(ctx, orgID, email); invErr == nil {
+		if err := s.Invitations.RefreshPending(ctx, pending.ID, tokenHash, expiresAt); err != nil {
+			return err
+		}
+	} else if errors.Is(invErr, repository.ErrNotFound) {
+		inv := &domain.OrganizationInvitation{
+			OrganizationID: orgID,
+			Email:          email,
+			Role:           role,
+			InviterID:      actorID,
+			TokenHash:      tokenHash,
+			Status:         domain.InvitationPending,
+			ExpiresAt:      expiresAt,
+		}
+		if err := s.Invitations.Create(ctx, inv); err != nil {
+			return err
+		}
+	} else {
+		return invErr
 	}
-	if err := s.Invitations.Create(ctx, inv); err != nil {
+
+	if err := s.sendInvitationMail(ctx, email, org.Name, token); err != nil {
 		return err
-	}
-
-	acceptURL := fmt.Sprintf("%s/org/accept-invite?token=%s", strings.TrimRight(s.WebBaseURL, "/"), token)
-	if s.Mail != nil {
-		_ = s.Mail.Send(ctx, mail.Message{
-			To:      email,
-			Subject: "Miyuna — organizasyon daveti",
-			Body:    fmt.Sprintf("%s organizasyonuna davet edildiniz.\nKabul: %s", org.Name, acceptURL),
-		})
 	}
 
 	uid := actorID
@@ -222,6 +220,17 @@ func (s *Service) InviteMember(ctx context.Context, actorID, orgID primitive.Obj
 		Severity:       domain.SeverityInfo,
 		Details:        map[string]string{"email": compliance.SanitizeForAudit(email), "role": string(role)},
 	})
+	return nil
+}
+
+func (s *Service) sendInvitationMail(ctx context.Context, email, orgName, token string) error {
+	acceptURL := fmt.Sprintf("%s/org/accept-invite?token=%s", strings.TrimRight(s.WebBaseURL, "/"), token)
+	subject, plain, html := mail.InvitationEmail(orgName, acceptURL)
+	if err := mail.DeliverNow(ctx, s.Mail, mail.Message{
+		To: email, Subject: subject, Body: plain, HTMLBody: html,
+	}); err != nil {
+		return fmt.Errorf("invitation mail: %w", err)
+	}
 	return nil
 }
 

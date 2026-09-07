@@ -38,6 +38,24 @@ func LoginOTPEmail(code string) (subject, plain, html string) {
 	return subject, plain, html
 }
 
+func InvitationEmail(orgName, acceptURL string) (subject, plain, html string) {
+	subject = "Miyuna — organizasyon daveti"
+	plain = fmt.Sprintf("%s organizasyonuna davet edildiniz.\nKabul: %s\n\nBağlantı 7 gün geçerlidir.", orgName, acceptURL)
+	html = fmt.Sprintf(`<!DOCTYPE html>
+<html lang="tr">
+<head><meta charset="UTF-8"><title>%s</title></head>
+<body style="font-family:system-ui,sans-serif;background:#f5f0e8;margin:0;padding:32px">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;border:1px solid #e0d8cc">
+    <h1 style="color:#14352f;font-size:22px;margin:0 0 16px">Miyuna</h1>
+    <p style="color:#333;line-height:1.6"><strong>%s</strong> organizasyonuna davet edildiniz.</p>
+    <p style="margin:24px 0"><a href="%s" style="display:inline-block;background:#14352f;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Daveti kabul et</a></p>
+    <p style="color:#666;font-size:13px">Bağlantı 7 gün geçerlidir. Bu daveti beklemiyorsanız e-postayı yok sayın.</p>
+  </div>
+</body>
+</html>`, subject, orgName, acceptURL)
+	return subject, plain, html
+}
+
 func DeviceLoginNoticeEmail(label, ip string) (subject, plain, html string) {
 	subject = "Miyuna — yeni oturum bildirimi"
 	plain = fmt.Sprintf("Hesabınıza yeni bir oturum açıldı.\nCihaz: %s\nIP: %s", label, ip)
