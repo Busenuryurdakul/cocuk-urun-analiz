@@ -197,15 +197,19 @@ func TestEvidenceValidatorWrongAnalysisRun(t *testing.T) {
 	assertValidator(t, out, "UNSUPPORTED", domain.EvidenceIssueWrongAnalysisRun)
 }
 
-func TestEvidenceValidatorContradictedAndPartial(t *testing.T) {
+func TestEvidenceValidatorContradicted(t *testing.T) {
 	f := setupValidatorFixture(t)
 	good := f.createEvidence(t, f.orgA, f.runA.ID, f.prodA.ID, "claim-mix", nil)
 	bad := f.createEvidence(t, f.orgA, f.runA.ID, f.prodA.ID, "claim-mix", map[string]any{"contradictsClaim": true})
 	out := f.execute(t, f.orgA, f.runA.ID, "claim-mix", []string{good.ID.Hex(), bad.ID.Hex()})
 	assertValidator(t, out, "CONTRADICTED", domain.EvidenceIssueContradictory)
+}
 
-	partial := f.execute(t, f.orgA, f.runA.ID, "claim-partial", []string{good.ID.Hex(), "not-an-id"})
-	assertValidator(t, partial, "PARTIALLY_SUPPORTED", domain.EvidenceIssueInvalidEvidenceID)
+func TestEvidenceValidatorPartiallySupported(t *testing.T) {
+	f := setupValidatorFixture(t)
+	good := f.createEvidence(t, f.orgA, f.runA.ID, f.prodA.ID, "claim-partial", nil)
+	out := f.execute(t, f.orgA, f.runA.ID, "claim-partial", []string{good.ID.Hex(), "not-an-id"})
+	assertValidator(t, out, "PARTIALLY_SUPPORTED", domain.EvidenceIssueInvalidEvidenceID)
 }
 
 func TestEvidenceValidatorInvalidReliabilityFreshness(t *testing.T) {
