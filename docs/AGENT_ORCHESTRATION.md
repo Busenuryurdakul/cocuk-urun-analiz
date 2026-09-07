@@ -88,7 +88,7 @@ Persist                       ← MongoDB + audit events
 | `review_sampler` | Sample reviews (max 100) |
 | `review_analyzer` | Analyze sampled reviews |
 | `price_history_analyzer` | Deterministic price analytics |
-| `safety_analyzer` | Verified knowledge + deterministic rules |
+| `safety_analyzer` | Deterministic safety findings + official recall matching (AVAILABLE via Executor; planner wiring deferred) |
 | `age_analyzer` | Target age group assessment |
 | `material_analyzer` | Material composition analysis |
 | `market_analyzer` | Market/risk signal assessment |
@@ -124,9 +124,12 @@ LLM Tool Intent
 
 `safety_analyzer` = **Verified Knowledge + Deterministic Rules + Normalized Data**
 
+- P0 PR-A2: Executor implementation is AVAILABLE. Python/Go planner still excludes it (`SAFETY_ANALYZER_PLANNER_WIRING: DEFERRED_TO_PR_A3`).
+- Official CPSC/GÜBİS records are normalized and matched deterministically. Weak/fuzzy matches are `requiresReview` and cannot become CRITICAL confirmed findings.
 - LLM role: explain/summarize — **not** verdict engine
-- Evidence yoksa status: **UNVERIFIED**
+- Evidence yoksa status: **UNVERIFIED** / `INSUFFICIENT_EVIDENCE`
 - Platform asla "kesinlikle güvenli/güvensiz" hüküm vermez
+- Detay: [SAFETY_RECALL.md](./SAFETY_RECALL.md)
 
 ## 9. Progress Events
 

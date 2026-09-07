@@ -44,6 +44,10 @@ type Query {
   agentRunEvents(organizationId: ID!, analysisRunId: ID!, afterSequence: Int = 0, limit: Int = 100): [AgentRunEvent!]!
   """Evidence for an analysis run — tenant-isolated"""
   analysisEvidence(organizationId: ID!, analysisRunId: ID!, limit: Int = 50): [Evidence!]!
+  """Safety findings for an analysis run — tenant-isolated"""
+  analysisSafetyFindings(organizationId: ID!, analysisRunId: ID!, limit: Int = 50): [SafetyFinding!]!
+  """Recall match signals for an analysis run — tenant-isolated"""
+  analysisRecallMatches(organizationId: ID!, analysisRunId: ID!, limit: Int = 50): [RecallMatch!]!
   """LLM providers — platform registry"""
   llmProviders: [LLMProvider!]!
   """LLM models available to organization"""
@@ -621,6 +625,30 @@ type AnalysisRun {
   createdAt: String!
   updatedAt: String!
   evidence(limit: Int = 50): [Evidence!]!
+  safetyFindings(limit: Int = 50): [SafetyFinding!]!
+  recalls(limit: Int = 50): [RecallMatch!]!
+}
+
+type SafetyFinding {
+  id: ID!
+  analysisRunId: ID!
+  productId: ID!
+  type: String!
+  severity: String!
+  confidence: Float!
+  evidenceIds: [ID!]!
+  rationale: String!
+  createdAt: String!
+}
+
+type RecallMatch {
+  source: String!
+  sourceRecordId: String!
+  matched: Boolean!
+  confidence: Float!
+  method: String!
+  reference: String
+  requiresReview: Boolean!
 }
 
 type Evidence {

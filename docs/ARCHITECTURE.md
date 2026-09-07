@@ -219,7 +219,8 @@ DatasetRecord candidates → DatasetVersion (DRAFT metadata only)
 **Boundaries:**
 
 - **Phase 5 (IMPLEMENTED):** Python authoritative orchestrator; Go GraphQL/security/persistence/tool boundary; Redis grants/leases
-- **P0 PR-A1 (IMPLEMENTED):** tenant-scoped `evidences` + `evidence_claim_validations`; `evidence_validator` available via Executor. Planner/orchestrator payload wiring deferred to PR-A3. Safety/CPSC/GÜBİS/recall and review_analyzer are not in this PR.
+- **P0 PR-A1 (IMPLEMENTED):** tenant-scoped `evidences` + `evidence_claim_validations`; `evidence_validator` available via Executor. Planner/orchestrator payload wiring deferred to PR-A3.
+- **P0 PR-A2 (IMPLEMENTED):** safety findings + official CPSC/GÜBİS recall adapters + recall matcher; `safety_analyzer` available via Executor. Planner/orchestrator wiring, review_analyzer, final analysis, confidence, and product decision are deferred to PR-A3.
 - **Phase 10:** Fine-tune training, dataset publication export — NOT in Phase 4
 - **Live Hepsiburada/Trendyol fetch:** DEFERRED_WITH_REASON until verified authorized/permitted API
 

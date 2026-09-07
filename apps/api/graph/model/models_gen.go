@@ -53,6 +53,8 @@ type AnalysisRun struct {
 	CreatedAt               string            `json:"createdAt"`
 	UpdatedAt               string            `json:"updatedAt"`
 	Evidence                []*Evidence       `json:"evidence"`
+	SafetyFindings          []*SafetyFinding  `json:"safetyFindings"`
+	Recalls                 []*RecallMatch    `json:"recalls"`
 }
 
 type BuildDatasetDraftInput struct {
@@ -460,6 +462,16 @@ type PublishLLMConfigurationInput struct {
 type Query struct {
 }
 
+type RecallMatch struct {
+	Source         string  `json:"source"`
+	SourceRecordID string  `json:"sourceRecordId"`
+	Matched        bool    `json:"matched"`
+	Confidence     float64 `json:"confidence"`
+	Method         string  `json:"method"`
+	Reference      *string `json:"reference,omitempty"`
+	RequiresReview bool    `json:"requiresReview"`
+}
+
 type RegisterInput struct {
 	Email          string  `json:"email"`
 	Password       string  `json:"password"`
@@ -485,6 +497,18 @@ type RollbackLLMConfigurationInput struct {
 	OrganizationID string `json:"organizationId"`
 	SnapshotID     string `json:"snapshotId"`
 	Reason         string `json:"reason"`
+}
+
+type SafetyFinding struct {
+	ID            string   `json:"id"`
+	AnalysisRunID string   `json:"analysisRunId"`
+	ProductID     string   `json:"productId"`
+	Type          string   `json:"type"`
+	Severity      string   `json:"severity"`
+	Confidence    float64  `json:"confidence"`
+	EvidenceIds   []string `json:"evidenceIds"`
+	Rationale     string   `json:"rationale"`
+	CreatedAt     string   `json:"createdAt"`
 }
 
 type SetOrganizationModelsInput struct {

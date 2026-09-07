@@ -15,6 +15,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/fetch"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/rbac"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,6 +30,7 @@ type ToolInput struct {
 	ClaimID        string
 	ClaimText      string
 	EvidenceIDs    []string
+	RecallIDs      []string
 }
 
 type ToolOutput struct {
@@ -40,6 +42,7 @@ type Executor struct {
 	Registry   *Registry
 	Compliance *compliance.Engine
 	Evidence   *evidence.Service
+	Safety     *safety.Service
 }
 
 func (e *Executor) Execute(ctx context.Context, toolName string, input ToolInput) (*ToolOutput, error) {
@@ -66,6 +69,8 @@ func (e *Executor) Execute(ctx context.Context, toolName string, input ToolInput
 		return e.runPIIRedactor(input)
 	case "evidence_validator":
 		return e.runEvidenceValidator(ctx, input)
+	case "safety_analyzer":
+		return e.runSafetyAnalyzer(ctx, input)
 	default:
 		return nil, ErrToolUnavailable
 	}
@@ -196,6 +201,48 @@ func (e *Executor) runDatasetValidator(input ToolInput) (*ToolOutput, error) {
 			"eligibilitySummary":     summary,
 		},
 	}, nil
+}
+
+func (e *Executor) runSafetyAnalyzer(ctx context.Context, input ToolInput) (*ToolOutput, error) {
+	if e.Safety == nil {
+		return nil, ErrToolUnavailable
+	}
+	if err := ValidateSafetyAnalyzerInput(input); err != nil {
+		return nil, err
+	}
+	result, err := e.Safety.Analyze(ctx, safety.AnalyzeInput{
+		OrganizationID: input.OrganizationID,
+		AnalysisRunID:  input.RunID,
+		ProductID:      input.ProductID,
+		EvidenceIDs:    input.EvidenceIDs,
+		RecallIDs:      input.RecallIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+	findings := make([]map[string]any, 0, len(result.Findings))
+	for _, f := range result.Findings {
+		ids := f.EvidenceIDs
+		if ids == nil {
+			ids = []string{}
+		}
+		findings = append(findings, map[string]any{
+			"type":        f.Type,
+			"severity":    f.Severity,
+			"confidence":  f.Confidence,
+			"evidenceIds": ids,
+			"rationale":   f.Rationale,
+		})
+	}
+	issues := result.Issues
+	if issues == nil {
+		issues = []string{}
+	}
+	payload := map[string]any{"findings": findings, "issues": issues}
+	if err := ValidateToolOutput("safety_analyzer", "OK", payload); err != nil {
+		return nil, err
+	}
+	return &ToolOutput{Status: "OK", Payload: payload}, nil
 }
 
 func (e *Executor) runEvidenceValidator(ctx context.Context, input ToolInput) (*ToolOutput, error) {

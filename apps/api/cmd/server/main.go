@@ -43,6 +43,7 @@ func main() {
 		MarketplaceService: application.Marketplace,
 		DatasetService:     application.Dataset,
 		EvidenceService:    application.Evidence,
+		SafetyService:      application.Safety,
 		AgentService:       application.Agent,
 		LLMService:         application.LLM,
 		CookieOpts:         application.CookieOptions(),

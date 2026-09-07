@@ -40,6 +40,11 @@ var toolIOSchemas = map[string]ToolIOSchema{
 		OutputRequired: []string{"claimId", "status", "evidenceIds", "issues"},
 		OutputStatuses: []string{"OK"},
 	},
+	"safety_analyzer": {
+		InputRequired:  []string{"analysisRunId", "productId", "evidenceIds"},
+		OutputRequired: []string{"findings", "issues"},
+		OutputStatuses: []string{"OK"},
+	},
 }
 
 func ValidateToolOutput(toolName string, status string, payload map[string]any) error {
@@ -54,6 +59,19 @@ func ValidateToolOutput(toolName string, status string, payload map[string]any) 
 		if _, ok := payload[field]; !ok {
 			return fmt.Errorf("%w: missing output field %s", ErrSchemaValidation, field)
 		}
+	}
+	return nil
+}
+
+func ValidateSafetyAnalyzerInput(input ToolInput) error {
+	if input.RunID.IsZero() {
+		return fmt.Errorf("%w: missing analysisRunId", ErrSchemaValidation)
+	}
+	if input.ProductID.IsZero() {
+		return fmt.Errorf("%w: missing productId", ErrSchemaValidation)
+	}
+	if input.EvidenceIDs == nil {
+		return fmt.Errorf("%w: missing evidenceIds", ErrSchemaValidation)
 	}
 	return nil
 }

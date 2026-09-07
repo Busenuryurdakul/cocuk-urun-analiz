@@ -129,19 +129,29 @@ Missing field ile ilgili claim → maximum status: **UNVERIFIED**
 
 ## 7. Safety Evidence Model
 
-`safety_analyzer` output:
+P0 PR-A2 persists tenant-scoped `safety_findings` and run-specific `recall_matches`. Confirmed official recalls reuse PR-A1 `EvidenceService.CreateEvidence`:
 
 ```text
-SafetySignal {
-  signal: string
-  status: VERIFIED | PARTIAL | UNVERIFIED | CONTRADICTED
-  evidence: Evidence[]
-  ruleId?: string              // deterministic rule reference
-  knowledgeBaseRef?: string    // verified knowledge reference
+sourceType: OFFICIAL_RECALL | OFFICIAL_SAFETY_NOTICE
+source: CPSC | GUBIS
+claim: "Product matched an official recall record"
+metadata: sourceRecordId, matchMethod, matchConfidence, hazard, publishedAt
+```
+
+`safety_analyzer` Executor output:
+
+```text
+{
+  findings: [{ type, severity, confidence, evidenceIds, rationale }],
+  issues: []
 }
 ```
 
+CRITICAL/HIGH findings require evidence IDs. Weak fuzzy recall matches are not confirmed and cannot become CRITICAL. Planner wiring remains deferred to PR-A3.
+
 LLM safety açıklaması evidence'ye bağlıdır. LLM verdict engine değildir.
+
+Detay: [SAFETY_RECALL.md](./SAFETY_RECALL.md)
 
 ## 8. Review Evidence Flow
 
