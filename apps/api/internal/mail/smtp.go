@@ -34,6 +34,7 @@ func NewSMTPFromHostPort(host, port, from string) *SMTPService {
 
 func (s *SMTPService) Send(ctx context.Context, msg Message) error {
 	_ = ctx
+	msg = normalizeMessage(msg)
 	addr := net.JoinHostPort(s.cfg.Host, s.cfg.Port)
 	envelopeFrom, headerFrom := parseFrom(s.cfg.From)
 	body := buildMIME(headerFrom, msg)

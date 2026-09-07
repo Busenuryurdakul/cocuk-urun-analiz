@@ -34,6 +34,7 @@ func (s *ResendService) Send(ctx context.Context, msg Message) error {
 	if strings.TrimSpace(s.cfg.APIKey) == "" {
 		return fmt.Errorf("resend api key missing")
 	}
+	msg = normalizeMessage(msg)
 	from, _ := parseFrom(s.cfg.From)
 	body := map[string]any{
 		"from":    from,

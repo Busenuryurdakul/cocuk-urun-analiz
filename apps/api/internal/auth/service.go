@@ -238,7 +238,7 @@ func (s *Service) sendEmailVerification(ctx context.Context, userID primitive.Ob
 	}
 	verifyURL := fmt.Sprintf("%s/auth/verify-email?token=%s", strings.TrimRight(s.WebBaseURL, "/"), token)
 	subject, plain, html := mail.VerificationEmail(verifyURL)
-	return s.Mail.Send(ctx, mail.Message{
+	return s.deliverCriticalMail(ctx, mail.Message{
 		To:       email,
 		Subject:  subject,
 		Body:     plain,

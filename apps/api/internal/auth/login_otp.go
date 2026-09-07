@@ -142,7 +142,7 @@ func (s *Service) sendLoginEmailOTP(ctx context.Context, user *domain.User, pend
 		return err
 	}
 	subject, plain, html := mail.LoginOTPEmail(codePlain)
-	if err := s.Mail.Send(ctx, mail.Message{To: user.Email, Subject: subject, Body: plain, HTMLBody: html}); err != nil {
+	if err := s.deliverCriticalMail(ctx, mail.Message{To: user.Email, Subject: subject, Body: plain, HTMLBody: html}); err != nil {
 		return err
 	}
 	uid := user.ID
