@@ -1,6 +1,6 @@
 # Miyuna — Safety Findings and Official Recall Sources
 
-> Implementation state for **P0 PR-A2 + PR-A3**. This is not Phase 7 complete until PR-C real dual-LLM verification.
+> Implementation state for **P0 PR-A2 + PR-A3 + PR-C validation**. GÜBİS live remains environment-dependent; real LLM live verify documented in [REAL_LLM_FINAL_VERIFICATION.md](./REAL_LLM_FINAL_VERIFICATION.md).
 
 ## 1. Scope
 

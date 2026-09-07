@@ -109,7 +109,9 @@ policy_evaluator → compliance_checker → review_sampler?
   → worker LLM → reviewer LLM → finalize (hallucination/confidence/decision)
 ```
 
-Unavailable or excluded tools never enter the plan. `report_generator`, age/material/market/price analyzers remain excluded. Real dual-LLM final E2E is deferred to PR-C.
+Unavailable or excluded tools never enter the plan. `report_generator`, age/material/market/price analyzers remain excluded.
+
+Real dual-LLM verification: run `scripts/phase6/run_p0_final_validation.ps1` (HF token in env) or local Ollama manifest flow via `run_phase6_local_verification.ps1`. CI remains mock-only (`LLM_USE_MOCK=true`).
 
 ## 7. Tool Authorization Chain
 

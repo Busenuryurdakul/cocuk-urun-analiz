@@ -150,7 +150,7 @@ func TestRequestAndConfirmDeletionRevokesSessionsAndDevices(t *testing.T) {
 		DeviceID:         device.ID,
 		OrganizationID:   org.ID,
 		FamilyID:         primitive.NewObjectID(),
-		RefreshTokenHash: auth.HashToken("refresh-token"),
+		RefreshTokenHash: auth.HashToken("refresh-token-" + user.ID.Hex()),
 		ExpiresAt:        time.Now().UTC().Add(time.Hour),
 	}
 	if err := svc.Sessions.Create(ctx, session); err != nil {
