@@ -48,14 +48,14 @@ type Evidence struct {
 }
 
 type EvidenceClaimValidation struct {
-	ID             primitive.ObjectID     `bson:"_id,omitempty"`
-	OrganizationID primitive.ObjectID     `bson:"organizationId"`
-	AnalysisRunID  primitive.ObjectID     `bson:"analysisRunId"`
-	ClaimID        string                 `bson:"claimId"`
-	ClaimText      string                 `bson:"claimText"`
-	EvidenceIDs    []primitive.ObjectID   `bson:"evidenceIds"`
-	SupportStatus  EvidenceSupportStatus  `bson:"supportStatus"`
-	Issues         []string               `bson:"issues"`
-	CreatedAt      time.Time              `bson:"createdAt"`
-	UpdatedAt      time.Time              `bson:"updatedAt"`
+	ID             primitive.ObjectID    `bson:"_id,omitempty"`
+	OrganizationID primitive.ObjectID    `bson:"organizationId"`
+	AnalysisRunID  primitive.ObjectID    `bson:"analysisRunId"`
+	ClaimID        string                `bson:"claimId"`
+	ClaimText      string                `bson:"claimText"`
+	EvidenceIDs    []primitive.ObjectID  `bson:"evidenceIds"`
+	SupportStatus  EvidenceSupportStatus `bson:"supportStatus"`
+	Issues         []string              `bson:"issues"`
+	CreatedAt      time.Time             `bson:"createdAt"`
+	UpdatedAt      time.Time             `bson:"updatedAt"`
 }
