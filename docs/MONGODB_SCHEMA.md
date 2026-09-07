@@ -416,6 +416,53 @@ Persisted `evidence_validator` result. Upserted on `(organizationId, analysisRun
 
 **Indexes:** unique `{ organizationId: 1, analysisRunId: 1, claimId: 1 }`, `{ organizationId: 1, analysisRunId: 1 }`
 
+### safety_findings — IMPLEMENTED (P0 PR-A2)
+
+Tenant-scoped safety analyzer findings. CRITICAL/HIGH rows must carry evidence IDs or are persisted as `INSUFFICIENT_EVIDENCE`.
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  analysisRunId: ObjectId,
+  productId: ObjectId,
+  type: CHOKING | SUFFOCATION | STRANGULATION | CHEMICAL | FIRE | ELECTRICAL | STRUCTURAL | AGE_SUITABILITY | HYGIENE | INJURY | RECALL | MISLEADING_CLAIM | OTHER | INSUFFICIENT_EVIDENCE,
+  severity: LOW | MEDIUM | HIGH | CRITICAL,
+  confidence: number,
+  evidenceIds: ObjectId[],
+  rationale: string,
+  source: string,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, analysisRunId: 1 }`, `{ organizationId: 1, productId: 1 }`, `{ organizationId: 1, severity: 1 }`, `{ organizationId: 1, type: 1 }`
+
+### recall_matches — IMPLEMENTED (P0 PR-A2)
+
+Run-specific recall match signals. External CPSC/GÜBİS records are not duplicated as tenant-owned canonical data; only the match result is tenant-scoped.
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  analysisRunId: ObjectId,
+  productId: ObjectId,
+  source: CPSC | GUBIS,
+  sourceRecordId: string,
+  matched: boolean,
+  confidence: number,
+  method: string,
+  reference: string?,
+  requiresReview: boolean,
+  hazard: string?,
+  title: string?,
+  createdAt: Date
+}
+```
+
+**Indexes:** `{ organizationId: 1, analysisRunId: 1 }`, `{ organizationId: 1, productId: 1 }`
+
 ### tool_executions — IMPLEMENTED (Phase 5)
 
 ```text

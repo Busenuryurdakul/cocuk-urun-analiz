@@ -84,6 +84,8 @@ type ComplexityRoot struct {
 		OrganizationID          func(childComplexity int) int
 		PlannerVersion          func(childComplexity int) int
 		ProductID               func(childComplexity int) int
+		Recalls                 func(childComplexity int, limit *int) int
+		SafetyFindings          func(childComplexity int, limit *int) int
 		StartedAt               func(childComplexity int) int
 		Status                  func(childComplexity int) int
 		TerminalError           func(childComplexity int) int
@@ -444,7 +446,9 @@ type ComplexityRoot struct {
 		AgentRun                  func(childComplexity int, organizationID string, analysisRunID string) int
 		AgentRunEvents            func(childComplexity int, organizationID string, analysisRunID string, afterSequence *int, limit *int) int
 		AnalysisEvidence          func(childComplexity int, organizationID string, analysisRunID string, limit *int) int
+		AnalysisRecallMatches     func(childComplexity int, organizationID string, analysisRunID string, limit *int) int
 		AnalysisRuns              func(childComplexity int, organizationID string, status *model.AnalysisRunStatus, limit *int) int
+		AnalysisSafetyFindings    func(childComplexity int, organizationID string, analysisRunID string, limit *int) int
 		CompliancePolicyVersions  func(childComplexity int, organizationID string, limit *int) int
 		DatasetEligibilitySummary func(childComplexity int, organizationID string) int
 		DatasetVersions           func(childComplexity int, organizationID string, limit *int) int
@@ -475,8 +479,30 @@ type ComplexityRoot struct {
 		UserExperiences           func(childComplexity int, organizationID string, productID string) int
 	}
 
+	RecallMatch struct {
+		Confidence     func(childComplexity int) int
+		Matched        func(childComplexity int) int
+		Method         func(childComplexity int) int
+		Reference      func(childComplexity int) int
+		RequiresReview func(childComplexity int) int
+		Source         func(childComplexity int) int
+		SourceRecordID func(childComplexity int) int
+	}
+
 	RegisterPayload struct {
 		Message func(childComplexity int) int
+	}
+
+	SafetyFinding struct {
+		AnalysisRunID func(childComplexity int) int
+		Confidence    func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		EvidenceIds   func(childComplexity int) int
+		ID            func(childComplexity int) int
+		ProductID     func(childComplexity int) int
+		Rationale     func(childComplexity int) int
+		Severity      func(childComplexity int) int
+		Type          func(childComplexity int) int
 	}
 
 	SourceCount struct {
@@ -519,6 +545,8 @@ type ComplexityRoot struct {
 
 type AnalysisRunResolver interface {
 	Evidence(ctx context.Context, obj *model.AnalysisRun, limit *int) ([]*model.Evidence, error)
+	SafetyFindings(ctx context.Context, obj *model.AnalysisRun, limit *int) ([]*model.SafetyFinding, error)
+	Recalls(ctx context.Context, obj *model.AnalysisRun, limit *int) ([]*model.RecallMatch, error)
 }
 type MutationResolver interface {
 	Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error)
@@ -582,6 +610,8 @@ type QueryResolver interface {
 	AnalysisRuns(ctx context.Context, organizationID string, status *model.AnalysisRunStatus, limit *int) ([]*model.AnalysisRun, error)
 	AgentRunEvents(ctx context.Context, organizationID string, analysisRunID string, afterSequence *int, limit *int) ([]*model.AgentRunEvent, error)
 	AnalysisEvidence(ctx context.Context, organizationID string, analysisRunID string, limit *int) ([]*model.Evidence, error)
+	AnalysisSafetyFindings(ctx context.Context, organizationID string, analysisRunID string, limit *int) ([]*model.SafetyFinding, error)
+	AnalysisRecallMatches(ctx context.Context, organizationID string, analysisRunID string, limit *int) ([]*model.RecallMatch, error)
 	LlmProviders(ctx context.Context) ([]*model.LLMProvider, error)
 	LlmModels(ctx context.Context, organizationID string) ([]*model.LLMModel, error)
 	LlmRoutingPolicies(ctx context.Context, organizationID string, limit *int) ([]*model.LLMRoutingPolicy, error)
@@ -798,6 +828,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.AnalysisRun.ProductID(childComplexity), true
+	case "AnalysisRun.recalls":
+		if e.complexity.AnalysisRun.Recalls == nil {
+			break
+		}
+
+		args, err := ec.field_AnalysisRun_recalls_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.AnalysisRun.Recalls(childComplexity, args["limit"].(*int)), true
+	case "AnalysisRun.safetyFindings":
+		if e.complexity.AnalysisRun.SafetyFindings == nil {
+			break
+		}
+
+		args, err := ec.field_AnalysisRun_safetyFindings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.AnalysisRun.SafetyFindings(childComplexity, args["limit"].(*int)), true
 	case "AnalysisRun.startedAt":
 		if e.complexity.AnalysisRun.StartedAt == nil {
 			break
@@ -2619,6 +2671,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AnalysisEvidence(childComplexity, args["organizationId"].(string), args["analysisRunId"].(string), args["limit"].(*int)), true
+	case "Query.analysisRecallMatches":
+		if e.complexity.Query.AnalysisRecallMatches == nil {
+			break
+		}
+
+		args, err := ec.field_Query_analysisRecallMatches_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AnalysisRecallMatches(childComplexity, args["organizationId"].(string), args["analysisRunId"].(string), args["limit"].(*int)), true
 	case "Query.analysisRuns":
 		if e.complexity.Query.AnalysisRuns == nil {
 			break
@@ -2630,6 +2693,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AnalysisRuns(childComplexity, args["organizationId"].(string), args["status"].(*model.AnalysisRunStatus), args["limit"].(*int)), true
+	case "Query.analysisSafetyFindings":
+		if e.complexity.Query.AnalysisSafetyFindings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_analysisSafetyFindings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AnalysisSafetyFindings(childComplexity, args["organizationId"].(string), args["analysisRunId"].(string), args["limit"].(*int)), true
 	case "Query.compliancePolicyVersions":
 		if e.complexity.Query.CompliancePolicyVersions == nil {
 			break
@@ -2904,12 +2978,110 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.UserExperiences(childComplexity, args["organizationId"].(string), args["productId"].(string)), true
 
+	case "RecallMatch.confidence":
+		if e.complexity.RecallMatch.Confidence == nil {
+			break
+		}
+
+		return e.complexity.RecallMatch.Confidence(childComplexity), true
+	case "RecallMatch.matched":
+		if e.complexity.RecallMatch.Matched == nil {
+			break
+		}
+
+		return e.complexity.RecallMatch.Matched(childComplexity), true
+	case "RecallMatch.method":
+		if e.complexity.RecallMatch.Method == nil {
+			break
+		}
+
+		return e.complexity.RecallMatch.Method(childComplexity), true
+	case "RecallMatch.reference":
+		if e.complexity.RecallMatch.Reference == nil {
+			break
+		}
+
+		return e.complexity.RecallMatch.Reference(childComplexity), true
+	case "RecallMatch.requiresReview":
+		if e.complexity.RecallMatch.RequiresReview == nil {
+			break
+		}
+
+		return e.complexity.RecallMatch.RequiresReview(childComplexity), true
+	case "RecallMatch.source":
+		if e.complexity.RecallMatch.Source == nil {
+			break
+		}
+
+		return e.complexity.RecallMatch.Source(childComplexity), true
+	case "RecallMatch.sourceRecordId":
+		if e.complexity.RecallMatch.SourceRecordID == nil {
+			break
+		}
+
+		return e.complexity.RecallMatch.SourceRecordID(childComplexity), true
+
 	case "RegisterPayload.message":
 		if e.complexity.RegisterPayload.Message == nil {
 			break
 		}
 
 		return e.complexity.RegisterPayload.Message(childComplexity), true
+
+	case "SafetyFinding.analysisRunId":
+		if e.complexity.SafetyFinding.AnalysisRunID == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.AnalysisRunID(childComplexity), true
+	case "SafetyFinding.confidence":
+		if e.complexity.SafetyFinding.Confidence == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.Confidence(childComplexity), true
+	case "SafetyFinding.createdAt":
+		if e.complexity.SafetyFinding.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.CreatedAt(childComplexity), true
+	case "SafetyFinding.evidenceIds":
+		if e.complexity.SafetyFinding.EvidenceIds == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.EvidenceIds(childComplexity), true
+	case "SafetyFinding.id":
+		if e.complexity.SafetyFinding.ID == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.ID(childComplexity), true
+	case "SafetyFinding.productId":
+		if e.complexity.SafetyFinding.ProductID == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.ProductID(childComplexity), true
+	case "SafetyFinding.rationale":
+		if e.complexity.SafetyFinding.Rationale == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.Rationale(childComplexity), true
+	case "SafetyFinding.severity":
+		if e.complexity.SafetyFinding.Severity == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.Severity(childComplexity), true
+	case "SafetyFinding.type":
+		if e.complexity.SafetyFinding.Type == nil {
+			break
+		}
+
+		return e.complexity.SafetyFinding.Type(childComplexity), true
 
 	case "SourceCount.count":
 		if e.complexity.SourceCount.Count == nil {
@@ -3222,6 +3394,28 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // region    ***************************** args.gotpl *****************************
 
 func (ec *executionContext) field_AnalysisRun_evidence_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_AnalysisRun_recalls_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_AnalysisRun_safetyFindings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
@@ -3724,6 +3918,27 @@ func (ec *executionContext) field_Query_analysisEvidence_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_analysisRecallMatches_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "analysisRunId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["analysisRunId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_analysisRuns_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3737,6 +3952,27 @@ func (ec *executionContext) field_Query_analysisRuns_args(ctx context.Context, r
 		return nil, err
 	}
 	args["status"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_analysisSafetyFindings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "analysisRunId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["analysisRunId"] = arg1
 	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
 	if err != nil {
 		return nil, err
@@ -5223,6 +5459,124 @@ func (ec *executionContext) fieldContext_AnalysisRun_evidence(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_AnalysisRun_evidence_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnalysisRun_safetyFindings(ctx context.Context, field graphql.CollectedField, obj *model.AnalysisRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AnalysisRun_safetyFindings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.AnalysisRun().SafetyFindings(ctx, obj, fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNSafetyFinding2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSafetyFindingᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AnalysisRun_safetyFindings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnalysisRun",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SafetyFinding_id(ctx, field)
+			case "analysisRunId":
+				return ec.fieldContext_SafetyFinding_analysisRunId(ctx, field)
+			case "productId":
+				return ec.fieldContext_SafetyFinding_productId(ctx, field)
+			case "type":
+				return ec.fieldContext_SafetyFinding_type(ctx, field)
+			case "severity":
+				return ec.fieldContext_SafetyFinding_severity(ctx, field)
+			case "confidence":
+				return ec.fieldContext_SafetyFinding_confidence(ctx, field)
+			case "evidenceIds":
+				return ec.fieldContext_SafetyFinding_evidenceIds(ctx, field)
+			case "rationale":
+				return ec.fieldContext_SafetyFinding_rationale(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_SafetyFinding_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SafetyFinding", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_AnalysisRun_safetyFindings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnalysisRun_recalls(ctx context.Context, field graphql.CollectedField, obj *model.AnalysisRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AnalysisRun_recalls,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.AnalysisRun().Recalls(ctx, obj, fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNRecallMatch2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRecallMatchᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AnalysisRun_recalls(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnalysisRun",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "source":
+				return ec.fieldContext_RecallMatch_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_RecallMatch_sourceRecordId(ctx, field)
+			case "matched":
+				return ec.fieldContext_RecallMatch_matched(ctx, field)
+			case "confidence":
+				return ec.fieldContext_RecallMatch_confidence(ctx, field)
+			case "method":
+				return ec.fieldContext_RecallMatch_method(ctx, field)
+			case "reference":
+				return ec.fieldContext_RecallMatch_reference(ctx, field)
+			case "requiresReview":
+				return ec.fieldContext_RecallMatch_requiresReview(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RecallMatch", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_AnalysisRun_recalls_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11956,6 +12310,10 @@ func (ec *executionContext) fieldContext_Mutation_startAgentRun(ctx context.Cont
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
 			case "evidence":
 				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
+			case "safetyFindings":
+				return ec.fieldContext_AnalysisRun_safetyFindings(ctx, field)
+			case "recalls":
+				return ec.fieldContext_AnalysisRun_recalls(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -12041,6 +12399,10 @@ func (ec *executionContext) fieldContext_Mutation_cancelAgentRun(ctx context.Con
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
 			case "evidence":
 				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
+			case "safetyFindings":
+				return ec.fieldContext_AnalysisRun_safetyFindings(ctx, field)
+			case "recalls":
+				return ec.fieldContext_AnalysisRun_recalls(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -14829,6 +15191,10 @@ func (ec *executionContext) fieldContext_Query_agentRun(ctx context.Context, fie
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
 			case "evidence":
 				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
+			case "safetyFindings":
+				return ec.fieldContext_AnalysisRun_safetyFindings(ctx, field)
+			case "recalls":
+				return ec.fieldContext_AnalysisRun_recalls(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -14914,6 +15280,10 @@ func (ec *executionContext) fieldContext_Query_analysisRuns(ctx context.Context,
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
 			case "evidence":
 				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
+			case "safetyFindings":
+				return ec.fieldContext_AnalysisRun_safetyFindings(ctx, field)
+			case "recalls":
+				return ec.fieldContext_AnalysisRun_recalls(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -15060,6 +15430,124 @@ func (ec *executionContext) fieldContext_Query_analysisEvidence(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_analysisEvidence_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_analysisSafetyFindings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_analysisSafetyFindings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AnalysisSafetyFindings(ctx, fc.Args["organizationId"].(string), fc.Args["analysisRunId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNSafetyFinding2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSafetyFindingᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_analysisSafetyFindings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SafetyFinding_id(ctx, field)
+			case "analysisRunId":
+				return ec.fieldContext_SafetyFinding_analysisRunId(ctx, field)
+			case "productId":
+				return ec.fieldContext_SafetyFinding_productId(ctx, field)
+			case "type":
+				return ec.fieldContext_SafetyFinding_type(ctx, field)
+			case "severity":
+				return ec.fieldContext_SafetyFinding_severity(ctx, field)
+			case "confidence":
+				return ec.fieldContext_SafetyFinding_confidence(ctx, field)
+			case "evidenceIds":
+				return ec.fieldContext_SafetyFinding_evidenceIds(ctx, field)
+			case "rationale":
+				return ec.fieldContext_SafetyFinding_rationale(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_SafetyFinding_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SafetyFinding", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_analysisSafetyFindings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_analysisRecallMatches(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_analysisRecallMatches,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AnalysisRecallMatches(ctx, fc.Args["organizationId"].(string), fc.Args["analysisRunId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNRecallMatch2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRecallMatchᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_analysisRecallMatches(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "source":
+				return ec.fieldContext_RecallMatch_source(ctx, field)
+			case "sourceRecordId":
+				return ec.fieldContext_RecallMatch_sourceRecordId(ctx, field)
+			case "matched":
+				return ec.fieldContext_RecallMatch_matched(ctx, field)
+			case "confidence":
+				return ec.fieldContext_RecallMatch_confidence(ctx, field)
+			case "method":
+				return ec.fieldContext_RecallMatch_method(ctx, field)
+			case "reference":
+				return ec.fieldContext_RecallMatch_reference(ctx, field)
+			case "requiresReview":
+				return ec.fieldContext_RecallMatch_requiresReview(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RecallMatch", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_analysisRecallMatches_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -15926,6 +16414,209 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _RecallMatch_source(ctx context.Context, field graphql.CollectedField, obj *model.RecallMatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecallMatch_source,
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecallMatch_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecallMatch",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecallMatch_sourceRecordId(ctx context.Context, field graphql.CollectedField, obj *model.RecallMatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecallMatch_sourceRecordId,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceRecordID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecallMatch_sourceRecordId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecallMatch",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecallMatch_matched(ctx context.Context, field graphql.CollectedField, obj *model.RecallMatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecallMatch_matched,
+		func(ctx context.Context) (any, error) {
+			return obj.Matched, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecallMatch_matched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecallMatch",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecallMatch_confidence(ctx context.Context, field graphql.CollectedField, obj *model.RecallMatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecallMatch_confidence,
+		func(ctx context.Context) (any, error) {
+			return obj.Confidence, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecallMatch_confidence(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecallMatch",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecallMatch_method(ctx context.Context, field graphql.CollectedField, obj *model.RecallMatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecallMatch_method,
+		func(ctx context.Context) (any, error) {
+			return obj.Method, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecallMatch_method(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecallMatch",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecallMatch_reference(ctx context.Context, field graphql.CollectedField, obj *model.RecallMatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecallMatch_reference,
+		func(ctx context.Context) (any, error) {
+			return obj.Reference, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecallMatch_reference(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecallMatch",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecallMatch_requiresReview(ctx context.Context, field graphql.CollectedField, obj *model.RecallMatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecallMatch_requiresReview,
+		func(ctx context.Context) (any, error) {
+			return obj.RequiresReview, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecallMatch_requiresReview(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecallMatch",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RegisterPayload_message(ctx context.Context, field graphql.CollectedField, obj *model.RegisterPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15945,6 +16636,267 @@ func (ec *executionContext) _RegisterPayload_message(ctx context.Context, field 
 func (ec *executionContext) fieldContext_RegisterPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RegisterPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_id(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_analysisRunId(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_analysisRunId,
+		func(ctx context.Context) (any, error) {
+			return obj.AnalysisRunID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_analysisRunId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_productId(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_productId,
+		func(ctx context.Context) (any, error) {
+			return obj.ProductID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_productId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_type(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_severity(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_severity,
+		func(ctx context.Context) (any, error) {
+			return obj.Severity, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_severity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_confidence(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_confidence,
+		func(ctx context.Context) (any, error) {
+			return obj.Confidence, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_confidence(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_evidenceIds(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_evidenceIds,
+		func(ctx context.Context) (any, error) {
+			return obj.EvidenceIds, nil
+		},
+		nil,
+		ec.marshalNID2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_evidenceIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_rationale(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_rationale,
+		func(ctx context.Context) (any, error) {
+			return obj.Rationale, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_rationale(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SafetyFinding_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.SafetyFinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SafetyFinding_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SafetyFinding_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SafetyFinding",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -19806,6 +20758,78 @@ func (ec *executionContext) _AnalysisRun(ctx context.Context, sel ast.SelectionS
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "safetyFindings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AnalysisRun_safetyFindings(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "recalls":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AnalysisRun_recalls(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -22578,6 +23602,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "analysisSafetyFindings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_analysisSafetyFindings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "analysisRecallMatches":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_analysisRecallMatches(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "llmProviders":
 			field := field
 
@@ -22908,6 +23976,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var recallMatchImplementors = []string{"RecallMatch"}
+
+func (ec *executionContext) _RecallMatch(ctx context.Context, sel ast.SelectionSet, obj *model.RecallMatch) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, recallMatchImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RecallMatch")
+		case "source":
+			out.Values[i] = ec._RecallMatch_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceRecordId":
+			out.Values[i] = ec._RecallMatch_sourceRecordId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "matched":
+			out.Values[i] = ec._RecallMatch_matched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "confidence":
+			out.Values[i] = ec._RecallMatch_confidence(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "method":
+			out.Values[i] = ec._RecallMatch_method(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reference":
+			out.Values[i] = ec._RecallMatch_reference(ctx, field, obj)
+		case "requiresReview":
+			out.Values[i] = ec._RecallMatch_requiresReview(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var registerPayloadImplementors = []string{"RegisterPayload"}
 
 func (ec *executionContext) _RegisterPayload(ctx context.Context, sel ast.SelectionSet, obj *model.RegisterPayload) graphql.Marshaler {
@@ -22921,6 +24055,85 @@ func (ec *executionContext) _RegisterPayload(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("RegisterPayload")
 		case "message":
 			out.Values[i] = ec._RegisterPayload_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var safetyFindingImplementors = []string{"SafetyFinding"}
+
+func (ec *executionContext) _SafetyFinding(ctx context.Context, sel ast.SelectionSet, obj *model.SafetyFinding) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, safetyFindingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SafetyFinding")
+		case "id":
+			out.Values[i] = ec._SafetyFinding_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "analysisRunId":
+			out.Values[i] = ec._SafetyFinding_analysisRunId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "productId":
+			out.Values[i] = ec._SafetyFinding_productId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._SafetyFinding_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "severity":
+			out.Values[i] = ec._SafetyFinding_severity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "confidence":
+			out.Values[i] = ec._SafetyFinding_confidence(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "evidenceIds":
+			out.Values[i] = ec._SafetyFinding_evidenceIds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rationale":
+			out.Values[i] = ec._SafetyFinding_rationale(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._SafetyFinding_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -24294,6 +25507,36 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -25193,6 +26436,60 @@ func (ec *executionContext) marshalNQualityStatus2githubᚗcomᚋBusenuryurdakul
 	return v
 }
 
+func (ec *executionContext) marshalNRecallMatch2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRecallMatchᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RecallMatch) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRecallMatch2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRecallMatch(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNRecallMatch2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRecallMatch(ctx context.Context, sel ast.SelectionSet, v *model.RecallMatch) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RecallMatch(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNRegisterInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRegisterInput(ctx context.Context, v any) (model.RegisterInput, error) {
 	res, err := ec.unmarshalInputRegisterInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -25225,6 +26522,60 @@ func (ec *executionContext) unmarshalNResendEmailVerificationInput2githubᚗcom�
 func (ec *executionContext) unmarshalNRollbackLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐRollbackLLMConfigurationInput(ctx context.Context, v any) (model.RollbackLLMConfigurationInput, error) {
 	res, err := ec.unmarshalInputRollbackLLMConfigurationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSafetyFinding2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSafetyFindingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SafetyFinding) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSafetyFinding2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSafetyFinding(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSafetyFinding2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSafetyFinding(ctx context.Context, sel ast.SelectionSet, v *model.SafetyFinding) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SafetyFinding(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNSatisfactionLevel2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSatisfactionLevel(ctx context.Context, v any) (model.SatisfactionLevel, error) {

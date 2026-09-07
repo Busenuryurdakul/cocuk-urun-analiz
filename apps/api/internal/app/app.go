@@ -22,6 +22,9 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/queue"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/redis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety"
+	safetycpsc "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety/cpsc"
+	safetygubis "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/safety/gubis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/storage"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/tenant"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/turnstile"
@@ -44,6 +47,7 @@ type App struct {
 	Marketplace    *marketplace.Service
 	Dataset        *dataset.Service
 	Evidence       *evidence.Service
+	Safety         *safety.Service
 	Agent          *agent.Service
 	LLM            *llm.Service
 	ImportConsumer *marketplace.Consumer
@@ -100,6 +104,8 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	configSnapshotsRepo := repository.NewConfigSnapshotRepository(db)
 	evidencesRepo := repository.NewEvidenceRepository(db)
 	evidenceValidationsRepo := repository.NewEvidenceClaimValidationRepository(db)
+	safetyFindingsRepo := repository.NewSafetyFindingRepository(db)
+	recallMatchesRepo := repository.NewRecallMatchRepository(db)
 	llmProvidersRepo := repository.NewLLMProviderRepository(db)
 	llmModelsRepo := repository.NewLLMModelRepository(db)
 	llmRoutingRepo := repository.NewLLMRoutingPolicyRepository(db)
@@ -223,7 +229,17 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Products:    productsRepo,
 		Tenant:      guard,
 	}
-	agentExecutor := &agent.Executor{Registry: agentRegistry, Compliance: complianceEngine, Evidence: evidenceSvc}
+	safetySvc := &safety.Service{
+		Findings:  safetyFindingsRepo,
+		Matches:   recallMatchesRepo,
+		Runs:      analysisRunsRepo,
+		Products:  productsRepo,
+		Mappings:  mappingsRepo,
+		Evidences: evidenceSvc,
+		Tenant:    guard,
+		Adapters:  []safety.SourceAdapter{safetycpsc.NewAdapter(), safetygubis.NewAdapter()},
+	}
+	agentExecutor := &agent.Executor{Registry: agentRegistry, Compliance: complianceEngine, Evidence: evidenceSvc, Safety: safetySvc}
 	agentAuthorizer := &agent.Authorizer{Registry: agentRegistry, Security: security}
 	grantStore := &agent.GrantStore{Redis: redisClient, Security: security, TTL: 5 * time.Minute}
 	leaseStore := &agent.LeaseStore{Redis: redisClient, TTL: 2 * time.Minute}
@@ -347,6 +363,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Marketplace:    marketplaceSvc,
 		Dataset:        datasetSvc,
 		Evidence:       evidenceSvc,
+		Safety:         safetySvc,
 		Agent:          agentSvc,
 		LLM:            llmSvc,
 		ImportConsumer: importConsumer,

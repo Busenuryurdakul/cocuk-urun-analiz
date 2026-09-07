@@ -23,3 +23,7 @@ models:
     fields:
       evidence:
         resolver: true
+      safetyFindings:
+        resolver: true
+      recalls:
+        resolver: true

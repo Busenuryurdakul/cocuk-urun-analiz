@@ -34,6 +34,22 @@ func (r *analysisRunResolver) Evidence(ctx context.Context, obj *model.AnalysisR
 	return r.Query().AnalysisEvidence(ctx, obj.OrganizationID, obj.ID, limit)
 }
 
+// SafetyFindings is the resolver for the safetyFindings field.
+func (r *analysisRunResolver) SafetyFindings(ctx context.Context, obj *model.AnalysisRun, limit *int) ([]*model.SafetyFinding, error) {
+	if obj == nil {
+		return []*model.SafetyFinding{}, nil
+	}
+	return r.Query().AnalysisSafetyFindings(ctx, obj.OrganizationID, obj.ID, limit)
+}
+
+// Recalls is the resolver for the recalls field.
+func (r *analysisRunResolver) Recalls(ctx context.Context, obj *model.AnalysisRun, limit *int) ([]*model.RecallMatch, error) {
+	if obj == nil {
+		return []*model.RecallMatch{}, nil
+	}
+	return r.Query().AnalysisRecallMatches(ctx, obj.OrganizationID, obj.ID, limit)
+}
+
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error) {
 	if err := r.Auth.TurnstileVerify(ctx, ptrStr(input.TurnstileToken)); err != nil {
@@ -1316,6 +1332,46 @@ func (r *queryResolver) AnalysisEvidence(ctx context.Context, organizationID str
 		return nil, mapPhase5Error(err)
 	}
 	return toModelEvidenceList(items), nil
+}
+
+// AnalysisSafetyFindings is the resolver for the analysisSafetyFindings field.
+func (r *queryResolver) AnalysisSafetyFindings(ctx context.Context, organizationID string, analysisRunID string, limit *int) ([]*model.SafetyFinding, error) {
+	if r.SafetyService == nil {
+		return []*model.SafetyFinding{}, nil
+	}
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, runID, lim, err := parseOrgRunLimit(organizationID, analysisRunID, limit)
+	if err != nil {
+		return nil, err
+	}
+	items, err := r.SafetyService.ListFindingsForActor(ctx, actorID, orgID, runID, lim)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelSafetyFindings(items), nil
+}
+
+// AnalysisRecallMatches is the resolver for the analysisRecallMatches field.
+func (r *queryResolver) AnalysisRecallMatches(ctx context.Context, organizationID string, analysisRunID string, limit *int) ([]*model.RecallMatch, error) {
+	if r.SafetyService == nil {
+		return []*model.RecallMatch{}, nil
+	}
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, runID, lim, err := parseOrgRunLimit(organizationID, analysisRunID, limit)
+	if err != nil {
+		return nil, err
+	}
+	items, err := r.SafetyService.ListMatchesForActor(ctx, actorID, orgID, runID, lim)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelRecallMatches(items), nil
 }
 
 // LlmProviders is the resolver for the llmProviders field.
