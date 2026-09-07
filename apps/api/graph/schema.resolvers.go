@@ -7,6 +7,7 @@ package graph
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -521,6 +522,57 @@ func (r *mutationResolver) WithdrawConsent(ctx context.Context, input model.With
 		return false, mapAuthError(err)
 	}
 	return true, nil
+}
+
+// RequestAccountDeletion is the resolver for the requestAccountDeletion field.
+func (r *mutationResolver) RequestAccountDeletion(ctx context.Context) (*model.AccountDeletionRequestResult, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", errUnauthorized)
+	}
+	result, err := r.Account.RequestDeletion(ctx, actorID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	expires := result.ExpiresAt.UTC().Format(time.RFC3339)
+	return &model.AccountDeletionRequestResult{
+		Status:    result.Status,
+		ExpiresAt: &expires,
+	}, nil
+}
+
+// ConfirmAccountDeletion is the resolver for the confirmAccountDeletion field.
+func (r *mutationResolver) ConfirmAccountDeletion(ctx context.Context, code string) (bool, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return false, gqlError("UNAUTHORIZED", errUnauthorized)
+	}
+	if err := r.Account.ConfirmDeletion(ctx, actorID, code); err != nil {
+		return false, mapAuthError(err)
+	}
+	clearAuthCookies(ctx, r.CookieOpts)
+	return true, nil
+}
+
+// ExportMyData is the resolver for the exportMyData field.
+func (r *mutationResolver) ExportMyData(ctx context.Context) (*model.UserDataExport, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", errUnauthorized)
+	}
+	doc, err := r.Account.ExportData(ctx, actorID)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	raw, err := json.Marshal(doc)
+	if err != nil {
+		return nil, err
+	}
+	return &model.UserDataExport{
+		SchemaVersion: doc.SchemaVersion,
+		ExportedAt:    doc.ExportedAt,
+		Payload:       string(raw),
+	}, nil
 }
 
 // CreateProduct is the resolver for the createProduct field.

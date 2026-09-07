@@ -29,6 +29,10 @@ Register → Email Verification → MFA → Login → Device Verification → Wo
 | Login | MFA challenge on each login (or trusted device) |
 | Device Verification | New device requires verification flow |
 | Session | Secure, httpOnly cookies (web); OS Keychain (Electron) |
+| Account erasure | `requestAccountDeletion` / `confirmAccountDeletion`; sessions revoked on confirm |
+| Data export | `exportMyData` — versioned JSON, no credentials |
+
+GraphQL account mutations are self-scoped (authenticated user only; no arbitrary `userId`).
 
 ### Electron Hardened Security
 

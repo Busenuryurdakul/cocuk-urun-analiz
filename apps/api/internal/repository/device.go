@@ -149,3 +149,15 @@ func (r *DeviceRepository) Revoke(ctx context.Context, userID, deviceID primitiv
 	}
 	return nil
 }
+
+func (r *DeviceRepository) RevokeAllByUser(ctx context.Context, userID primitive.ObjectID) error {
+	now := time.Now().UTC()
+	_, err := r.col.UpdateMany(ctx, bson.M{
+		"userId":    userID,
+		"revokedAt": nil,
+	}, bson.M{"$set": bson.M{
+		"revokedAt": now,
+		"verified":  false,
+	}})
+	return err
+}

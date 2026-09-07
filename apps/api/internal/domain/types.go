@@ -41,18 +41,29 @@ const (
 type SecurityEventType string
 
 const (
-	EventCrossTenantAccess     SecurityEventType = "CROSS_TENANT_ACCESS"
-	EventAuthFailure           SecurityEventType = "AUTH_FAILURE"
-	EventMFAFailure            SecurityEventType = "MFA_FAILURE"
-	EventRefreshTokenReplay    SecurityEventType = "REFRESH_TOKEN_REPLAY"
-	EventOTPAttemptLimit       SecurityEventType = "OTP_ATTEMPT_LIMIT"
-	EventEmailVerified         SecurityEventType = "EMAIL_VERIFIED"
-	EventLoginSuccess          SecurityEventType = "LOGIN_SUCCESS"
-	EventLogout                SecurityEventType = "LOGOUT"
-	EventDeviceRevoked         SecurityEventType = "DEVICE_REVOKED"
-	EventLoginEmailOTPSent     SecurityEventType = "LOGIN_EMAIL_OTP_SENT"
-	EventDesktopSessionBlocked SecurityEventType = "DESKTOP_SESSION_BLOCKED"
+	EventCrossTenantAccess               SecurityEventType = "CROSS_TENANT_ACCESS"
+	EventAuthFailure                     SecurityEventType = "AUTH_FAILURE"
+	EventMFAFailure                      SecurityEventType = "MFA_FAILURE"
+	EventRefreshTokenReplay              SecurityEventType = "REFRESH_TOKEN_REPLAY"
+	EventOTPAttemptLimit                 SecurityEventType = "OTP_ATTEMPT_LIMIT"
+	EventEmailVerified                   SecurityEventType = "EMAIL_VERIFIED"
+	EventLoginSuccess                    SecurityEventType = "LOGIN_SUCCESS"
+	EventLogout                          SecurityEventType = "LOGOUT"
+	EventDeviceRevoked                   SecurityEventType = "DEVICE_REVOKED"
+	EventLoginEmailOTPSent               SecurityEventType = "LOGIN_EMAIL_OTP_SENT"
+	EventDesktopSessionBlocked           SecurityEventType = "DESKTOP_SESSION_BLOCKED"
+	EventAccountDeletionRequested        SecurityEventType = "ACCOUNT_DELETION_REQUESTED"
+	EventAccountDeletionConfirmed        SecurityEventType = "ACCOUNT_DELETION_CONFIRMED"
+	EventAccountDeletionBlockedOwnership SecurityEventType = "ACCOUNT_DELETION_BLOCKED_OWNERSHIP"
+	EventAccountDeleted                  SecurityEventType = "ACCOUNT_DELETED"
+	EventDataExportRequested             SecurityEventType = "DATA_EXPORT_REQUESTED"
 )
+
+// AnonymizedActorUserID replaces user actor references on retained org records after deletion.
+var AnonymizedActorUserID = func() primitive.ObjectID {
+	id, _ := primitive.ObjectIDFromHex("000000000000000000000001")
+	return id
+}()
 
 func IsElectronPlatform(p DevicePlatform) bool {
 	return p == DevicePlatformElectronWin || p == DevicePlatformElectronMac
@@ -66,8 +77,13 @@ type User struct {
 	MFAEnabled    bool               `bson:"mfaEnabled"`
 	MFASecret     string             `bson:"mfaSecret,omitempty"`
 	PersonalOrgID primitive.ObjectID `bson:"personalOrgId"`
+	DeletedAt     *time.Time         `bson:"deletedAt,omitempty"`
 	CreatedAt     time.Time          `bson:"createdAt"`
 	UpdatedAt     time.Time          `bson:"updatedAt"`
+}
+
+func (u *User) IsDeleted() bool {
+	return u != nil && u.DeletedAt != nil
 }
 
 type Organization struct {
@@ -189,6 +205,16 @@ type LoginEmailVerification struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	UserID         primitive.ObjectID `bson:"userId"`
 	PendingHash    string             `bson:"pendingHash"`
+	CodeHash       string             `bson:"codeHash"`
+	FailedAttempts int                `bson:"failedAttempts"`
+	Locked         bool               `bson:"locked"`
+	ExpiresAt      time.Time          `bson:"expiresAt"`
+	CreatedAt      time.Time          `bson:"createdAt"`
+}
+
+type AccountDeletionRequest struct {
+	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	UserID         primitive.ObjectID `bson:"userId"`
 	CodeHash       string             `bson:"codeHash"`
 	FailedAttempts int                `bson:"failedAttempts"`
 	Locked         bool               `bson:"locked"`

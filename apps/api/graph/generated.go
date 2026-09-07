@@ -48,6 +48,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AccountDeletionRequestResult struct {
+		ExpiresAt func(childComplexity int) int
+		Status    func(childComplexity int) int
+	}
+
 	ActivityLogEntry struct {
 		Action     func(childComplexity int) int
 		ID         func(childComplexity int) int
@@ -367,12 +372,14 @@ type ComplexityRoot struct {
 		AcceptInvitation                    func(childComplexity int, token string) int
 		BuildDatasetDraft                   func(childComplexity int, input model.BuildDatasetDraftInput) int
 		CancelAgentRun                      func(childComplexity int, input model.CancelAgentRunInput) int
+		ConfirmAccountDeletion              func(childComplexity int, code string) int
 		ConfirmMfa                          func(childComplexity int, input model.ConfirmMFAInput) int
 		CreateLLMConfigurationDraft         func(childComplexity int, input model.CreateLLMConfigurationDraftInput) int
 		CreateOrganization                  func(childComplexity int, input model.CreateOrganizationInput) int
 		CreateProduct                       func(childComplexity int, input model.CreateProductInput) int
 		CreateUserExperience                func(childComplexity int, input model.CreateUserExperienceInput) int
 		DeleteUserExperience                func(childComplexity int, input model.DeleteUserExperienceInput) int
+		ExportMyData                        func(childComplexity int) int
 		GrantConsent                        func(childComplexity int, input model.GrantConsentInput) int
 		InviteMember                        func(childComplexity int, input model.InviteMemberInput) int
 		Login                               func(childComplexity int, input model.LoginInput) int
@@ -383,6 +390,7 @@ type ComplexityRoot struct {
 		RefreshToken                        func(childComplexity int) int
 		Register                            func(childComplexity int, input model.RegisterInput) int
 		RemoveMember                        func(childComplexity int, input model.RemoveMemberInput) int
+		RequestAccountDeletion              func(childComplexity int) int
 		ResendEmailVerification             func(childComplexity int, input model.ResendEmailVerificationInput) int
 		ResendLoginEmailOtp                 func(childComplexity int) int
 		RevokeDevice                        func(childComplexity int, deviceID string) int
@@ -540,6 +548,12 @@ type ComplexityRoot struct {
 		PersonalOrgID func(childComplexity int) int
 	}
 
+	UserDataExport struct {
+		ExportedAt    func(childComplexity int) int
+		Payload       func(childComplexity int) int
+		SchemaVersion func(childComplexity int) int
+	}
+
 	UserExperience struct {
 		CreatedAt          func(childComplexity int) int
 		DatasetEligibility func(childComplexity int) int
@@ -595,6 +609,9 @@ type MutationResolver interface {
 	PublishCompliancePolicyVersion(ctx context.Context, input model.PublishCompliancePolicyInput) (*model.CompliancePolicy, error)
 	GrantConsent(ctx context.Context, input model.GrantConsentInput) (*model.Consent, error)
 	WithdrawConsent(ctx context.Context, input model.WithdrawConsentInput) (bool, error)
+	RequestAccountDeletion(ctx context.Context) (*model.AccountDeletionRequestResult, error)
+	ConfirmAccountDeletion(ctx context.Context, code string) (bool, error)
+	ExportMyData(ctx context.Context) (*model.UserDataExport, error)
 	CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.CreateProductPayload, error)
 	CreateUserExperience(ctx context.Context, input model.CreateUserExperienceInput) (*model.UserExperience, error)
 	UpdateUserExperience(ctx context.Context, input model.UpdateUserExperienceInput) (*model.UserExperience, error)
@@ -670,6 +687,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AccountDeletionRequestResult.expiresAt":
+		if e.complexity.AccountDeletionRequestResult.ExpiresAt == nil {
+			break
+		}
+
+		return e.complexity.AccountDeletionRequestResult.ExpiresAt(childComplexity), true
+	case "AccountDeletionRequestResult.status":
+		if e.complexity.AccountDeletionRequestResult.Status == nil {
+			break
+		}
+
+		return e.complexity.AccountDeletionRequestResult.Status(childComplexity), true
 
 	case "ActivityLogEntry.action":
 		if e.complexity.ActivityLogEntry.Action == nil {
@@ -2099,6 +2129,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CancelAgentRun(childComplexity, args["input"].(model.CancelAgentRunInput)), true
+	case "Mutation.confirmAccountDeletion":
+		if e.complexity.Mutation.ConfirmAccountDeletion == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_confirmAccountDeletion_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ConfirmAccountDeletion(childComplexity, args["code"].(string)), true
 	case "Mutation.confirmMFA":
 		if e.complexity.Mutation.ConfirmMfa == nil {
 			break
@@ -2165,6 +2206,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteUserExperience(childComplexity, args["input"].(model.DeleteUserExperienceInput)), true
+	case "Mutation.exportMyData":
+		if e.complexity.Mutation.ExportMyData == nil {
+			break
+		}
+
+		return e.complexity.Mutation.ExportMyData(childComplexity), true
 	case "Mutation.grantConsent":
 		if e.complexity.Mutation.GrantConsent == nil {
 			break
@@ -2265,6 +2312,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.RemoveMember(childComplexity, args["input"].(model.RemoveMemberInput)), true
+	case "Mutation.requestAccountDeletion":
+		if e.complexity.Mutation.RequestAccountDeletion == nil {
+			break
+		}
+
+		return e.complexity.Mutation.RequestAccountDeletion(childComplexity), true
 	case "Mutation.resendEmailVerification":
 		if e.complexity.Mutation.ResendEmailVerification == nil {
 			break
@@ -3249,6 +3302,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.User.PersonalOrgID(childComplexity), true
 
+	case "UserDataExport.exportedAt":
+		if e.complexity.UserDataExport.ExportedAt == nil {
+			break
+		}
+
+		return e.complexity.UserDataExport.ExportedAt(childComplexity), true
+	case "UserDataExport.payload":
+		if e.complexity.UserDataExport.Payload == nil {
+			break
+		}
+
+		return e.complexity.UserDataExport.Payload(childComplexity), true
+	case "UserDataExport.schemaVersion":
+		if e.complexity.UserDataExport.SchemaVersion == nil {
+			break
+		}
+
+		return e.complexity.UserDataExport.SchemaVersion(childComplexity), true
+
 	case "UserExperience.createdAt":
 		if e.complexity.UserExperience.CreatedAt == nil {
 			break
@@ -3578,6 +3650,17 @@ func (ec *executionContext) field_Mutation_cancelAgentRun_args(ctx context.Conte
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_confirmAccountDeletion_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "code", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["code"] = arg0
 	return args, nil
 }
 
@@ -4465,6 +4548,64 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AccountDeletionRequestResult_status(ctx context.Context, field graphql.CollectedField, obj *model.AccountDeletionRequestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AccountDeletionRequestResult_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AccountDeletionRequestResult_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountDeletionRequestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AccountDeletionRequestResult_expiresAt(ctx context.Context, field graphql.CollectedField, obj *model.AccountDeletionRequestResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AccountDeletionRequestResult_expiresAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AccountDeletionRequestResult_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AccountDeletionRequestResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _ActivityLogEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLogEntry) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
@@ -12253,6 +12394,119 @@ func (ec *executionContext) fieldContext_Mutation_withdrawConsent(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_requestAccountDeletion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_requestAccountDeletion,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().RequestAccountDeletion(ctx)
+		},
+		nil,
+		ec.marshalNAccountDeletionRequestResult2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccountDeletionRequestResult,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_requestAccountDeletion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "status":
+				return ec.fieldContext_AccountDeletionRequestResult_status(ctx, field)
+			case "expiresAt":
+				return ec.fieldContext_AccountDeletionRequestResult_expiresAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccountDeletionRequestResult", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_confirmAccountDeletion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_confirmAccountDeletion,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ConfirmAccountDeletion(ctx, fc.Args["code"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_confirmAccountDeletion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_confirmAccountDeletion_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_exportMyData(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_exportMyData,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().ExportMyData(ctx)
+		},
+		nil,
+		ec.marshalNUserDataExport2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserDataExport,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_exportMyData(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "schemaVersion":
+				return ec.fieldContext_UserDataExport_schemaVersion(ctx, field)
+			case "exportedAt":
+				return ec.fieldContext_UserDataExport_exportedAt(ctx, field)
+			case "payload":
+				return ec.fieldContext_UserDataExport_payload(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserDataExport", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createProduct(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -17746,6 +18000,93 @@ func (ec *executionContext) fieldContext_User_personalOrgId(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _UserDataExport_schemaVersion(ctx context.Context, field graphql.CollectedField, obj *model.UserDataExport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserDataExport_schemaVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.SchemaVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserDataExport_schemaVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserDataExport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserDataExport_exportedAt(ctx context.Context, field graphql.CollectedField, obj *model.UserDataExport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserDataExport_exportedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ExportedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserDataExport_exportedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserDataExport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserDataExport_payload(ctx context.Context, field graphql.CollectedField, obj *model.UserDataExport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserDataExport_payload,
+		func(ctx context.Context) (any, error) {
+			return obj.Payload, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserDataExport_payload(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserDataExport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserExperience_id(ctx context.Context, field graphql.CollectedField, obj *model.UserExperience) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -21129,6 +21470,47 @@ func (ec *executionContext) unmarshalInputWithdrawConsentInput(ctx context.Conte
 
 // region    **************************** object.gotpl ****************************
 
+var accountDeletionRequestResultImplementors = []string{"AccountDeletionRequestResult"}
+
+func (ec *executionContext) _AccountDeletionRequestResult(ctx context.Context, sel ast.SelectionSet, obj *model.AccountDeletionRequestResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, accountDeletionRequestResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AccountDeletionRequestResult")
+		case "status":
+			out.Values[i] = ec._AccountDeletionRequestResult_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expiresAt":
+			out.Values[i] = ec._AccountDeletionRequestResult_expiresAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var activityLogEntryImplementors = []string{"ActivityLogEntry"}
 
 func (ec *executionContext) _ActivityLogEntry(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLogEntry) graphql.Marshaler {
@@ -23497,6 +23879,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "requestAccountDeletion":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_requestAccountDeletion(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "confirmAccountDeletion":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_confirmAccountDeletion(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "exportMyData":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_exportMyData(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createProduct":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createProduct(ctx, field)
@@ -25103,6 +25506,55 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var userDataExportImplementors = []string{"UserDataExport"}
+
+func (ec *executionContext) _UserDataExport(ctx context.Context, sel ast.SelectionSet, obj *model.UserDataExport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userDataExportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserDataExport")
+		case "schemaVersion":
+			out.Values[i] = ec._UserDataExport_schemaVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "exportedAt":
+			out.Values[i] = ec._UserDataExport_exportedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "payload":
+			out.Values[i] = ec._UserDataExport_payload(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var userExperienceImplementors = []string{"UserExperience"}
 
 func (ec *executionContext) _UserExperience(ctx context.Context, sel ast.SelectionSet, obj *model.UserExperience) graphql.Marshaler {
@@ -25598,6 +26050,20 @@ func (ec *executionContext) unmarshalNAccessMode2githubᚗcomᚋBusenuryurdakul�
 
 func (ec *executionContext) marshalNAccessMode2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccessMode(ctx context.Context, sel ast.SelectionSet, v model.AccessMode) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNAccountDeletionRequestResult2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccountDeletionRequestResult(ctx context.Context, sel ast.SelectionSet, v model.AccountDeletionRequestResult) graphql.Marshaler {
+	return ec._AccountDeletionRequestResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAccountDeletionRequestResult2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐAccountDeletionRequestResult(ctx context.Context, sel ast.SelectionSet, v *model.AccountDeletionRequestResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AccountDeletionRequestResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNActivityLogEntry2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐActivityLogEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActivityLogEntry) graphql.Marshaler {
@@ -27635,6 +28101,20 @@ func (ec *executionContext) unmarshalNUsageStatus2githubᚗcomᚋBusenuryurdakul
 
 func (ec *executionContext) marshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus(ctx context.Context, sel ast.SelectionSet, v model.UsageStatus) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNUserDataExport2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserDataExport(ctx context.Context, sel ast.SelectionSet, v model.UserDataExport) graphql.Marshaler {
+	return ec._UserDataExport(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserDataExport2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserDataExport(ctx context.Context, sel ast.SelectionSet, v *model.UserDataExport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserDataExport(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserExperience2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserExperience(ctx context.Context, sel ast.SelectionSet, v model.UserExperience) graphql.Marshaler {

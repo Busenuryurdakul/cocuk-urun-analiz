@@ -101,6 +101,9 @@ type Mutation {
   publishCompliancePolicyVersion(input: PublishCompliancePolicyInput!): CompliancePolicy!
   grantConsent(input: GrantConsentInput!): Consent!
   withdrawConsent(input: WithdrawConsentInput!): Boolean!
+  requestAccountDeletion: AccountDeletionRequestResult!
+  confirmAccountDeletion(code: String!): Boolean!
+  exportMyData: UserDataExport!
   createProduct(input: CreateProductInput!): CreateProductPayload!
   createUserExperience(input: CreateUserExperienceInput!): UserExperience!
   updateUserExperience(input: UpdateUserExperienceInput!): UserExperience!
@@ -258,6 +261,17 @@ type Consent {
   grantedAt: String!
   withdrawnAt: String
   organizationId: ID
+}
+
+type AccountDeletionRequestResult {
+  status: String!
+  expiresAt: String
+}
+
+type UserDataExport {
+  schemaVersion: String!
+  exportedAt: String!
+  payload: String!
 }
 
 enum OrgType {

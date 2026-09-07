@@ -96,3 +96,10 @@ func (r *MemberRepository) CountOwners(ctx context.Context, organizationID primi
 		"role":           domain.RoleOwner,
 	})
 }
+
+func (r *MemberRepository) CountMembersExcluding(ctx context.Context, organizationID, excludeUserID primitive.ObjectID) (int64, error) {
+	return r.col.CountDocuments(ctx, bson.M{
+		"organizationId": organizationID,
+		"userId":         bson.M{"$ne": excludeUserID},
+	})
+}

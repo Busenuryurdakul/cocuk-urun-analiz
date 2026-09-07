@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/account"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/analysis"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/auth"
@@ -18,6 +19,7 @@ import (
 
 type Resolver struct {
 	Auth               *auth.Service
+	Account            *account.Service
 	Org                *org.Service
 	Consent            *compliance.ConsentService
 	Compliance         *compliance.Engine
