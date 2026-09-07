@@ -26,6 +26,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Evidence is the resolver for the evidence field.
+func (r *analysisRunResolver) Evidence(ctx context.Context, obj *model.AnalysisRun, limit *int) ([]*model.Evidence, error) {
+	if obj == nil {
+		return []*model.Evidence{}, nil
+	}
+	return r.Query().AnalysisEvidence(ctx, obj.OrganizationID, obj.ID, limit)
+}
+
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error) {
 	if err := r.Auth.TurnstileVerify(ctx, ptrStr(input.TurnstileToken)); err != nil {
@@ -1285,6 +1293,31 @@ func (r *queryResolver) AgentRunEvents(ctx context.Context, organizationID strin
 	return toModelAgentRunEvents(events), nil
 }
 
+// AnalysisEvidence is the resolver for the analysisEvidence field.
+func (r *queryResolver) AnalysisEvidence(ctx context.Context, organizationID string, analysisRunID string, limit *int) ([]*model.Evidence, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgID, err := parseObjectID(organizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	runID, err := parseObjectID(analysisRunID)
+	if err != nil {
+		return nil, gqlError("INVALID_INPUT", err)
+	}
+	lim := 50
+	if limit != nil {
+		lim = *limit
+	}
+	items, err := r.EvidenceService.ListAnalysisEvidenceForActor(ctx, actorID, orgID, runID, lim)
+	if err != nil {
+		return nil, mapPhase5Error(err)
+	}
+	return toModelEvidenceList(items), nil
+}
+
 // LlmProviders is the resolver for the llmProviders field.
 func (r *queryResolver) LlmProviders(ctx context.Context) ([]*model.LLMProvider, error) {
 	actorID, err := requireActor(ctx)
@@ -1572,11 +1605,15 @@ func (r *queryResolver) PendingMfaSetup(ctx context.Context) (*model.MFASetupPay
 	}, nil
 }
 
+// AnalysisRun returns AnalysisRunResolver implementation.
+func (r *Resolver) AnalysisRun() AnalysisRunResolver { return &analysisRunResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type analysisRunResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

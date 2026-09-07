@@ -42,6 +42,8 @@ type Query {
   analysisRuns(organizationId: ID!, status: AnalysisRunStatus, limit: Int = 20): [AnalysisRun!]!
   """Agent run events — append-only progress"""
   agentRunEvents(organizationId: ID!, analysisRunId: ID!, afterSequence: Int = 0, limit: Int = 100): [AgentRunEvent!]!
+  """Evidence for an analysis run — tenant-isolated"""
+  analysisEvidence(organizationId: ID!, analysisRunId: ID!, limit: Int = 50): [Evidence!]!
   """LLM providers — platform registry"""
   llmProviders: [LLMProvider!]!
   """LLM models available to organization"""
@@ -618,6 +620,24 @@ type AnalysisRun {
   completedAt: String
   createdAt: String!
   updatedAt: String!
+  evidence(limit: Int = 50): [Evidence!]!
+}
+
+type Evidence {
+  id: ID!
+  organizationId: ID!
+  analysisRunId: ID!
+  productId: ID!
+  claimId: ID
+  source: String!
+  sourceType: String!
+  claim: String!
+  snippet: String
+  reference: String
+  reliability: Float!
+  freshness: Float!
+  retrievedAt: String!
+  createdAt: String!
 }
 
 type AgentRunEvent {

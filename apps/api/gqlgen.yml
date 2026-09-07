@@ -18,4 +18,8 @@ resolver:
 
 autobind: []
 
-models: {}
+models:
+  AnalysisRun:
+    fields:
+      evidence:
+        resolver: true

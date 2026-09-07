@@ -83,6 +83,25 @@ Confidence {
 | UNVERIFIED | Insufficient or no evidence |
 | CONTRADICTED | Evidence contradicts claim |
 
+## 4.1 Persistence (P0 PR-A1)
+
+Production evidence is stored in Mongo `evidences` and is organization-scoped. Create path:
+
+```text
+validate input
+  → enforce organization scope
+  → validate analysisRun
+  → validate product relation
+  → validate reliability / freshness (0.0 – 1.0)
+  → persist
+```
+
+Claim-evidence linkage results are persisted in `evidence_claim_validations` (upsert on organizationId + analysisRunId + claimId). Tool JSON is not the source of truth.
+
+GraphQL read: `analysisEvidence(organizationId, analysisRunId)` and `AnalysisRun.evidence`. Cross-org access is denied.
+
+`evidence_validator` is AVAILABLE via Executor. Planner wiring is deferred to PR-A3.
+
 ## 5. Evidence Validation Rules
 
 `evidence_validator` tool enforces:

@@ -183,6 +183,26 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 			return fmt.Errorf("index %s: %w", idx.collection, err)
 		}
 	}
+
+	evidenceIndexes := []struct {
+		collection string
+		model      mongo.IndexModel
+	}{
+		{"evidences", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "analysisRunId", Value: 1}}}},
+		{"evidences", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "productId", Value: 1}}}},
+		{"evidences", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "claimId", Value: 1}}}},
+		{"evidences", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "createdAt", Value: -1}}}},
+		{"evidence_claim_validations", mongo.IndexModel{
+			Keys:    bson.D{{Key: "organizationId", Value: 1}, {Key: "analysisRunId", Value: 1}, {Key: "claimId", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		}},
+		{"evidence_claim_validations", mongo.IndexModel{Keys: bson.D{{Key: "organizationId", Value: 1}, {Key: "analysisRunId", Value: 1}}}},
+	}
+	for _, idx := range evidenceIndexes {
+		if _, err := c.DB.Collection(idx.collection).Indexes().CreateOne(ctx, idx.model); err != nil {
+			return fmt.Errorf("index %s: %w", idx.collection, err)
+		}
+	}
 	return nil
 }
 

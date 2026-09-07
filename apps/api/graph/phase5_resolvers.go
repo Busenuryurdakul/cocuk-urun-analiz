@@ -7,13 +7,16 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/graph/model"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/agent"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/evidence"
 )
 
 func mapPhase5Error(err error) error {
 	switch {
 	case errors.Is(err, agent.ErrForbidden):
 		return gqlError("FORBIDDEN", errForbidden)
-	case errors.Is(err, agent.ErrInvalidInput):
+	case errors.Is(err, evidence.ErrForbidden):
+		return gqlError("FORBIDDEN", errForbidden)
+	case errors.Is(err, agent.ErrInvalidInput), errors.Is(err, evidence.ErrInvalidInput):
 		return gqlError("INVALID_INPUT", err)
 	case errors.Is(err, agent.ErrComplianceRejected):
 		return gqlError("COMPLIANCE_REJECTED", err)
@@ -98,4 +101,41 @@ func domainAnalysisStatus(status *model.AnalysisRunStatus) *domain.AnalysisRunSt
 	}
 	s := domain.AnalysisRunStatus(*status)
 	return &s
+}
+
+func toModelEvidence(ev *domain.Evidence) *model.Evidence {
+	out := &model.Evidence{
+		ID:             ev.ID.Hex(),
+		OrganizationID: ev.OrganizationID.Hex(),
+		AnalysisRunID:  ev.AnalysisRunID.Hex(),
+		ProductID:      ev.ProductID.Hex(),
+		Source:         ev.Source,
+		SourceType:     ev.SourceType,
+		Claim:          ev.Claim,
+		Reliability:    ev.Reliability,
+		Freshness:      ev.Freshness,
+		RetrievedAt:    ev.RetrievedAt.UTC().Format(time.RFC3339),
+		CreatedAt:      ev.CreatedAt.UTC().Format(time.RFC3339),
+	}
+	if ev.ClaimID != "" {
+		v := ev.ClaimID
+		out.ClaimID = &v
+	}
+	if ev.Snippet != "" {
+		v := ev.Snippet
+		out.Snippet = &v
+	}
+	if ev.Reference != "" {
+		v := ev.Reference
+		out.Reference = &v
+	}
+	return out
+}
+
+func toModelEvidenceList(items []domain.Evidence) []*model.Evidence {
+	out := make([]*model.Evidence, 0, len(items))
+	for i := range items {
+		out = append(out, toModelEvidence(&items[i]))
+	}
+	return out
 }

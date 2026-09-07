@@ -95,7 +95,7 @@ Persist                       ← MongoDB + audit events
 | `compliance_checker` | KVKK/GDPR compliance validation |
 | `pii_redactor` | PII detection and redaction |
 | `policy_evaluator` | Evaluate against versioned policy profiles |
-| `evidence_validator` | Validate claim-evidence linkage |
+| `evidence_validator` | Validate claim-evidence linkage (AVAILABLE via Executor; planner wiring deferred) |
 | `report_generator` | Generate final analysis report |
 
 **New tool = Change Request.** Registry genişletmesi master prompt değişikliği gerektirir.

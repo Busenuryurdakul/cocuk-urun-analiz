@@ -12,6 +12,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/config"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/cookies"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/evidence"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/llm"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/mail"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/marketplace"
@@ -42,6 +43,7 @@ type App struct {
 	UGC            *ugc.Service
 	Marketplace    *marketplace.Service
 	Dataset        *dataset.Service
+	Evidence       *evidence.Service
 	Agent          *agent.Service
 	LLM            *llm.Service
 	ImportConsumer *marketplace.Consumer
@@ -96,6 +98,8 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	agentEventsRepo := repository.NewAgentRunEventRepository(db)
 	toolExecutionsRepo := repository.NewToolExecutionRepository(db)
 	configSnapshotsRepo := repository.NewConfigSnapshotRepository(db)
+	evidencesRepo := repository.NewEvidenceRepository(db)
+	evidenceValidationsRepo := repository.NewEvidenceClaimValidationRepository(db)
 	llmProvidersRepo := repository.NewLLMProviderRepository(db)
 	llmModelsRepo := repository.NewLLMModelRepository(db)
 	llmRoutingRepo := repository.NewLLMRoutingPolicyRepository(db)
@@ -212,7 +216,14 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		UX:         uxRepo,
 		ImportRuns: importRunsRepo,
 	}
-	agentExecutor := &agent.Executor{Registry: agentRegistry, Compliance: complianceEngine}
+	evidenceSvc := &evidence.Service{
+		Evidences:   evidencesRepo,
+		Validations: evidenceValidationsRepo,
+		Runs:        analysisRunsRepo,
+		Products:    productsRepo,
+		Tenant:      guard,
+	}
+	agentExecutor := &agent.Executor{Registry: agentRegistry, Compliance: complianceEngine, Evidence: evidenceSvc}
 	agentAuthorizer := &agent.Authorizer{Registry: agentRegistry, Security: security}
 	grantStore := &agent.GrantStore{Redis: redisClient, Security: security, TTL: 5 * time.Minute}
 	leaseStore := &agent.LeaseStore{Redis: redisClient, TTL: 2 * time.Minute}
@@ -335,6 +346,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		UGC:            ugcSvc,
 		Marketplace:    marketplaceSvc,
 		Dataset:        datasetSvc,
+		Evidence:       evidenceSvc,
 		Agent:          agentSvc,
 		LLM:            llmSvc,
 		ImportConsumer: importConsumer,

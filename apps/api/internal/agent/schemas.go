@@ -35,6 +35,11 @@ var toolIOSchemas = map[string]ToolIOSchema{
 		OutputRequired: []string{"redactedMetadata"},
 		OutputStatuses: []string{"OK"},
 	},
+	"evidence_validator": {
+		InputRequired:  []string{"claimId", "claimText", "evidenceIds"},
+		OutputRequired: []string{"claimId", "status", "evidenceIds", "issues"},
+		OutputStatuses: []string{"OK"},
+	},
 }
 
 func ValidateToolOutput(toolName string, status string, payload map[string]any) error {
@@ -49,6 +54,19 @@ func ValidateToolOutput(toolName string, status string, payload map[string]any) 
 		if _, ok := payload[field]; !ok {
 			return fmt.Errorf("%w: missing output field %s", ErrSchemaValidation, field)
 		}
+	}
+	return nil
+}
+
+func ValidateEvidenceValidatorInput(input ToolInput) error {
+	if strings.TrimSpace(input.ClaimID) == "" {
+		return fmt.Errorf("%w: missing claimId", ErrSchemaValidation)
+	}
+	if strings.TrimSpace(input.ClaimText) == "" {
+		return fmt.Errorf("%w: missing claimText", ErrSchemaValidation)
+	}
+	if input.EvidenceIDs == nil {
+		return fmt.Errorf("%w: missing evidenceIds", ErrSchemaValidation)
 	}
 	return nil
 }
