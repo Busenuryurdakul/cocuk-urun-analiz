@@ -39,6 +39,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	AnalysisRun() AnalysisRunResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -76,6 +77,7 @@ type ComplexityRoot struct {
 		ConfigSnapshotID        func(childComplexity int) int
 		CreatedAt               func(childComplexity int) int
 		CurrentPhase            func(childComplexity int) int
+		Evidence                func(childComplexity int, limit *int) int
 		ID                      func(childComplexity int) int
 		IterationCount          func(childComplexity int) int
 		MarketplaceImportRunID  func(childComplexity int) int
@@ -153,6 +155,23 @@ type ComplexityRoot struct {
 	EventMetadataEntry struct {
 		Key   func(childComplexity int) int
 		Value func(childComplexity int) int
+	}
+
+	Evidence struct {
+		AnalysisRunID  func(childComplexity int) int
+		Claim          func(childComplexity int) int
+		ClaimID        func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		Freshness      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		OrganizationID func(childComplexity int) int
+		ProductID      func(childComplexity int) int
+		Reference      func(childComplexity int) int
+		Reliability    func(childComplexity int) int
+		RetrievedAt    func(childComplexity int) int
+		Snippet        func(childComplexity int) int
+		Source         func(childComplexity int) int
+		SourceType     func(childComplexity int) int
 	}
 
 	LLMCall struct {
@@ -424,6 +443,7 @@ type ComplexityRoot struct {
 		ActiveLLMConfiguration    func(childComplexity int, organizationID string) int
 		AgentRun                  func(childComplexity int, organizationID string, analysisRunID string) int
 		AgentRunEvents            func(childComplexity int, organizationID string, analysisRunID string, afterSequence *int, limit *int) int
+		AnalysisEvidence          func(childComplexity int, organizationID string, analysisRunID string, limit *int) int
 		AnalysisRuns              func(childComplexity int, organizationID string, status *model.AnalysisRunStatus, limit *int) int
 		CompliancePolicyVersions  func(childComplexity int, organizationID string, limit *int) int
 		DatasetEligibilitySummary func(childComplexity int, organizationID string) int
@@ -497,6 +517,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type AnalysisRunResolver interface {
+	Evidence(ctx context.Context, obj *model.AnalysisRun, limit *int) ([]*model.Evidence, error)
+}
 type MutationResolver interface {
 	Register(ctx context.Context, input model.RegisterInput) (*model.RegisterPayload, error)
 	ResendEmailVerification(ctx context.Context, input model.ResendEmailVerificationInput) (*model.RegisterPayload, error)
@@ -558,6 +581,7 @@ type QueryResolver interface {
 	AgentRun(ctx context.Context, organizationID string, analysisRunID string) (*model.AnalysisRun, error)
 	AnalysisRuns(ctx context.Context, organizationID string, status *model.AnalysisRunStatus, limit *int) ([]*model.AnalysisRun, error)
 	AgentRunEvents(ctx context.Context, organizationID string, analysisRunID string, afterSequence *int, limit *int) ([]*model.AgentRunEvent, error)
+	AnalysisEvidence(ctx context.Context, organizationID string, analysisRunID string, limit *int) ([]*model.Evidence, error)
 	LlmProviders(ctx context.Context) ([]*model.LLMProvider, error)
 	LlmModels(ctx context.Context, organizationID string) ([]*model.LLMModel, error)
 	LlmRoutingPolicies(ctx context.Context, organizationID string, limit *int) ([]*model.LLMRoutingPolicy, error)
@@ -727,6 +751,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.AnalysisRun.CurrentPhase(childComplexity), true
+	case "AnalysisRun.evidence":
+		if e.complexity.AnalysisRun.Evidence == nil {
+			break
+		}
+
+		args, err := ec.field_AnalysisRun_evidence_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.AnalysisRun.Evidence(childComplexity, args["limit"].(*int)), true
 	case "AnalysisRun.id":
 		if e.complexity.AnalysisRun.ID == nil {
 			break
@@ -1053,6 +1088,91 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.EventMetadataEntry.Value(childComplexity), true
+
+	case "Evidence.analysisRunId":
+		if e.complexity.Evidence.AnalysisRunID == nil {
+			break
+		}
+
+		return e.complexity.Evidence.AnalysisRunID(childComplexity), true
+	case "Evidence.claim":
+		if e.complexity.Evidence.Claim == nil {
+			break
+		}
+
+		return e.complexity.Evidence.Claim(childComplexity), true
+	case "Evidence.claimId":
+		if e.complexity.Evidence.ClaimID == nil {
+			break
+		}
+
+		return e.complexity.Evidence.ClaimID(childComplexity), true
+	case "Evidence.createdAt":
+		if e.complexity.Evidence.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Evidence.CreatedAt(childComplexity), true
+	case "Evidence.freshness":
+		if e.complexity.Evidence.Freshness == nil {
+			break
+		}
+
+		return e.complexity.Evidence.Freshness(childComplexity), true
+	case "Evidence.id":
+		if e.complexity.Evidence.ID == nil {
+			break
+		}
+
+		return e.complexity.Evidence.ID(childComplexity), true
+	case "Evidence.organizationId":
+		if e.complexity.Evidence.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.Evidence.OrganizationID(childComplexity), true
+	case "Evidence.productId":
+		if e.complexity.Evidence.ProductID == nil {
+			break
+		}
+
+		return e.complexity.Evidence.ProductID(childComplexity), true
+	case "Evidence.reference":
+		if e.complexity.Evidence.Reference == nil {
+			break
+		}
+
+		return e.complexity.Evidence.Reference(childComplexity), true
+	case "Evidence.reliability":
+		if e.complexity.Evidence.Reliability == nil {
+			break
+		}
+
+		return e.complexity.Evidence.Reliability(childComplexity), true
+	case "Evidence.retrievedAt":
+		if e.complexity.Evidence.RetrievedAt == nil {
+			break
+		}
+
+		return e.complexity.Evidence.RetrievedAt(childComplexity), true
+	case "Evidence.snippet":
+		if e.complexity.Evidence.Snippet == nil {
+			break
+		}
+
+		return e.complexity.Evidence.Snippet(childComplexity), true
+	case "Evidence.source":
+		if e.complexity.Evidence.Source == nil {
+			break
+		}
+
+		return e.complexity.Evidence.Source(childComplexity), true
+	case "Evidence.sourceType":
+		if e.complexity.Evidence.SourceType == nil {
+			break
+		}
+
+		return e.complexity.Evidence.SourceType(childComplexity), true
 
 	case "LLMCall.compliancePolicyVersion":
 		if e.complexity.LLMCall.CompliancePolicyVersion == nil {
@@ -2488,6 +2608,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AgentRunEvents(childComplexity, args["organizationId"].(string), args["analysisRunId"].(string), args["afterSequence"].(*int), args["limit"].(*int)), true
+	case "Query.analysisEvidence":
+		if e.complexity.Query.AnalysisEvidence == nil {
+			break
+		}
+
+		args, err := ec.field_Query_analysisEvidence_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AnalysisEvidence(childComplexity, args["organizationId"].(string), args["analysisRunId"].(string), args["limit"].(*int)), true
 	case "Query.analysisRuns":
 		if e.complexity.Query.AnalysisRuns == nil {
 			break
@@ -3090,6 +3221,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_AnalysisRun_evidence_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_acceptInvitation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3558,6 +3700,27 @@ func (ec *executionContext) field_Query_agentRun_args(ctx context.Context, rawAr
 		return nil, err
 	}
 	args["analysisRunId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_analysisEvidence_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "organizationId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "analysisRunId", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["analysisRunId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -4995,6 +5158,77 @@ func (ec *executionContext) fieldContext_AnalysisRun_updatedAt(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _AnalysisRun_evidence(ctx context.Context, field graphql.CollectedField, obj *model.AnalysisRun) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AnalysisRun_evidence,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.AnalysisRun().Evidence(ctx, obj, fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNEvidence2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEvidenceᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_AnalysisRun_evidence(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnalysisRun",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Evidence_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_Evidence_organizationId(ctx, field)
+			case "analysisRunId":
+				return ec.fieldContext_Evidence_analysisRunId(ctx, field)
+			case "productId":
+				return ec.fieldContext_Evidence_productId(ctx, field)
+			case "claimId":
+				return ec.fieldContext_Evidence_claimId(ctx, field)
+			case "source":
+				return ec.fieldContext_Evidence_source(ctx, field)
+			case "sourceType":
+				return ec.fieldContext_Evidence_sourceType(ctx, field)
+			case "claim":
+				return ec.fieldContext_Evidence_claim(ctx, field)
+			case "snippet":
+				return ec.fieldContext_Evidence_snippet(ctx, field)
+			case "reference":
+				return ec.fieldContext_Evidence_reference(ctx, field)
+			case "reliability":
+				return ec.fieldContext_Evidence_reliability(ctx, field)
+			case "freshness":
+				return ec.fieldContext_Evidence_freshness(ctx, field)
+			case "retrievedAt":
+				return ec.fieldContext_Evidence_retrievedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Evidence_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Evidence", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_AnalysisRun_evidence_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CompliancePolicy_profile(ctx context.Context, field graphql.CollectedField, obj *model.CompliancePolicy) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6172,6 +6406,412 @@ func (ec *executionContext) _EventMetadataEntry_value(ctx context.Context, field
 func (ec *executionContext) fieldContext_EventMetadataEntry_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EventMetadataEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_id(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_organizationId,
+		func(ctx context.Context) (any, error) {
+			return obj.OrganizationID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_organizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_analysisRunId(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_analysisRunId,
+		func(ctx context.Context) (any, error) {
+			return obj.AnalysisRunID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_analysisRunId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_productId(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_productId,
+		func(ctx context.Context) (any, error) {
+			return obj.ProductID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_productId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_claimId(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_claimId,
+		func(ctx context.Context) (any, error) {
+			return obj.ClaimID, nil
+		},
+		nil,
+		ec.marshalOID2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_claimId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_source(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_source,
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_sourceType(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_sourceType,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceType, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_sourceType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_claim(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_claim,
+		func(ctx context.Context) (any, error) {
+			return obj.Claim, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_claim(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_snippet(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_snippet,
+		func(ctx context.Context) (any, error) {
+			return obj.Snippet, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_snippet(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_reference(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_reference,
+		func(ctx context.Context) (any, error) {
+			return obj.Reference, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_reference(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_reliability(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_reliability,
+		func(ctx context.Context) (any, error) {
+			return obj.Reliability, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_reliability(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_freshness(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_freshness,
+		func(ctx context.Context) (any, error) {
+			return obj.Freshness, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_freshness(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_retrievedAt(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_retrievedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.RetrievedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_retrievedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Evidence_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Evidence) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Evidence_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Evidence_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Evidence",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -11314,6 +11954,8 @@ func (ec *executionContext) fieldContext_Mutation_startAgentRun(ctx context.Cont
 				return ec.fieldContext_AnalysisRun_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
+			case "evidence":
+				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -11397,6 +12039,8 @@ func (ec *executionContext) fieldContext_Mutation_cancelAgentRun(ctx context.Con
 				return ec.fieldContext_AnalysisRun_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
+			case "evidence":
+				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -14183,6 +14827,8 @@ func (ec *executionContext) fieldContext_Query_agentRun(ctx context.Context, fie
 				return ec.fieldContext_AnalysisRun_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
+			case "evidence":
+				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -14266,6 +14912,8 @@ func (ec *executionContext) fieldContext_Query_analysisRuns(ctx context.Context,
 				return ec.fieldContext_AnalysisRun_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_AnalysisRun_updatedAt(ctx, field)
+			case "evidence":
+				return ec.fieldContext_AnalysisRun_evidence(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalysisRun", field.Name)
 		},
@@ -14341,6 +14989,77 @@ func (ec *executionContext) fieldContext_Query_agentRunEvents(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_agentRunEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_analysisEvidence(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_analysisEvidence,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().AnalysisEvidence(ctx, fc.Args["organizationId"].(string), fc.Args["analysisRunId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNEvidence2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEvidenceᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_analysisEvidence(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Evidence_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_Evidence_organizationId(ctx, field)
+			case "analysisRunId":
+				return ec.fieldContext_Evidence_analysisRunId(ctx, field)
+			case "productId":
+				return ec.fieldContext_Evidence_productId(ctx, field)
+			case "claimId":
+				return ec.fieldContext_Evidence_claimId(ctx, field)
+			case "source":
+				return ec.fieldContext_Evidence_source(ctx, field)
+			case "sourceType":
+				return ec.fieldContext_Evidence_sourceType(ctx, field)
+			case "claim":
+				return ec.fieldContext_Evidence_claim(ctx, field)
+			case "snippet":
+				return ec.fieldContext_Evidence_snippet(ctx, field)
+			case "reference":
+				return ec.fieldContext_Evidence_reference(ctx, field)
+			case "reliability":
+				return ec.fieldContext_Evidence_reliability(ctx, field)
+			case "freshness":
+				return ec.fieldContext_Evidence_freshness(ctx, field)
+			case "retrievedAt":
+				return ec.fieldContext_Evidence_retrievedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Evidence_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Evidence", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_analysisEvidence_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -18972,66 +19691,66 @@ func (ec *executionContext) _AnalysisRun(ctx context.Context, sel ast.SelectionS
 		case "id":
 			out.Values[i] = ec._AnalysisRun_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "organizationId":
 			out.Values[i] = ec._AnalysisRun_organizationId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "productId":
 			out.Values[i] = ec._AnalysisRun_productId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "marketplaceImportRunId":
 			out.Values[i] = ec._AnalysisRun_marketplaceImportRunId(ctx, field, obj)
 		case "clientRequestId":
 			out.Values[i] = ec._AnalysisRun_clientRequestId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "status":
 			out.Values[i] = ec._AnalysisRun_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "currentPhase":
 			out.Values[i] = ec._AnalysisRun_currentPhase(ctx, field, obj)
 		case "traceId":
 			out.Values[i] = ec._AnalysisRun_traceId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "configSnapshotId":
 			out.Values[i] = ec._AnalysisRun_configSnapshotId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "toolRegistryVersion":
 			out.Values[i] = ec._AnalysisRun_toolRegistryVersion(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "toolPolicyVersion":
 			out.Values[i] = ec._AnalysisRun_toolPolicyVersion(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "compliancePolicyVersion":
 			out.Values[i] = ec._AnalysisRun_compliancePolicyVersion(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "plannerVersion":
 			out.Values[i] = ec._AnalysisRun_plannerVersion(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "iterationCount":
 			out.Values[i] = ec._AnalysisRun_iterationCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "terminalError":
 			out.Values[i] = ec._AnalysisRun_terminalError(ctx, field, obj)
@@ -19044,13 +19763,49 @@ func (ec *executionContext) _AnalysisRun(ctx context.Context, sel ast.SelectionS
 		case "createdAt":
 			out.Values[i] = ec._AnalysisRun_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "updatedAt":
 			out.Values[i] = ec._AnalysisRun_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "evidence":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AnalysisRun_evidence(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -19494,6 +20249,101 @@ func (ec *executionContext) _EventMetadataEntry(ctx context.Context, sel ast.Sel
 			}
 		case "value":
 			out.Values[i] = ec._EventMetadataEntry_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var evidenceImplementors = []string{"Evidence"}
+
+func (ec *executionContext) _Evidence(ctx context.Context, sel ast.SelectionSet, obj *model.Evidence) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, evidenceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Evidence")
+		case "id":
+			out.Values[i] = ec._Evidence_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organizationId":
+			out.Values[i] = ec._Evidence_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "analysisRunId":
+			out.Values[i] = ec._Evidence_analysisRunId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "productId":
+			out.Values[i] = ec._Evidence_productId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "claimId":
+			out.Values[i] = ec._Evidence_claimId(ctx, field, obj)
+		case "source":
+			out.Values[i] = ec._Evidence_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceType":
+			out.Values[i] = ec._Evidence_sourceType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "claim":
+			out.Values[i] = ec._Evidence_claim(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "snippet":
+			out.Values[i] = ec._Evidence_snippet(ctx, field, obj)
+		case "reference":
+			out.Values[i] = ec._Evidence_reference(ctx, field, obj)
+		case "reliability":
+			out.Values[i] = ec._Evidence_reliability(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "freshness":
+			out.Values[i] = ec._Evidence_freshness(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "retrievedAt":
+			out.Values[i] = ec._Evidence_retrievedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Evidence_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -21706,6 +22556,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "analysisEvidence":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_analysisEvidence(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "llmProviders":
 			field := field
 
@@ -23329,6 +24201,60 @@ func (ec *executionContext) marshalNEventMetadataEntry2ᚖgithubᚗcomᚋBusenur
 		return graphql.Null
 	}
 	return ec._EventMetadataEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNEvidence2ᚕᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEvidenceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Evidence) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEvidence2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEvidence(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNEvidence2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐEvidence(ctx context.Context, sel ast.SelectionSet, v *model.Evidence) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Evidence(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v any) (float64, error) {

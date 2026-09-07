@@ -27,7 +27,9 @@ User
               ├── RawSourcePayloads[]
               ├── DatasetRecords[]
               ├── DatasetVersions[]           ← DRAFT only (Phase 4)
-              ├── AnalysisRuns[]              ← Phase 5+ (not implemented)
+              ├── AnalysisRuns[]              ← Phase 5 IMPLEMENTED
+              ├── Evidences[]                 ← P0 PR-A1
+              ├── EvidenceClaimValidations[]  ← P0 PR-A1
               └── ConfigSnapshots[]
 ```
 
@@ -363,6 +365,56 @@ Publication / fine-tune export belongs to later phases (Phase 10).
 **Indexes:** unique `{ organizationId: 1, runId: 1, sequence: 1 }`
 
 **Invariant:** append-only; no duplicate sequence per run.
+
+### evidences — IMPLEMENTED (P0 PR-A1)
+
+Tenant-scoped persisted evidence. LLM-only URLs/citations in text are not evidence.
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  analysisRunId: ObjectId,
+  productId: ObjectId,
+  claimId: string?,
+  source: string,
+  sourceType: string,
+  claim: string,
+  snippet: string?,
+  reference: string?,
+  reliability: number,                 // 0.0 – 1.0
+  freshness: number,                   // 0.0 – 1.0
+  retrievedAt: Date,
+  createdAt: Date,
+  updatedAt: Date,
+  metadata: object?
+}
+```
+
+**Indexes:** `{ organizationId: 1, analysisRunId: 1 }`, `{ organizationId: 1, productId: 1 }`, `{ organizationId: 1, claimId: 1 }`, `{ organizationId: 1, createdAt: -1 }`
+
+**Invariant:** every query includes organizationId. Create path validates analysis run and product belong to the same organization.
+
+### evidence_claim_validations — IMPLEMENTED (P0 PR-A1)
+
+Persisted `evidence_validator` result. Upserted on `(organizationId, analysisRunId, claimId)`.
+
+```text
+{
+  _id: ObjectId,
+  organizationId: ObjectId,
+  analysisRunId: ObjectId,
+  claimId: string,
+  claimText: string,
+  evidenceIds: ObjectId[],
+  supportStatus: SUPPORTED | PARTIALLY_SUPPORTED | UNSUPPORTED | CONTRADICTED,
+  issues: string[],
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Indexes:** unique `{ organizationId: 1, analysisRunId: 1, claimId: 1 }`, `{ organizationId: 1, analysisRunId: 1 }`
 
 ### tool_executions — IMPLEMENTED (Phase 5)
 

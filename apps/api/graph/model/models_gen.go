@@ -52,6 +52,7 @@ type AnalysisRun struct {
 	CompletedAt             *string           `json:"completedAt,omitempty"`
 	CreatedAt               string            `json:"createdAt"`
 	UpdatedAt               string            `json:"updatedAt"`
+	Evidence                []*Evidence       `json:"evidence"`
 }
 
 type BuildDatasetDraftInput struct {
@@ -172,6 +173,23 @@ type EligibilityCount struct {
 type EventMetadataEntry struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+type Evidence struct {
+	ID             string  `json:"id"`
+	OrganizationID string  `json:"organizationId"`
+	AnalysisRunID  string  `json:"analysisRunId"`
+	ProductID      string  `json:"productId"`
+	ClaimID        *string `json:"claimId,omitempty"`
+	Source         string  `json:"source"`
+	SourceType     string  `json:"sourceType"`
+	Claim          string  `json:"claim"`
+	Snippet        *string `json:"snippet,omitempty"`
+	Reference      *string `json:"reference,omitempty"`
+	Reliability    float64 `json:"reliability"`
+	Freshness      float64 `json:"freshness"`
+	RetrievedAt    string  `json:"retrievedAt"`
+	CreatedAt      string  `json:"createdAt"`
 }
 
 type GrantConsentInput struct {

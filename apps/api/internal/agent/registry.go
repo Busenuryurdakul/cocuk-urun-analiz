@@ -42,7 +42,7 @@ var frozenRegistry = []ToolDefinition{
 	{Name: "compliance_checker", Version: "frozen-v1", Purpose: "Compliance validation", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "pii_redactor", Version: "frozen-v1", Purpose: "PII redaction", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "policy_evaluator", Version: "frozen-v1", Purpose: "Policy profile evaluation", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
-	{Name: "evidence_validator", Version: "frozen-v1", Purpose: "Validate claim-evidence linkage", Availability: ToolUnavailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
+	{Name: "evidence_validator", Version: "frozen-v1", Purpose: "Validate claim-evidence linkage", Availability: ToolAvailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 	{Name: "report_generator", Version: "frozen-v1", Purpose: "Generate analysis report", Availability: ToolUnavailable, SandboxClass: SandboxInternal, MinRole: "ANALYST"},
 }
 

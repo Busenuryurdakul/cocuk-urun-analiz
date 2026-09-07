@@ -42,6 +42,7 @@ func main() {
 		UGCService:         application.UGC,
 		MarketplaceService: application.Marketplace,
 		DatasetService:     application.Dataset,
+		EvidenceService:    application.Evidence,
 		AgentService:       application.Agent,
 		LLMService:         application.LLM,
 		CookieOpts:         application.CookieOptions(),

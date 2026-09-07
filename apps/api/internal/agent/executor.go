@@ -11,6 +11,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/compliance"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/dataset"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/evidence"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/fetch"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/rbac"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
@@ -25,6 +26,9 @@ type ToolInput struct {
 	Role           domain.OrgRole
 	Resolved       ResolvedInput
 	SourceURL      string
+	ClaimID        string
+	ClaimText      string
+	EvidenceIDs    []string
 }
 
 type ToolOutput struct {
@@ -35,6 +39,7 @@ type ToolOutput struct {
 type Executor struct {
 	Registry   *Registry
 	Compliance *compliance.Engine
+	Evidence   *evidence.Service
 }
 
 func (e *Executor) Execute(ctx context.Context, toolName string, input ToolInput) (*ToolOutput, error) {
@@ -59,6 +64,8 @@ func (e *Executor) Execute(ctx context.Context, toolName string, input ToolInput
 		return e.runDatasetValidator(input)
 	case "pii_redactor":
 		return e.runPIIRedactor(input)
+	case "evidence_validator":
+		return e.runEvidenceValidator(ctx, input)
 	default:
 		return nil, ErrToolUnavailable
 	}
@@ -189,6 +196,43 @@ func (e *Executor) runDatasetValidator(input ToolInput) (*ToolOutput, error) {
 			"eligibilitySummary":     summary,
 		},
 	}, nil
+}
+
+func (e *Executor) runEvidenceValidator(ctx context.Context, input ToolInput) (*ToolOutput, error) {
+	if e.Evidence == nil {
+		return nil, ErrToolUnavailable
+	}
+	if err := ValidateEvidenceValidatorInput(input); err != nil {
+		return nil, err
+	}
+	result, err := e.Evidence.ValidateClaim(ctx, evidence.ValidateClaimInput{
+		OrganizationID: input.OrganizationID,
+		AnalysisRunID:  input.RunID,
+		ClaimID:        input.ClaimID,
+		ClaimText:      input.ClaimText,
+		EvidenceIDs:    input.EvidenceIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+	issues := result.Issues
+	if issues == nil {
+		issues = []string{}
+	}
+	ids := result.EvidenceIDs
+	if ids == nil {
+		ids = []string{}
+	}
+	payload := map[string]any{
+		"claimId":     result.ClaimID,
+		"status":      string(result.Status),
+		"evidenceIds": ids,
+		"issues":      issues,
+	}
+	if err := ValidateToolOutput("evidence_validator", "OK", payload); err != nil {
+		return nil, err
+	}
+	return &ToolOutput{Status: "OK", Payload: payload}, nil
 }
 
 func (e *Executor) runPIIRedactor(input ToolInput) (*ToolOutput, error) {
