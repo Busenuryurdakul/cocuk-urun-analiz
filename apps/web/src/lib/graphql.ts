@@ -34,12 +34,16 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   EMAIL_NOT_VERIFIED:
     "E-posta adresiniz henüz doğrulanmadı. Kayıt sırasında gönderilen bağlantıyı açın, ardından tekrar giriş yapın.",
   INVALID_CREDENTIALS: "E-posta veya şifre hatalı.",
-  INVALID_TOKEN: "Bağlantı geçersiz veya süresi dolmuş.",
-  INVALID_CODE: "Authenticator kodu hatalı. Uygulamadaki güncel kodu girin.",
+  INVALID_TOKEN: "Oturum süresi doldu veya geçersiz. Giriş sayfasından tekrar deneyin.",
+  INVALID_CODE: "Doğrulama kodu hatalı veya süresi dolmuş.",
   CHALLENGE_LOCKED: "Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.",
   DUPLICATE: "Bu e-posta ile zaten bir hesap var.",
   DESKTOP_SESSION_ACTIVE:
     "Bu hesapta başka bir masaüstü oturumu açık. Önce diğer cihazdan çıkış yapın veya o cihazı güvenlik ayarlarından kaldırın.",
+  PERSONAL_ORG: "Kişisel çalışma alanına üye davet edilemez. Ekip için önce bir organizasyon oluşturun.",
+  ALREADY_MEMBER: "Bu e-posta zaten bu organizasyonun üyesi.",
+  INVITATION_PENDING: "Bu e-postaya zaten bekleyen bir davet var.",
+  CONSENT_REQUIRED: "Davet için uyumluluk onayı gerekli. Uyumluluk sayfasından onayları verip tekrar deneyin.",
 };
 
 function isNetworkFailure(err: unknown): boolean {
@@ -157,7 +161,7 @@ export async function graphqlRequest<T>(
   }
 
   const payload = (await res.json()) as GraphQLResponse<T>;
-  if (payload.errors?.length) {
+  if (payload.errors?.length && !hasUsableGraphQLData(payload.data)) {
     const code = payload.errors[0].extensions?.code ?? payload.errors[0].message;
     throw new GraphQLRequestError(code);
   }
@@ -165,4 +169,11 @@ export async function graphqlRequest<T>(
     throw new Error("GraphQL yanıtı boş");
   }
   return payload.data;
+}
+
+function hasUsableGraphQLData<T>(data: T | undefined): data is T {
+  if (data == null || typeof data !== "object") {
+    return false;
+  }
+  return Object.values(data as Record<string, unknown>).some((value) => value != null && value !== false);
 }

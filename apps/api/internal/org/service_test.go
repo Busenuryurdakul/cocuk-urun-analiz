@@ -129,6 +129,83 @@ func TestPersonalOrgInviteRejected(t *testing.T) {
 	}
 }
 
+func TestInviteExistingMemberRejected(t *testing.T) {
+	svc, ctx := setupOrgTest(t)
+	ownerID, teamID, ownerEmail := seedOwnerAndTeamOrg(t, svc, ctx)
+
+	err := svc.InviteMember(ctx, ownerID, teamID, ownerEmail, "ADMIN")
+	if err != org.ErrAlreadyMember {
+		t.Fatalf("expected already member, got %v", err)
+	}
+}
+
+func TestInviteMemberGrantsMissingConsents(t *testing.T) {
+	svc, ctx := setupOrgTest(t)
+	owner := primitive.NewObjectID()
+	team := primitive.NewObjectID()
+	_ = svc.Users.Create(ctx, &domain.User{
+		ID: owner, Email: fmt.Sprintf("owner-consent-%d@test.local", time.Now().UnixNano()),
+		EmailVerified: true, MFAEnabled: true, PasswordHash: "hash", PersonalOrgID: team,
+	})
+	_ = svc.Orgs.Create(ctx, &domain.Organization{
+		ID: team, Name: "Team", Type: domain.OrgTypeOrganization,
+		ComplianceProfile: "KVKK", CompliancePolicyVersion: "1.0.0", OwnerID: owner,
+	})
+	_ = svc.Members.Create(ctx, &domain.OrganizationMember{
+		OrganizationID: team, UserID: owner, Role: domain.RoleOwner,
+	})
+
+	invitee := fmt.Sprintf("invitee-consent-%d@test.local", time.Now().UnixNano())
+	if err := svc.InviteMember(ctx, owner, team, invitee, "VIEWER"); err != nil {
+		t.Fatalf("expected invite to grant missing consents and succeed, got %v", err)
+	}
+}
+
+func TestInviteMemberAndRejectDuplicatePending(t *testing.T) {
+	svc, ctx := setupOrgTest(t)
+	ownerID, teamID, _ := seedOwnerAndTeamOrg(t, svc, ctx)
+	invitee := fmt.Sprintf("invitee-%d@test.local", time.Now().UnixNano())
+
+	if err := svc.InviteMember(ctx, ownerID, teamID, invitee, "VIEWER"); err != nil {
+		t.Fatalf("expected first invite to succeed, got %v", err)
+	}
+	if err := svc.InviteMember(ctx, ownerID, teamID, invitee, "ADMIN"); err != org.ErrInvitationPending {
+		t.Fatalf("expected pending invitation, got %v", err)
+	}
+}
+
+func seedOwnerAndTeamOrg(t *testing.T, svc *org.Service, ctx context.Context) (primitive.ObjectID, primitive.ObjectID, string) {
+	t.Helper()
+	email := fmt.Sprintf("owner-%d@test.local", time.Now().UnixNano())
+	user := &domain.User{
+		Email: email, EmailVerified: true, MFAEnabled: true, PasswordHash: "hash",
+	}
+	if err := svc.Users.Create(ctx, user); err != nil {
+		t.Fatal(err)
+	}
+	personal := &domain.Organization{
+		Name: "Personal", Type: domain.OrgTypePersonal,
+		ComplianceProfile: "KVKK", CompliancePolicyVersion: "1.0.0", OwnerID: user.ID,
+	}
+	if err := svc.Orgs.Create(ctx, personal); err != nil {
+		t.Fatal(err)
+	}
+	user.PersonalOrgID = personal.ID
+	if err := svc.Users.Update(ctx, user); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Members.Create(ctx, &domain.OrganizationMember{
+		OrganizationID: personal.ID, UserID: user.ID, Role: domain.RoleOwner,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	created, err := svc.CreateOrganization(ctx, user.ID, "Team Org", "BOTH")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return user.ID, created.ID, email
+}
+
 func TestCrossTenantMemberListRejected(t *testing.T) {
 	svc, ctx := setupOrgTest(t)
 	orgID := primitive.NewObjectID()

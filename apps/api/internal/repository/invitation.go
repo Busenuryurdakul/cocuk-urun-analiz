@@ -68,6 +68,7 @@ func (r *InvitationRepository) FindPendingByOrgAndEmail(ctx context.Context, org
 		"organizationId": orgID,
 		"email":          email,
 		"status":         domain.InvitationPending,
+		"expiresAt":      bson.M{"$gt": time.Now().UTC()},
 	}).Decode(&inv)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

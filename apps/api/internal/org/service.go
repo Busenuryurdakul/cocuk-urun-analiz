@@ -22,6 +22,8 @@ var (
 	ErrLastOwner          = errors.New("last owner protection")
 	ErrPersonalOrg        = errors.New("personal organization immutable")
 	ErrInvalidRole        = errors.New("invalid role")
+	ErrAlreadyMember      = errors.New("already a member")
+	ErrInvitationPending  = errors.New("invitation already pending")
 	ErrInvitationExpired  = errors.New("invitation expired")
 	ErrInvitationMismatch = errors.New("invitation email mismatch")
 	ErrInvitationUsed     = errors.New("invitation already used")
@@ -109,6 +111,7 @@ func (s *Service) CreateOrganization(ctx context.Context, actorID primitive.Obje
 
 	uid := actorID
 	oid := org.ID
+	s.grantRequiredConsents(ctx, actorID, oid, profile, policy.Version)
 	_ = s.Security.Record(ctx, domain.SecurityEvent{
 		OrganizationID: &oid,
 		UserID:         &uid,
@@ -117,6 +120,16 @@ func (s *Service) CreateOrganization(ctx context.Context, actorID primitive.Obje
 		Details:        map[string]string{"name": compliance.SanitizeForAudit(name), "profile": string(profile)},
 	})
 	return org, nil
+}
+
+func (s *Service) grantRequiredConsents(ctx context.Context, userID, orgID primitive.ObjectID, profile domain.ComplianceProfile, policyVersion string) {
+	if s.Consent == nil {
+		return
+	}
+	orgPtr := &orgID
+	for _, purposeRaw := range compliance.DefaultPlatformPolicyRules(profile).RequireConsentPurposes {
+		_, _ = s.Consent.Grant(ctx, userID, orgPtr, domain.ConsentPurpose(purposeRaw), domain.ConsentSourceWeb, policyVersion)
+	}
 }
 
 func (s *Service) InviteMember(ctx context.Context, actorID, orgID primitive.ObjectID, email, roleRaw string) error {
@@ -145,6 +158,24 @@ func (s *Service) InviteMember(ctx context.Context, actorID, orgID primitive.Obj
 	if email == "" {
 		return fmt.Errorf("%w: email required", compliance.ErrComplianceViolation)
 	}
+
+	if existingUser, userErr := s.Users.FindByEmail(ctx, email); userErr == nil {
+		if _, memErr := s.Members.FindByUserAndOrg(ctx, existingUser.ID, orgID); memErr == nil {
+			return ErrAlreadyMember
+		} else if memErr != nil && !errors.Is(memErr, repository.ErrNotFound) {
+			return memErr
+		}
+	} else if !errors.Is(userErr, repository.ErrNotFound) {
+		return userErr
+	}
+
+	if _, invErr := s.Invitations.FindPendingByOrgAndEmail(ctx, orgID, email); invErr == nil {
+		return ErrInvitationPending
+	} else if !errors.Is(invErr, repository.ErrNotFound) {
+		return invErr
+	}
+
+	s.grantRequiredConsents(ctx, actorID, orgID, domain.ComplianceProfile(org.ComplianceProfile), org.CompliancePolicyVersion)
 
 	fields := map[string]string{"email": email, "role": string(role)}
 	if _, err := s.Compliance.Evaluate(ctx, compliance.EvaluateRequest{
@@ -175,11 +206,13 @@ func (s *Service) InviteMember(ctx context.Context, actorID, orgID primitive.Obj
 	}
 
 	acceptURL := fmt.Sprintf("%s/org/accept-invite?token=%s", strings.TrimRight(s.WebBaseURL, "/"), token)
-	_ = s.Mail.Send(ctx, mail.Message{
-		To:      email,
-		Subject: "Miyuna — organizasyon daveti",
-		Body:    fmt.Sprintf("%s organizasyonuna davet edildiniz.\nKabul: %s", org.Name, acceptURL),
-	})
+	if s.Mail != nil {
+		_ = s.Mail.Send(ctx, mail.Message{
+			To:      email,
+			Subject: "Miyuna — organizasyon daveti",
+			Body:    fmt.Sprintf("%s organizasyonuna davet edildiniz.\nKabul: %s", org.Name, acceptURL),
+		})
+	}
 
 	uid := actorID
 	_ = s.Security.Record(ctx, domain.SecurityEvent{
@@ -264,13 +297,14 @@ func (s *Service) AcceptInvitation(ctx context.Context, actorID primitive.Object
 		Details:        map[string]string{"role": string(inv.Role)},
 	})
 
-	orgPtr := &oid
 	policy, _ := s.PolicyRepo.ResolveActive(ctx, org)
 	policyVersion := "1.0.0"
+	profile := domain.ComplianceProfile(org.ComplianceProfile)
 	if policy != nil {
 		policyVersion = policy.Version
+		profile = policy.Profile
 	}
-	_, _ = s.Consent.Grant(ctx, actorID, orgPtr, domain.ConsentPurposeOrgMembership, domain.ConsentSourceWeb, policyVersion)
+	s.grantRequiredConsents(ctx, actorID, oid, profile, policyVersion)
 
 	return org, nil
 }
