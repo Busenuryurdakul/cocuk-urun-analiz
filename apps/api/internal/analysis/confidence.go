@@ -70,14 +70,14 @@ func ComputeConfidence(in ConfidenceInput) ConfidenceResult {
 	return ConfidenceResult{
 		Score: round2(clamp01(score)),
 		Factors: map[string]float64{
-			"evidenceQuality":   round2(quality),
-			"evidenceCount":     round2(count),
-			"sourceAgreement":   round2(agreement),
-			"sourceFreshness":   round2(freshness),
+			"evidenceQuality":        round2(quality),
+			"evidenceCount":          round2(count),
+			"sourceAgreement":        round2(agreement),
+			"sourceFreshness":        round2(freshness),
 			"productMatchConfidence": round2(match),
-			"reviewerValidation": round2(reviewer),
-			"dataCompleteness":  round2(completeness),
-			"reviewCoverage":    round2(coverage),
+			"reviewerValidation":     round2(reviewer),
+			"dataCompleteness":       round2(completeness),
+			"reviewCoverage":         round2(coverage),
 		},
 	}
 }

@@ -20,26 +20,26 @@ const (
 type HallucinationFlag string
 
 const (
-	FlagUnsupportedClaim         HallucinationFlag = "UNSUPPORTED_CLAIM"
-	FlagInventedRecall           HallucinationFlag = "INVENTED_RECALL"
-	FlagContradictoryEvidence    HallucinationFlag = "CONTRADICTORY_EVIDENCE"
-	FlagInsufficientEvidence     HallucinationFlag = "INSUFFICIENT_EVIDENCE"
-	FlagOverconfidentConclusion  HallucinationFlag = "OVERCONFIDENT_CONCLUSION"
-	FlagSourceMismatch           HallucinationFlag = "SOURCE_MISMATCH"
+	FlagUnsupportedClaim        HallucinationFlag = "UNSUPPORTED_CLAIM"
+	FlagInventedRecall          HallucinationFlag = "INVENTED_RECALL"
+	FlagContradictoryEvidence   HallucinationFlag = "CONTRADICTORY_EVIDENCE"
+	FlagInsufficientEvidence    HallucinationFlag = "INSUFFICIENT_EVIDENCE"
+	FlagOverconfidentConclusion HallucinationFlag = "OVERCONFIDENT_CONCLUSION"
+	FlagSourceMismatch          HallucinationFlag = "SOURCE_MISMATCH"
 )
 
 type ReviewSignalKind string
 
 const (
-	ReviewSignalPositive  ReviewSignalKind = "POSITIVE"
-	ReviewSignalNegative  ReviewSignalKind = "NEGATIVE"
-	ReviewSignalSafety    ReviewSignalKind = "SAFETY"
-	ReviewSignalQuality   ReviewSignalKind = "QUALITY"
+	ReviewSignalPositive   ReviewSignalKind = "POSITIVE"
+	ReviewSignalNegative   ReviewSignalKind = "NEGATIVE"
+	ReviewSignalSafety     ReviewSignalKind = "SAFETY"
+	ReviewSignalQuality    ReviewSignalKind = "QUALITY"
 	ReviewSignalDurability ReviewSignalKind = "DURABILITY"
-	ReviewSignalUsability ReviewSignalKind = "USABILITY"
-	ReviewSignalAssembly  ReviewSignalKind = "ASSEMBLY"
-	ReviewSignalAge       ReviewSignalKind = "AGE"
-	ReviewSignalRepeated  ReviewSignalKind = "REPEATED"
+	ReviewSignalUsability  ReviewSignalKind = "USABILITY"
+	ReviewSignalAssembly   ReviewSignalKind = "ASSEMBLY"
+	ReviewSignalAge        ReviewSignalKind = "AGE"
+	ReviewSignalRepeated   ReviewSignalKind = "REPEATED"
 )
 
 type ReviewSignal struct {
@@ -80,21 +80,21 @@ type AnalysisLLMResult struct {
 }
 
 type FinalAnalysisResult struct {
-	SchemaVersion      string             `bson:"schemaVersion" json:"schemaVersion"`
-	Summary            string             `bson:"summary" json:"summary"`
-	OverallRisk        string             `bson:"overallRisk" json:"overallRisk"`
-	Confidence         float64            `bson:"confidence" json:"confidence"`
-	ConfidenceFactors  map[string]float64 `bson:"confidenceFactors,omitempty" json:"confidenceFactors,omitempty"`
-	PositiveSignals    []ReviewSignal     `bson:"positiveSignals" json:"positiveSignals"`
-	NegativeSignals    []ReviewSignal     `bson:"negativeSignals" json:"negativeSignals"`
-	ReviewInsights     []ReviewSignal     `bson:"reviewInsights" json:"reviewInsights"`
-	SafetyFindings     []SafetyFinding    `bson:"safetyFindings,omitempty" json:"-"`
+	SchemaVersion      string              `bson:"schemaVersion" json:"schemaVersion"`
+	Summary            string              `bson:"summary" json:"summary"`
+	OverallRisk        string              `bson:"overallRisk" json:"overallRisk"`
+	Confidence         float64             `bson:"confidence" json:"confidence"`
+	ConfidenceFactors  map[string]float64  `bson:"confidenceFactors,omitempty" json:"confidenceFactors,omitempty"`
+	PositiveSignals    []ReviewSignal      `bson:"positiveSignals" json:"positiveSignals"`
+	NegativeSignals    []ReviewSignal      `bson:"negativeSignals" json:"negativeSignals"`
+	ReviewInsights     []ReviewSignal      `bson:"reviewInsights" json:"reviewInsights"`
+	SafetyFindings     []SafetyFinding     `bson:"safetyFindings,omitempty" json:"-"`
 	Recalls            []RecallMatchRecord `bson:"recalls,omitempty" json:"-"`
-	Decision           ProductDecision    `bson:"decision" json:"decision"`
-	Recommendation     string             `bson:"recommendation" json:"recommendation"`
-	Limitations        []string           `bson:"limitations" json:"limitations"`
-	HallucinationFlags []string           `bson:"hallucinationFlags" json:"hallucinationFlags"`
-	Worker             AnalysisLLMResult  `bson:"worker" json:"worker"`
-	Reviewer           AnalysisLLMResult  `bson:"reviewer" json:"reviewer"`
-	CreatedAt          time.Time          `bson:"createdAt" json:"createdAt"`
+	Decision           ProductDecision     `bson:"decision" json:"decision"`
+	Recommendation     string              `bson:"recommendation" json:"recommendation"`
+	Limitations        []string            `bson:"limitations" json:"limitations"`
+	HallucinationFlags []string            `bson:"hallucinationFlags" json:"hallucinationFlags"`
+	Worker             AnalysisLLMResult   `bson:"worker" json:"worker"`
+	Reviewer           AnalysisLLMResult   `bson:"reviewer" json:"reviewer"`
+	CreatedAt          time.Time           `bson:"createdAt" json:"createdAt"`
 }

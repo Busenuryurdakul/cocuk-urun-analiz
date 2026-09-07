@@ -21,17 +21,17 @@ func TestConfidenceOrdering(t *testing.T) {
 		ReviewerPassed: true,
 	})
 	weak := ComputeConfidence(ConfidenceInput{
-		Evidence:    []domain.Evidence{{Reliability: 0.3, Freshness: 0.2}},
-		ReviewCount: 1,
-		HasIdentity: false,
+		Evidence:      []domain.Evidence{{Reliability: 0.3, Freshness: 0.2}},
+		ReviewCount:   1,
+		HasIdentity:   false,
 		Hallucination: []string{string(domain.FlagInsufficientEvidence)},
 	})
 	conflict := ComputeConfidence(ConfidenceInput{
-		Evidence: []domain.Evidence{{Reliability: 0.7, Freshness: 0.7}, {Reliability: 0.7, Freshness: 0.6}},
-		Validations: []domain.EvidenceClaimValidation{{SupportStatus: domain.EvidenceContradicted}},
+		Evidence:      []domain.Evidence{{Reliability: 0.7, Freshness: 0.7}, {Reliability: 0.7, Freshness: 0.6}},
+		Validations:   []domain.EvidenceClaimValidation{{SupportStatus: domain.EvidenceContradicted}},
 		Hallucination: []string{string(domain.FlagContradictoryEvidence)},
-		HasIdentity: true,
-		ReviewCount: 4,
+		HasIdentity:   true,
+		ReviewCount:   4,
 	})
 	if strong.Score <= weak.Score {
 		t.Fatalf("strong=%v weak=%v", strong.Score, weak.Score)
@@ -40,12 +40,12 @@ func TestConfidenceOrdering(t *testing.T) {
 		t.Fatalf("conflict should be lower than strong: %v vs %v", conflict.Score, strong.Score)
 	}
 	flagged := ComputeConfidence(ConfidenceInput{
-		Evidence: []domain.Evidence{{Reliability: 0.9, Freshness: 0.9}},
+		Evidence:    []domain.Evidence{{Reliability: 0.9, Freshness: 0.9}},
 		HasIdentity: true, ReviewCount: 8, ReviewerPassed: true,
 		Hallucination: []string{string(domain.FlagInventedRecall)},
 	})
 	clean := ComputeConfidence(ConfidenceInput{
-		Evidence: []domain.Evidence{{Reliability: 0.9, Freshness: 0.9}},
+		Evidence:    []domain.Evidence{{Reliability: 0.9, Freshness: 0.9}},
 		HasIdentity: true, ReviewCount: 8, ReviewerPassed: true,
 	})
 	if flagged.Score >= clean.Score {

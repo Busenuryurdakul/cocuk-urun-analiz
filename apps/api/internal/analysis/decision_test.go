@@ -50,7 +50,7 @@ func TestDecisionMatrix(t *testing.T) {
 		},
 		{
 			name: "unsupported claim does not block",
-			in: DecisionInput{Flags: []string{string(domain.FlagUnsupportedClaim)}},
+			in:   DecisionInput{Flags: []string{string(domain.FlagUnsupportedClaim)}},
 			want: domain.DecisionReviewRequired,
 		},
 	}

@@ -54,31 +54,31 @@ const (
 )
 
 type AnalysisRun struct {
-	ID                       primitive.ObjectID  `bson:"_id,omitempty"`
-	OrganizationID           primitive.ObjectID  `bson:"organizationId"`
-	CreatedByUserID          primitive.ObjectID  `bson:"createdByUserId"`
-	ProductID                primitive.ObjectID  `bson:"productId"`
-	MarketplaceImportRunID   *primitive.ObjectID `bson:"marketplaceImportRunId,omitempty"`
-	ClientRequestID          string              `bson:"clientRequestId"`
-	Status                   AnalysisRunStatus   `bson:"status"`
-	CurrentPhase             string              `bson:"currentPhase,omitempty"`
-	TraceID                  string              `bson:"traceId"`
-	CorrelationID            string              `bson:"correlationId"`
-	ConfigSnapshotID         primitive.ObjectID  `bson:"configSnapshotId"`
-	ToolRegistryVersion      string              `bson:"toolRegistryVersion"`
-	ToolPolicyVersion        string              `bson:"toolPolicyVersion"`
-	CompliancePolicyVersion  string              `bson:"compliancePolicyVersion"`
-	PlannerVersion           string              `bson:"plannerVersion"`
-	ObservationSchemaVersion string              `bson:"observationSchemaVersion"`
-	IterationCount           int                 `bson:"iterationCount"`
-	RetryCount               int                 `bson:"retryCount"`
-	CancellationRequested    bool                `bson:"cancellationRequested"`
-	CancelledByUserID        *primitive.ObjectID `bson:"cancelledByUserId,omitempty"`
-	RecoveryAttempt          int                 `bson:"recoveryAttempt,omitempty"`
-	LeaseOwnerID             string              `bson:"leaseOwnerId,omitempty"`
-	LastHeartbeatAt          *time.Time          `bson:"lastHeartbeatAt,omitempty"`
-	TerminalError            string              `bson:"terminalError,omitempty"`
-	TerminalReason           string              `bson:"terminalReason,omitempty"`
+	ID                       primitive.ObjectID   `bson:"_id,omitempty"`
+	OrganizationID           primitive.ObjectID   `bson:"organizationId"`
+	CreatedByUserID          primitive.ObjectID   `bson:"createdByUserId"`
+	ProductID                primitive.ObjectID   `bson:"productId"`
+	MarketplaceImportRunID   *primitive.ObjectID  `bson:"marketplaceImportRunId,omitempty"`
+	ClientRequestID          string               `bson:"clientRequestId"`
+	Status                   AnalysisRunStatus    `bson:"status"`
+	CurrentPhase             string               `bson:"currentPhase,omitempty"`
+	TraceID                  string               `bson:"traceId"`
+	CorrelationID            string               `bson:"correlationId"`
+	ConfigSnapshotID         primitive.ObjectID   `bson:"configSnapshotId"`
+	ToolRegistryVersion      string               `bson:"toolRegistryVersion"`
+	ToolPolicyVersion        string               `bson:"toolPolicyVersion"`
+	CompliancePolicyVersion  string               `bson:"compliancePolicyVersion"`
+	PlannerVersion           string               `bson:"plannerVersion"`
+	ObservationSchemaVersion string               `bson:"observationSchemaVersion"`
+	IterationCount           int                  `bson:"iterationCount"`
+	RetryCount               int                  `bson:"retryCount"`
+	CancellationRequested    bool                 `bson:"cancellationRequested"`
+	CancelledByUserID        *primitive.ObjectID  `bson:"cancelledByUserId,omitempty"`
+	RecoveryAttempt          int                  `bson:"recoveryAttempt,omitempty"`
+	LeaseOwnerID             string               `bson:"leaseOwnerId,omitempty"`
+	LastHeartbeatAt          *time.Time           `bson:"lastHeartbeatAt,omitempty"`
+	TerminalError            string               `bson:"terminalError,omitempty"`
+	TerminalReason           string               `bson:"terminalReason,omitempty"`
 	StartedAt                *time.Time           `bson:"startedAt,omitempty"`
 	CompletedAt              *time.Time           `bson:"completedAt,omitempty"`
 	WorkerResult             *AnalysisLLMResult   `bson:"workerResult,omitempty"`
