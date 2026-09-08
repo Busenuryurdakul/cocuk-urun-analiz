@@ -459,9 +459,22 @@ if ($mockJson -match 'Authorization') {
     Add-Failure 'HTTP result must not contain Authorization header text.'
 }
 
+if (@(Format-Phase6SafeTestOutput -Lines '').Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: empty string Lines must return no output.'
+}
+if (@(Format-Phase6SafeTestOutput -Lines @()).Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: empty array Lines must return no output.'
+}
+if (@(Format-Phase6SafeTestOutput -Lines $null).Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: null Lines must return no output.'
+}
+if (@(ConvertTo-Phase6OutputLines -RawOutput '').Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: ConvertTo-Phase6OutputLines must normalize empty string.'
+}
+
 Write-Host ''
 Write-Host 'STATIC_SECURITY_TEST=PASS'
-Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated'
+Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe'
 
 if ($failures.Count -gt 0) {
     Write-Host 'STATIC_SECURITY_TEST=FAIL'

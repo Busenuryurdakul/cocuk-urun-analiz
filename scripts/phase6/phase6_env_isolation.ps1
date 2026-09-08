@@ -91,16 +91,54 @@ function Write-Phase6CredentialCheckpoint {
     Write-Host ("{0}: {1}" -f $Label, $(if ($visible) { 'YES' } else { 'NO' }))
 }
 
+function ConvertTo-Phase6OutputLines {
+    param(
+        [AllowNull()]
+        $RawOutput
+    )
+
+    if ($null -eq $RawOutput) {
+        return @()
+    }
+
+    if ($RawOutput -is [System.Array]) {
+        return @(
+            $RawOutput |
+                ForEach-Object {
+                    if ($null -eq $_) { return }
+                    [string]$_
+                } |
+                Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        )
+    }
+
+    $text = [string]$RawOutput
+    if ([string]::IsNullOrWhiteSpace($text)) {
+        return @()
+    }
+
+    return @(
+        $text -split "`r?`n" |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    )
+}
+
 function Format-Phase6SafeTestOutput {
     param(
-        [Parameter(Mandatory = $true)]
-        [string[]]$Lines,
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]]$Lines = @(),
 
         [int]$MaxLines = 12
     )
 
+    $normalized = ConvertTo-Phase6OutputLines -RawOutput $Lines
+    if ($normalized.Count -eq 0) {
+        return @()
+    }
+
     $safeLines = @()
-    foreach ($line in ($Lines | Select-Object -Last $MaxLines)) {
+    foreach ($line in ($normalized | Select-Object -Last $MaxLines)) {
         $safe = [string]$line
         $safe = [regex]::Replace($safe, '(?i)\bBearer\s+\S+', 'Bearer [REDACTED]')
         $safe = [regex]::Replace($safe, '(?i)\bhf_[A-Za-z0-9]{8,}\b', 'hf_[REDACTED]')
@@ -110,4 +148,30 @@ function Format-Phase6SafeTestOutput {
         $safeLines += $safe
     }
     return $safeLines
+}
+
+function Write-Phase6SafeOutputLines {
+    param(
+        [AllowNull()]
+        $RawOutput,
+
+        [string]$Prefix = '  ',
+        [string]$RootCausePrefix = '  ROOT_CAUSE: '
+    )
+
+    $lines = ConvertTo-Phase6OutputLines -RawOutput $RawOutput
+    if ($lines.Count -eq 0) {
+        return
+    }
+
+    $rootCause = ($lines | Select-String -Pattern 'FAIL:|ERROR:|AssertionError|short test summary|panic:' | Select-Object -Last 1)
+    if ($null -ne $rootCause -and -not [string]::IsNullOrWhiteSpace([string]$rootCause.Line)) {
+        foreach ($line in (Format-Phase6SafeTestOutput -Lines @([string]$rootCause.Line))) {
+            Write-Host ($RootCausePrefix + $line)
+        }
+    }
+
+    foreach ($line in (Format-Phase6SafeTestOutput -Lines $lines)) {
+        Write-Host ($Prefix + $line)
+    }
 }

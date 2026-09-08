@@ -122,7 +122,9 @@ if ($credVisible -and $env:LLM_PRIMARY_MODEL_NAME -and $env:LLM_SECONDARY_MODEL_
         }
         else {
             Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: FAIL'
-            Format-Phase6SafeTestOutput -Lines @($goReal) | ForEach-Object { Write-ValidationLine "  $_" }
+            foreach ($line in (Format-Phase6SafeTestOutput -Lines (ConvertTo-Phase6OutputLines -RawOutput $goReal))) {
+                Write-ValidationLine "  $line"
+            }
         }
     }
     finally {
@@ -155,11 +157,16 @@ try {
         }
         else {
             Write-ValidationLine 'MOCK_CI_REGRESSION: FAIL'
-            $rootCause = ($goMock | Select-String -Pattern 'FAIL:|--- FAIL:|panic:|Error:' | Select-Object -Last 3)
-            if ($rootCause) {
-                Format-Phase6SafeTestOutput -Lines @($rootCause.Line) | ForEach-Object { Write-ValidationLine "  ROOT_CAUSE: $_" }
+            $mockLines = ConvertTo-Phase6OutputLines -RawOutput $goMock
+            $rootMatches = @($mockLines | Select-String -Pattern 'FAIL:|--- FAIL:|panic:|Error:')
+            if ($rootMatches.Count -gt 0) {
+                foreach ($line in (Format-Phase6SafeTestOutput -Lines @([string]$rootMatches[-1].Line))) {
+                    Write-ValidationLine "  ROOT_CAUSE: $line"
+                }
             }
-            Format-Phase6SafeTestOutput -Lines @($goMock) | ForEach-Object { Write-ValidationLine "  $_" }
+            foreach ($line in (Format-Phase6SafeTestOutput -Lines $mockLines)) {
+                Write-ValidationLine "  $line"
+            }
         }
     }
 }
@@ -181,11 +188,16 @@ if (-not $SkipAgent) {
         }
         else {
             Write-ValidationLine 'AGENT_TESTS: FAIL'
-            $pyRoot = ($py | Select-String -Pattern 'FAILED|ERROR|AssertionError|short test summary' | Select-Object -Last 5)
-            if ($pyRoot) {
-                Format-Phase6SafeTestOutput -Lines @($pyRoot.Line) | ForEach-Object { Write-ValidationLine "  ROOT_CAUSE: $_" }
+            $pyLines = ConvertTo-Phase6OutputLines -RawOutput $py
+            $rootMatches = @($pyLines | Select-String -Pattern 'FAILED|ERROR|AssertionError|short test summary')
+            if ($rootMatches.Count -gt 0) {
+                foreach ($line in (Format-Phase6SafeTestOutput -Lines @([string]$rootMatches[-1].Line))) {
+                    Write-ValidationLine "  ROOT_CAUSE: $line"
+                }
             }
-            Format-Phase6SafeTestOutput -Lines @($py) | ForEach-Object { Write-ValidationLine "  $_" }
+            foreach ($line in (Format-Phase6SafeTestOutput -Lines $pyLines)) {
+                Write-ValidationLine "  $line"
+            }
         }
     }
     finally {

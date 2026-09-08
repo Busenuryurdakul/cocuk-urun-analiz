@@ -1,4 +1,5 @@
 import threading
+import time
 from unittest.mock import MagicMock
 
 from miyuna_agent.run_manager import CancelRunPayload, RunManager, StartRunPayload
@@ -14,6 +15,8 @@ def _tool(name: str):
 
 def test_run_manager_starts_lifecycle_thread() -> None:
     go_client = MagicMock()
+    go_client.claim_run_lease.return_value = True
+    go_client.heartbeat_run_lease.return_value = None
     go_client.fetch_run_context.return_value = MagicMock(
         trace_id="trace-1",
         product_id="prod-1",
@@ -84,7 +87,9 @@ def test_run_manager_starts_lifecycle_thread() -> None:
         )
     )
     assert started.wait(timeout=2)
-    threading.Event().wait(0.5)
+    deadline = time.time() + 5
+    while time.time() < deadline and not go_client.finalize_analysis.called:
+        time.sleep(0.05)
     assert go_client.update_run_status.called
     assert go_client.record_event.called
     assert go_client.finalize_analysis.called
