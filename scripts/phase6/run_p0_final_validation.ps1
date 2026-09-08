@@ -12,19 +12,12 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location $repoRoot
 
+$isolationScript = Join-Path $PSScriptRoot 'phase6_env_isolation.ps1'
+. $isolationScript
+
 $verifyScript = Join-Path $PSScriptRoot 'verify_hf_runtime.ps1'
 if (Test-Path $verifyScript) {
     . $verifyScript -Mode Discover
-}
-
-function Test-CredentialVisible {
-    if ([string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
-        return $false
-    }
-    if (Get-Command Test-HfAccessTokenCandidate -ErrorAction SilentlyContinue) {
-        return (Test-HfAccessTokenCandidate -Raw $env:HF_TOKEN)
-    }
-    return $true
 }
 
 function Write-ValidationLine {
@@ -33,7 +26,15 @@ function Write-ValidationLine {
     $script:ReportLines += $Line
 }
 
+function Write-ValidationCheckpoint {
+    param([string]$Label)
+    $visible = Test-Phase6CredentialVisible
+    Write-ValidationLine ("{0}: {1}" -f $Label, $(if ($visible) { 'YES' } else { 'NO' }))
+}
+
 $script:ReportLines = @()
+$script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
+
 $timestamp = (Get-Date).ToUniversalTime().ToString('o')
 Write-ValidationLine "# REAL LLM Final Verification"
 Write-ValidationLine ""
@@ -42,9 +43,7 @@ Write-ValidationLine "branch: $(git branch --show-current 2>$null)"
 Write-ValidationLine "headSha: $(git rev-parse HEAD 2>$null)"
 Write-ValidationLine ""
 
-$credVisible = Test-CredentialVisible
-Write-ValidationLine "HF_TOKEN_VISIBLE: $(if ($credVisible) { 'YES' } else { 'NO' })"
-Write-ValidationLine "TOKEN_EXPOSED: NO"
+Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_BEFORE_STATIC'
 if ($env:LLM_PRIMARY_MODEL_NAME) {
     Write-ValidationLine "PRIMARY_MODEL=$($env:LLM_PRIMARY_MODEL_NAME.Trim())"
 }
@@ -55,18 +54,30 @@ if ($env:LLM_PRIMARY_MODEL_NAME -and $env:LLM_SECONDARY_MODEL_NAME) {
     $modelsDifferent = ($env:LLM_PRIMARY_MODEL_NAME.Trim() -ne $env:LLM_SECONDARY_MODEL_NAME.Trim())
     Write-ValidationLine "MODELS_DIFFERENT: $(if ($modelsDifferent) { 'YES' } else { 'NO' })"
 }
+Write-ValidationLine "TOKEN_EXPOSED: NO"
 Write-ValidationLine ""
 
-# Static Phase 6 script checks (no network)
+# Static Phase 6 script checks (child process — must not mutate parent runtime env)
 Write-Host 'STEP=phase6_static_tests'
 $staticScript = Join-Path $PSScriptRoot 'verify_hf_runtime.static.tests.ps1'
 if (Test-Path $staticScript) {
-    & $staticScript
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $staticScript
+    if ($LASTEXITCODE -ne 0) {
+        throw 'PHASE6_STATIC_TESTS failed'
+    }
+    Restore-Phase6RuntimeEnv $script:RuntimeEnvSnapshot
     Write-ValidationLine 'PHASE6_STATIC_TESTS: PASS'
 }
 else {
     Write-ValidationLine 'PHASE6_STATIC_TESTS: SKIP (script missing)'
 }
+
+Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_AFTER_STATIC'
+Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_BEFORE_HF_VERIFY'
+
+$credVisible = Test-Phase6CredentialVisible
+Write-ValidationLine "HF_TOKEN_VISIBLE: $(if ($credVisible) { 'YES' } else { 'NO' })"
+Write-ValidationLine ""
 
 # Optional HF direct dual-model smoke (requires HF_TOKEN in env)
 $hfStatus = 'IMPLEMENTED_BLOCKED'
@@ -75,6 +86,7 @@ if ($credVisible) {
     Write-Host 'STEP=hf_auto_verification'
     try {
         $null = Invoke-Phase6HfRuntime -Mode Auto -ForceNewToken:$ForceHfPrompt
+        $script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
         $hfStatus = 'PASS'
         $hfBlockReason = ''
         Write-ValidationLine 'REAL_DUAL_LLM_DIRECT_SMOKE: PASS'
@@ -83,6 +95,9 @@ if ($credVisible) {
     }
     catch {
         $safe = $_.Exception.Message
+        if (-not [string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+            $safe = $safe.Replace($env:HF_TOKEN, '[REDACTED]')
+        }
         if ($safe.Length -gt 200) { $safe = $safe.Substring(0, 200) }
         Write-ValidationLine "REAL_DUAL_LLM_DIRECT_SMOKE: FAIL ($safe)"
         $hfStatus = 'FAIL'
@@ -94,39 +109,26 @@ else {
     Write-ValidationLine "BLOCK_REASON: $hfBlockReason"
 }
 
-Write-Host 'STEP=go_mock_regression'
-Push-Location (Join-Path $repoRoot 'apps\api')
-$goMock = & go test ./internal/llm/... ./internal/integration/... ./internal/account/... -count=1 2>&1
-Pop-Location
-$goMockExit = $LASTEXITCODE
-Pop-Location
-if ($goMockExit -eq 0) {
-    Write-ValidationLine 'MOCK_CI_REGRESSION: PASS'
-}
-else {
-    $blocked = ($goMock -match 'Application Control policy has blocked')
-    if ($blocked) {
-        Write-ValidationLine 'GO_LOCAL: IMPLEMENTED_BLOCKED (Windows Application Control)'
-        Write-ValidationLine 'MOCK_CI_REGRESSION: PENDING_CI'
-    }
-    else {
-        Write-ValidationLine 'MOCK_CI_REGRESSION: FAIL'
-    }
-    $goMock | Select-Object -Last 20 | ForEach-Object { Write-ValidationLine "  $_" }
-}
-
-if ($credVisible -and $env:LLM_PRIMARY_MODEL_NAME -and $env:LLM_SECONDARY_MODEL_NAME -and ($env:LLM_PRIMARY_MODEL_NAME -ne $env:LLM_SECONDARY_MODEL_NAME)) {
+$credVisible = Test-Phase6CredentialVisible
+if ($credVisible -and $env:LLM_PRIMARY_MODEL_NAME -and $env:LLM_SECONDARY_MODEL_NAME -and ($env:LLM_PRIMARY_MODEL_NAME.Trim() -ne $env:LLM_SECONDARY_MODEL_NAME.Trim())) {
     Write-Host 'STEP=go_real_llm_tagged'
-    Push-Location (Join-Path $repoRoot 'apps\api')
-    $env:LLM_USE_MOCK = 'false'
-    $goReal = & go test -tags=real_llm ./internal/llm/... ./internal/integration/... -count=1 -timeout 10m 2>&1
-    Pop-Location
-    if ($LASTEXITCODE -eq 0) {
-        Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: PASS'
+    $realSnapshot = Get-Phase6RuntimeEnvSnapshot
+    try {
+        Push-Location (Join-Path $repoRoot 'apps\api')
+        $env:LLM_USE_MOCK = 'false'
+        $goReal = & go test -tags=real_llm ./internal/llm/... ./internal/integration/... -count=1 -timeout 10m -run 'Real' 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: PASS'
+        }
+        else {
+            Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: FAIL'
+            Format-Phase6SafeTestOutput -Lines @($goReal) | ForEach-Object { Write-ValidationLine "  $_" }
+        }
     }
-    else {
-        Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: FAIL'
-        $goReal | Select-Object -Last 20 | ForEach-Object { Write-ValidationLine "  $_" }
+    finally {
+        Pop-Location
+        Restore-Phase6RuntimeEnv $realSnapshot
+        $script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
     }
 }
 else {
@@ -134,16 +136,62 @@ else {
     Write-ValidationLine 'BLOCK_REASON: PROVIDER_CREDENTIAL_OR_DISTINCT_MODELS_NOT_AVAILABLE'
 }
 
-if (-not $SkipAgent) {
-    Write-Host 'STEP=agent_pytest'
-    Push-Location (Join-Path $repoRoot 'apps\agent')
-    $py = & python -m pytest tests/ -q 2>&1
+Write-Host 'STEP=go_mock_regression'
+$mockSnapshot = Get-Phase6RuntimeEnvSnapshot
+try {
+    Set-Phase6MockRegressionEnv
+    Push-Location (Join-Path $repoRoot 'apps\api')
+    $goMock = & go test ./internal/llm/... ./internal/integration/... ./internal/account/... -count=1 2>&1
+    $goMockExit = $LASTEXITCODE
     Pop-Location
-    if ($LASTEXITCODE -eq 0) {
-        Write-ValidationLine 'AGENT_TESTS: PASS'
+    if ($goMockExit -eq 0) {
+        Write-ValidationLine 'MOCK_CI_REGRESSION: PASS'
     }
     else {
-        Write-ValidationLine 'AGENT_TESTS: FAIL'
+        $blocked = ($goMock -match 'Application Control policy has blocked')
+        if ($blocked) {
+            Write-ValidationLine 'GO_LOCAL: IMPLEMENTED_BLOCKED (Windows Application Control)'
+            Write-ValidationLine 'MOCK_CI_REGRESSION: PENDING_CI'
+        }
+        else {
+            Write-ValidationLine 'MOCK_CI_REGRESSION: FAIL'
+            $rootCause = ($goMock | Select-String -Pattern 'FAIL:|--- FAIL:|panic:|Error:' | Select-Object -Last 3)
+            if ($rootCause) {
+                Format-Phase6SafeTestOutput -Lines @($rootCause.Line) | ForEach-Object { Write-ValidationLine "  ROOT_CAUSE: $_" }
+            }
+            Format-Phase6SafeTestOutput -Lines @($goMock) | ForEach-Object { Write-ValidationLine "  $_" }
+        }
+    }
+}
+finally {
+    Pop-Location -ErrorAction SilentlyContinue
+    Restore-Phase6RuntimeEnv $mockSnapshot
+    $script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
+}
+
+if (-not $SkipAgent) {
+    Write-Host 'STEP=agent_pytest'
+    $agentSnapshot = Get-Phase6RuntimeEnvSnapshot
+    try {
+        Set-Phase6AgentTestEnv
+        Push-Location (Join-Path $repoRoot 'apps\agent')
+        $py = & python -m pytest tests/ -q 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-ValidationLine 'AGENT_TESTS: PASS'
+        }
+        else {
+            Write-ValidationLine 'AGENT_TESTS: FAIL'
+            $pyRoot = ($py | Select-String -Pattern 'FAILED|ERROR|AssertionError|short test summary' | Select-Object -Last 5)
+            if ($pyRoot) {
+                Format-Phase6SafeTestOutput -Lines @($pyRoot.Line) | ForEach-Object { Write-ValidationLine "  ROOT_CAUSE: $_" }
+            }
+            Format-Phase6SafeTestOutput -Lines @($py) | ForEach-Object { Write-ValidationLine "  $_" }
+        }
+    }
+    finally {
+        Pop-Location
+        Restore-Phase6RuntimeEnv $agentSnapshot
+        $script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
     }
 }
 

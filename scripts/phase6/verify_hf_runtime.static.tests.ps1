@@ -4,10 +4,24 @@ $ErrorActionPreference = 'Stop'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $TargetScript = Join-Path $ScriptDir 'verify_hf_runtime.ps1'
+$IsolationScript = Join-Path $ScriptDir 'phase6_env_isolation.ps1'
 
 if (-not (Test-Path $TargetScript)) {
     throw "Missing target script: $TargetScript"
 }
+
+if (-not (Test-Path $IsolationScript)) {
+    throw "Missing isolation script: $IsolationScript"
+}
+
+. $IsolationScript
+
+$Script:InitialRuntimeSnapshot = Get-Phase6RuntimeEnvSnapshot
+$Script:HadRealHfToken = -not [string]::IsNullOrWhiteSpace($Script:InitialRuntimeSnapshot['HF_TOKEN'])
+$Script:InitialPrimaryModel = $Script:InitialRuntimeSnapshot['LLM_PRIMARY_MODEL_NAME']
+$Script:InitialSecondaryModel = $Script:InitialRuntimeSnapshot['LLM_SECONDARY_MODEL_NAME']
+
+try {
 
 $source = Get-Content -Path $TargetScript -Raw -Encoding UTF8
 $failures = New-Object System.Collections.Generic.List[string]
@@ -280,7 +294,7 @@ if ($headers.Authorization -match "[\r\n]") {
 }
 
 # Env propagation: valid token in $env:HF_TOKEN must be reused without prompting.
-$previousEnvToken = $env:HF_TOKEN
+$tokenSnapshot = Get-Phase6RuntimeEnvSnapshot
 $env:HF_TOKEN = $Script:SyntheticHfToken
 try {
     $resolved = Resolve-HfSessionTokenFromEnv
@@ -297,16 +311,10 @@ try {
     }
 }
 finally {
-    if ($null -eq $previousEnvToken) {
-        Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
-    }
-    else {
-        $env:HF_TOKEN = $previousEnvToken
-    }
+    Restore-Phase6RuntimeEnv $tokenSnapshot
 }
 
-$previousPrimary = $env:LLM_PRIMARY_MODEL_NAME
-$previousSecondary = $env:LLM_SECONDARY_MODEL_NAME
+$modelSnapshot = Get-Phase6RuntimeEnvSnapshot
 $env:LLM_PRIMARY_MODEL_NAME = ' org/model-primary '
 $env:LLM_SECONDARY_MODEL_NAME = ' org/model-secondary '
 try {
@@ -319,10 +327,10 @@ try {
     }
 }
 finally {
-    if ($null -eq $previousPrimary) { Remove-Item Env:LLM_PRIMARY_MODEL_NAME -ErrorAction SilentlyContinue } else { $env:LLM_PRIMARY_MODEL_NAME = $previousPrimary }
-    if ($null -eq $previousSecondary) { Remove-Item Env:LLM_SECONDARY_MODEL_NAME -ErrorAction SilentlyContinue } else { $env:LLM_SECONDARY_MODEL_NAME = $previousSecondary }
+    Restore-Phase6RuntimeEnv $modelSnapshot
 }
 
+$emptyTokenSnapshot = Get-Phase6RuntimeEnvSnapshot
 $env:HF_TOKEN = '   '
 try {
     if (Test-HfAccessTokenCandidate -Raw $env:HF_TOKEN) {
@@ -342,9 +350,10 @@ try {
     }
 }
 finally {
-    Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+    Restore-Phase6RuntimeEnv $emptyTokenSnapshot
 }
 
+$invalidTokenSnapshot = Get-Phase6RuntimeEnvSnapshot
 $env:HF_TOKEN = 'not_a_hf_token'
 try {
     $null = Resolve-HfSessionTokenFromEnv
@@ -356,9 +365,10 @@ catch {
     }
 }
 finally {
-    Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+    Restore-Phase6RuntimeEnv $invalidTokenSnapshot
 }
 
+$printTokenSnapshot = Get-Phase6RuntimeEnvSnapshot
 $env:HF_TOKEN = $Script:SyntheticHfToken
 try {
     $hostOut = & {
@@ -369,7 +379,7 @@ try {
     }
 }
 finally {
-    Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+    Restore-Phase6RuntimeEnv $printTokenSnapshot
 }
 
 $p0SourcePath = Join-Path $ScriptDir 'run_p0_final_validation.ps1'
@@ -378,9 +388,61 @@ if (Test-Path $p0SourcePath) {
     if ($p0Source -match 'powershell(\.exe)?\s+.*verify_hf_runtime') {
         Add-Failure 'Parent validation must not spawn child PowerShell for HF verification.'
     }
-    if ($p0Source -notmatch 'Test-HfAccessTokenCandidate') {
+    if ($p0Source -notmatch 'Test-Phase6CredentialVisible|Test-HfAccessTokenCandidate') {
         Add-Failure 'Parent validation must validate HF_TOKEN format, not only whitespace.'
     }
+    if ($p0Source -notmatch 'Get-Phase6RuntimeEnvSnapshot') {
+        Add-Failure 'Parent validation must snapshot runtime env before isolated stages.'
+    }
+    if ($p0Source -notmatch 'Set-Phase6MockRegressionEnv') {
+        Add-Failure 'Parent validation must isolate mock regression env from real model env.'
+    }
+    if ($p0Source -notmatch 'Set-Phase6AgentTestEnv') {
+        Add-Failure 'Parent validation must isolate agent pytest env.'
+    }
+    if ($p0Source -notmatch 'HF_TOKEN_VISIBLE_AFTER_STATIC') {
+        Add-Failure 'Parent validation must checkpoint HF token visibility after static tests.'
+    }
+}
+
+$isolationSourcePath = Join-Path $ScriptDir 'phase6_env_isolation.ps1'
+if (Test-Path $isolationSourcePath) {
+    $isolationSource = Get-Content -Path $isolationSourcePath -Raw -Encoding UTF8
+    if ($isolationSource -notmatch 'function Set-Phase6MockRegressionEnv') {
+        Add-Failure 'Mock regression env isolation helper must exist.'
+    }
+    if ($isolationSource -match 'Write-Host\s+\$env:HF_TOKEN|Write-Output\s+\$env:HF_TOKEN') {
+        Add-Failure 'Isolation helper must not print HF_TOKEN.'
+    }
+}
+
+$mockSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:LLM_PRIMARY_MODEL_NAME = 'Qwen/Qwen3-0.6B'
+$env:LLM_SECONDARY_MODEL_NAME = 'Qwen/Qwen2.5-0.5B-Instruct'
+try {
+    Set-Phase6MockRegressionEnv
+    if ($env:LLM_PRIMARY_MODEL_NAME -eq 'Qwen/Qwen3-0.6B') {
+        Add-Failure 'MOCK_REGRESSION_ISOLATED_FROM_REAL_MODEL_ENV: mock env must replace HF primary model.'
+    }
+    if ($env:LLM_PRIMARY_MODEL_NAME -ne 'llama3.2:latest') {
+        Add-Failure 'OLLAMA_TEST_NOT_USING_HF_PRIMARY_MODEL: mock regression must use canonical Ollama model name.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $mockSnapshot
+}
+
+$agentSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:LLM_PRIMARY_MODEL_NAME = 'Qwen/Qwen3-0.6B'
+$env:LLM_SECONDARY_MODEL_NAME = 'Qwen/Qwen2.5-0.5B-Instruct'
+try {
+    Set-Phase6AgentTestEnv
+    if ($env:LLM_PRIMARY_MODEL_NAME -or $env:LLM_SECONDARY_MODEL_NAME) {
+        Add-Failure 'AGENT_TEST_ENV_ISOLATED: agent stage must clear real HF model env vars.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $agentSnapshot
 }
 
 # Mock HTTP layer: ensure Authorization header is built but never returned in result objects
@@ -399,7 +461,7 @@ if ($mockJson -match 'Authorization') {
 
 Write-Host ''
 Write-Host 'STATIC_SECURITY_TEST=PASS'
-Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line'
+Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated'
 
 if ($failures.Count -gt 0) {
     Write-Host 'STATIC_SECURITY_TEST=FAIL'
@@ -407,6 +469,43 @@ if ($failures.Count -gt 0) {
         Write-Host ('FAIL: ' + $failure)
     }
     exit 1
+}
+
+}
+finally {
+    Restore-Phase6RuntimeEnv $Script:InitialRuntimeSnapshot
+
+    if ($Script:HadRealHfToken -and [string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+        Write-Host 'STATIC_TESTS_RESTORE_HF_TOKEN: FAIL'
+        exit 1
+    }
+
+    if ($null -ne $Script:InitialPrimaryModel) {
+        if ([string]$env:LLM_PRIMARY_MODEL_NAME -ne [string]$Script:InitialPrimaryModel) {
+            Write-Host 'STATIC_TESTS_RESTORE_PRIMARY_MODEL: FAIL'
+            exit 1
+        }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($env:LLM_PRIMARY_MODEL_NAME)) {
+        Write-Host 'STATIC_TESTS_RESTORE_PRIMARY_MODEL: FAIL'
+        exit 1
+    }
+
+    if ($null -ne $Script:InitialSecondaryModel) {
+        if ([string]$env:LLM_SECONDARY_MODEL_NAME -ne [string]$Script:InitialSecondaryModel) {
+            Write-Host 'STATIC_TESTS_RESTORE_SECONDARY_MODEL: FAIL'
+            exit 1
+        }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($env:LLM_SECONDARY_MODEL_NAME)) {
+        Write-Host 'STATIC_TESTS_RESTORE_SECONDARY_MODEL: FAIL'
+        exit 1
+    }
+
+    Write-Host 'STATIC_TESTS_DO_NOT_CLEAR_REAL_ENV: PASS'
+    Write-Host 'STATIC_TESTS_RESTORE_HF_TOKEN: PASS'
+    Write-Host 'STATIC_TESTS_RESTORE_PRIMARY_MODEL: PASS'
+    Write-Host 'STATIC_TESTS_RESTORE_SECONDARY_MODEL: PASS'
 }
 
 exit 0
