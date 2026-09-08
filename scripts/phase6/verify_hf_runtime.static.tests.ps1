@@ -96,8 +96,28 @@ if ($source -notmatch 'HF_TOKEN_FORMAT_INVALID') {
     Add-Failure 'Invalid token format rejection must exist.'
 }
 
-if ($source -notmatch 'function Sanitize-HfAccessTokenRaw') {
-    Add-Failure 'Token sanitization helper must exist.'
+if ($source -notmatch 'function Resolve-HfSessionTokenFromEnv') {
+    Add-Failure 'Env token resolver must exist for session reuse.'
+}
+
+if ($source -notmatch 'HF_TOKEN_SESSION_REUSED') {
+    Add-Failure 'Existing env token reuse marker must exist.'
+}
+
+if ($source -notmatch 'ENV_PRIMARY_MODEL_PRESERVED') {
+    Add-Failure 'Preset primary model preservation marker must exist.'
+}
+
+if ($source -notmatch 'ENV_SECONDARY_MODEL_PRESERVED') {
+    Add-Failure 'Preset secondary model preservation marker must exist.'
+}
+
+if ($source -match 'powershell(\.exe)?\s+.*HF_TOKEN|powershell(\.exe)?\s+.*-Token\s+hf_') {
+    Add-Failure 'HF token must not be passed on child PowerShell command lines.'
+}
+
+if ($source -notmatch 'function Get-PresetHfModelPair') {
+    Add-Failure 'Preset model pair helper must exist.'
 }
 
 if ($source -notmatch 'function New-HfAuthorizationHeaders') {
@@ -259,6 +279,110 @@ if ($headers.Authorization -match "[\r\n]") {
     Add-Failure 'Authorization header must not contain newline characters.'
 }
 
+# Env propagation: valid token in $env:HF_TOKEN must be reused without prompting.
+$previousEnvToken = $env:HF_TOKEN
+$env:HF_TOKEN = $Script:SyntheticHfToken
+try {
+    $resolved = Resolve-HfSessionTokenFromEnv
+    if ($resolved -ne $Script:SyntheticHfToken) {
+        Add-Failure 'ENV_TOKEN_PRESENT_PRESERVED: normalized env token must match fixture.'
+    }
+    if ($env:HF_TOKEN -ne $Script:SyntheticHfToken) {
+        Add-Failure 'ENV_TOKEN_PRESENT_PRESERVED: env HF_TOKEN must remain normalized fixture.'
+    }
+
+    $sessionToken = Initialize-HfSessionToken
+    if ($sessionToken -ne $Script:SyntheticHfToken) {
+        Add-Failure 'ENV_TOKEN_PRESENT_DOES_NOT_PROMPT: Initialize-HfSessionToken must return env token.'
+    }
+}
+finally {
+    if ($null -eq $previousEnvToken) {
+        Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:HF_TOKEN = $previousEnvToken
+    }
+}
+
+$previousPrimary = $env:LLM_PRIMARY_MODEL_NAME
+$previousSecondary = $env:LLM_SECONDARY_MODEL_NAME
+$env:LLM_PRIMARY_MODEL_NAME = ' org/model-primary '
+$env:LLM_SECONDARY_MODEL_NAME = ' org/model-secondary '
+try {
+    $pair = Get-PresetHfModelPair
+    if ($null -eq $pair) {
+        Add-Failure 'ENV_PRIMARY_MODEL_PRESERVED: preset pair must resolve when both env vars are set.'
+    }
+    elseif ($pair.Primary -ne 'org/model-primary' -or $pair.Secondary -ne 'org/model-secondary') {
+        Add-Failure 'ENV model env vars must be trimmed, not overwritten with empty values.'
+    }
+}
+finally {
+    if ($null -eq $previousPrimary) { Remove-Item Env:LLM_PRIMARY_MODEL_NAME -ErrorAction SilentlyContinue } else { $env:LLM_PRIMARY_MODEL_NAME = $previousPrimary }
+    if ($null -eq $previousSecondary) { Remove-Item Env:LLM_SECONDARY_MODEL_NAME -ErrorAction SilentlyContinue } else { $env:LLM_SECONDARY_MODEL_NAME = $previousSecondary }
+}
+
+$env:HF_TOKEN = '   '
+try {
+    if (Test-HfAccessTokenCandidate -Raw $env:HF_TOKEN) {
+        Add-Failure 'EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: whitespace-only env token must be rejected.'
+    }
+    if ($null -ne (Resolve-HfSessionTokenFromEnv)) {
+        Add-Failure 'EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: whitespace-only env token must not resolve.'
+    }
+    try {
+        $null = Normalize-HfAccessToken -Token $env:HF_TOKEN
+        Add-Failure 'EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: whitespace-only env token must throw on normalize.'
+    }
+    catch {
+        if ($_.Exception.Message -ne 'HF_TOKEN_EMPTY') {
+            Add-Failure ('EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: unexpected error ' + $_.Exception.Message)
+        }
+    }
+}
+finally {
+    Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+}
+
+$env:HF_TOKEN = 'not_a_hf_token'
+try {
+    $null = Resolve-HfSessionTokenFromEnv
+    Add-Failure 'Invalid non-empty env token must not resolve silently.'
+}
+catch {
+    if ($_.Exception.Message -ne 'HF_TOKEN_FORMAT_INVALID') {
+        Add-Failure ('Invalid env token must throw HF_TOKEN_FORMAT_INVALID: ' + $_.Exception.Message)
+    }
+}
+finally {
+    Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+}
+
+$env:HF_TOKEN = $Script:SyntheticHfToken
+try {
+    $hostOut = & {
+        $null = Initialize-HfSessionToken
+    } 2>&1 | Out-String
+    if ($hostOut -match [regex]::Escape($Script:SyntheticHfToken)) {
+        Add-Failure 'TOKEN_NOT_PRINTED: synthetic fixture token must never appear in stdout/stderr.'
+    }
+}
+finally {
+    Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+}
+
+$p0SourcePath = Join-Path $ScriptDir 'run_p0_final_validation.ps1'
+if (Test-Path $p0SourcePath) {
+    $p0Source = Get-Content -Path $p0SourcePath -Raw -Encoding UTF8
+    if ($p0Source -match 'powershell(\.exe)?\s+.*verify_hf_runtime') {
+        Add-Failure 'Parent validation must not spawn child PowerShell for HF verification.'
+    }
+    if ($p0Source -notmatch 'Test-HfAccessTokenCandidate') {
+        Add-Failure 'Parent validation must validate HF_TOKEN format, not only whitespace.'
+    }
+}
+
 # Mock HTTP layer: ensure Authorization header is built but never returned in result objects
 $mockToken = 'mock-token-value-not-real'
 $mockResponse = Invoke-HfOpenAIRequest -Method GET -Uri 'http://127.0.0.1:9/unreachable-mock-endpoint' -Token $mockToken -TimeoutSec 1
@@ -275,7 +399,7 @@ if ($mockJson -match 'Authorization') {
 
 Write-Host ''
 Write-Host 'STATIC_SECURITY_TEST=PASS'
-Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak'
+Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line'
 
 if ($failures.Count -gt 0) {
     Write-Host 'STATIC_SECURITY_TEST=FAIL'

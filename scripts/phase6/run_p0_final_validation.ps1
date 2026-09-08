@@ -12,8 +12,19 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location $repoRoot
 
+$verifyScript = Join-Path $PSScriptRoot 'verify_hf_runtime.ps1'
+if (Test-Path $verifyScript) {
+    . $verifyScript -Mode Discover
+}
+
 function Test-CredentialVisible {
-    return -not [string]::IsNullOrWhiteSpace($env:HF_TOKEN)
+    if ([string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+        return $false
+    }
+    if (Get-Command Test-HfAccessTokenCandidate -ErrorAction SilentlyContinue) {
+        return (Test-HfAccessTokenCandidate -Raw $env:HF_TOKEN)
+    }
+    return $true
 }
 
 function Write-ValidationLine {
@@ -34,6 +45,16 @@ Write-ValidationLine ""
 $credVisible = Test-CredentialVisible
 Write-ValidationLine "HF_TOKEN_VISIBLE: $(if ($credVisible) { 'YES' } else { 'NO' })"
 Write-ValidationLine "TOKEN_EXPOSED: NO"
+if ($env:LLM_PRIMARY_MODEL_NAME) {
+    Write-ValidationLine "PRIMARY_MODEL=$($env:LLM_PRIMARY_MODEL_NAME.Trim())"
+}
+if ($env:LLM_SECONDARY_MODEL_NAME) {
+    Write-ValidationLine "SECONDARY_MODEL=$($env:LLM_SECONDARY_MODEL_NAME.Trim())"
+}
+if ($env:LLM_PRIMARY_MODEL_NAME -and $env:LLM_SECONDARY_MODEL_NAME) {
+    $modelsDifferent = ($env:LLM_PRIMARY_MODEL_NAME.Trim() -ne $env:LLM_SECONDARY_MODEL_NAME.Trim())
+    Write-ValidationLine "MODELS_DIFFERENT: $(if ($modelsDifferent) { 'YES' } else { 'NO' })"
+}
 Write-ValidationLine ""
 
 # Static Phase 6 script checks (no network)
@@ -53,8 +74,6 @@ $hfBlockReason = 'PROVIDER_CREDENTIAL_NOT_AVAILABLE'
 if ($credVisible) {
     Write-Host 'STEP=hf_auto_verification'
     try {
-        $verifyScript = Join-Path $PSScriptRoot 'verify_hf_runtime.ps1'
-        . $verifyScript -Mode Auto
         $null = Invoke-Phase6HfRuntime -Mode Auto -ForceNewToken:$ForceHfPrompt
         $hfStatus = 'PASS'
         $hfBlockReason = ''

@@ -301,14 +301,38 @@ function Request-HfAccessTokenInteractive {
     return $token
 }
 
+function Resolve-HfSessionTokenFromEnv {
+    if ([string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+        return $null
+    }
+
+    if (-not (Test-HfAccessTokenCandidate -Raw $env:HF_TOKEN)) {
+        throw 'HF_TOKEN_FORMAT_INVALID'
+    }
+
+    $normalized = Normalize-HfAccessToken -Token $env:HF_TOKEN
+    $env:HF_TOKEN = $normalized
+    return $normalized
+}
+
 function Initialize-HfSessionToken {
     param(
         [switch]$ForcePrompt
     )
 
-    if (-not $ForcePrompt -and (Test-HfAccessTokenCandidate -Raw $env:HF_TOKEN)) {
-        Write-Host 'HF_TOKEN_SESSION_REUSED'
-        return Normalize-HfAccessToken -Token $env:HF_TOKEN
+    if (-not $ForcePrompt) {
+        $fromEnv = Resolve-HfSessionTokenFromEnv
+        if ($null -ne $fromEnv) {
+            Write-Host 'HF_TOKEN_SESSION_REUSED'
+            return $fromEnv
+        }
+
+        $clipboardToken = Get-HfAccessTokenFromClipboard
+        if (-not [string]::IsNullOrWhiteSpace($clipboardToken)) {
+            Write-Host 'HF_TOKEN_CLIPBOARD_REUSED (value not logged)'
+            $env:HF_TOKEN = $clipboardToken
+            return $clipboardToken
+        }
     }
 
     return Request-HfAccessTokenInteractive
@@ -321,19 +345,25 @@ function Get-HfAccessToken {
     )
 
     if ($Source -eq 'PromptOnly') {
-        return Initialize-HfSessionToken
+        return Initialize-HfSessionToken -ForcePrompt
     }
 
-    $existing = $env:HF_TOKEN
-    if (-not [string]::IsNullOrWhiteSpace($existing)) {
-        return Normalize-HfAccessToken -Token $existing
+    try {
+        $fromEnv = Resolve-HfSessionTokenFromEnv
+        if ($null -ne $fromEnv) {
+            Write-Host 'HF_TOKEN_SESSION_REUSED'
+            return $fromEnv
+        }
+    }
+    catch {
+        throw
     }
 
     Write-Host 'HF_TOKEN not found in the current process environment.'
 
     $clipboardToken = Get-HfAccessTokenFromClipboard
     if (-not [string]::IsNullOrWhiteSpace($clipboardToken)) {
-        Write-Host 'Using Hugging Face token extracted from clipboard (value not logged).'
+        Write-Host 'HF_TOKEN_CLIPBOARD_REUSED (value not logged)'
         $env:HF_TOKEN = $clipboardToken
         return $clipboardToken
     }
@@ -1045,6 +1075,27 @@ function Write-AutoVerificationReport {
     Write-Host 'TOKEN_EXPOSED=NO'
 }
 
+function Get-PresetHfModelPair {
+    $primary = [string]$env:LLM_PRIMARY_MODEL_NAME
+    $secondary = [string]$env:LLM_SECONDARY_MODEL_NAME
+
+    if ([string]::IsNullOrWhiteSpace($primary) -or [string]::IsNullOrWhiteSpace($secondary)) {
+        return $null
+    }
+
+    $primary = $primary.Trim()
+    $secondary = $secondary.Trim()
+
+    if ($primary -eq $secondary) {
+        throw 'PRESET_MODELS_MUST_DIFFER'
+    }
+
+    return [pscustomobject]@{
+        Primary   = $primary
+        Secondary = $secondary
+    }
+}
+
 function Invoke-AutoVerification {
     param(
         [switch]$ForceNewToken
@@ -1057,17 +1108,50 @@ function Invoke-AutoVerification {
 
     $token = Initialize-HfSessionToken -ForcePrompt:$ForceNewToken
 
-    Write-Host ''
-    Write-Host 'STEP=Discover'
-    $candidates = Get-HfChatModelCandidates -Token $token
-    if ($candidates.Count -eq 0) {
-        throw 'No chat-compatible models were returned by the Hugging Face models endpoint.'
-    }
-    Write-DiscoverReport -Candidates $candidates
+    $candidates = @()
+    $verifyOutcome = $null
+    $preset = Get-PresetHfModelPair
 
-    Write-Host ''
-    Write-Host 'STEP=Verify'
-    $verifyOutcome = Invoke-HfDualModelVerificationWithFallback -Token $token -Candidates $candidates
+    if ($null -ne $preset) {
+        Write-Host ''
+        Write-Host 'STEP=VerifyPreset'
+        Write-Host ('ENV_PRIMARY_MODEL_PRESERVED={0}' -f $preset.Primary)
+        Write-Host ('ENV_SECONDARY_MODEL_PRESERVED={0}' -f $preset.Secondary)
+
+        $primaryResult = Invoke-HfChatSmokeTest -Token $token -ModelId $preset.Primary
+        $secondaryResult = Invoke-HfChatSmokeTest -Token $token -ModelId $preset.Secondary
+
+        if ($primaryResult.Health -eq 'PASS' -and $secondaryResult.Health -eq 'PASS') {
+            $verifyOutcome = [pscustomobject]@{
+                PrimaryResult = $primaryResult
+                SecondaryResult = $secondaryResult
+                PairAttempts    = 1
+            }
+        }
+        else {
+            Write-Host 'PRESET_MODELS_SMOKE_FAILED — falling back to discovery'
+            if ($primaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$primaryResult.ErrorClass)) {
+                Write-Host ('PRIMARY_SMOKE_FAILED errorClass={0}' -f $primaryResult.ErrorClass)
+            }
+            if ($secondaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$secondaryResult.ErrorClass)) {
+                Write-Host ('SECONDARY_SMOKE_FAILED errorClass={0}' -f $secondaryResult.ErrorClass)
+            }
+        }
+    }
+
+    if ($null -eq $verifyOutcome) {
+        Write-Host ''
+        Write-Host 'STEP=Discover'
+        $candidates = Get-HfChatModelCandidates -Token $token
+        if ($candidates.Count -eq 0) {
+            throw 'No chat-compatible models were returned by the Hugging Face models endpoint.'
+        }
+        Write-DiscoverReport -Candidates $candidates
+
+        Write-Host ''
+        Write-Host 'STEP=Verify'
+        $verifyOutcome = Invoke-HfDualModelVerificationWithFallback -Token $token -Candidates $candidates
+    }
 
     Write-Host ''
     Write-Host 'STEP=ConfigureMiyunaRuntime'
