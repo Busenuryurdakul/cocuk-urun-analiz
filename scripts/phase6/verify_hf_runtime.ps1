@@ -769,9 +769,13 @@ function Test-HfRepositoryModelIdAllowed {
 
 function Get-HfRepositoryModelKey {
     param(
-        [Parameter(Mandatory = $true)]
+        [AllowNull()]
         [string]$ModelId
     )
+
+    if ([string]::IsNullOrWhiteSpace($ModelId)) {
+        return ''
+    }
 
     $normalized = $ModelId.Trim()
     if ($normalized.Contains(':')) {
@@ -789,16 +793,16 @@ function Get-HfInferenceProviderMappingsFromEntry {
 
     $mappings = New-Object System.Collections.Generic.List[object]
     if ($null -eq $ModelEntry) {
-        return @()
+        return ,@()
     }
 
     if ($ModelEntry.PSObject.Properties.Name -notcontains 'inferenceProviderMapping') {
-        return @()
+        return ,@()
     }
 
     $raw = $ModelEntry.inferenceProviderMapping
     if ($null -eq $raw) {
-        return @()
+        return ,@()
     }
 
     foreach ($prop in $raw.PSObject.Properties) {
@@ -865,11 +869,15 @@ function Test-HfProviderMappingEligible {
 
 function Select-HfBestProviderMapping {
     param(
-        [Parameter(Mandatory = $true)]
+        [AllowNull()]
         [array]$Mappings
     )
 
-    $eligible = @($Mappings | Where-Object { Test-HfProviderMappingEligible -Mapping $_ -AllowWarmFallback })
+    if ($null -eq $Mappings -or @($Mappings).Count -eq 0) {
+        return $null
+    }
+
+    $eligible = @($Mappings | Where-Object { $null -ne $_ } | Where-Object { Test-HfProviderMappingEligible -Mapping $_ -AllowWarmFallback })
     if ($eligible.Count -eq 0) {
         return $null
     }
@@ -886,11 +894,112 @@ function Select-HfBestProviderMapping {
     } | Select-Object -First 1)
 }
 
+function Test-HfProviderBackedCandidateValid {
+    param(
+        [AllowNull()]
+        $Candidate
+    )
+
+    if ($null -eq $Candidate) {
+        return $false
+    }
+
+    $modelId = ''
+    if ($Candidate.PSObject.Properties.Name -contains 'repositoryModelId') {
+        $modelId = [string]$Candidate.repositoryModelId
+    }
+    if ([string]::IsNullOrWhiteSpace($modelId) -and $Candidate.PSObject.Properties.Name -contains 'modelId') {
+        $modelId = [string]$Candidate.modelId
+    }
+
+    $modelId = Get-HfRepositoryModelKey -ModelId $modelId
+    if ([string]::IsNullOrWhiteSpace($modelId)) {
+        return $false
+    }
+
+    if (-not (Test-HfRepositoryModelIdAllowed -ModelId $modelId)) {
+        return $false
+    }
+
+    if ($Candidate.PSObject.Properties.Name -contains 'providerBacked' -and -not [bool]$Candidate.providerBacked) {
+        return $false
+    }
+
+    if ($Candidate.PSObject.Properties.Name -contains 'provider' -and [string]::IsNullOrWhiteSpace([string]$Candidate.provider)) {
+        return $false
+    }
+
+    return $true
+}
+
+function ConvertTo-HfSafeModelEntryArray {
+    param(
+        [AllowNull()]
+        $Items
+    )
+
+    if ($null -eq $Items) {
+        return ,@()
+    }
+
+    $raw = if ($Items -is [System.Collections.Generic.List[object]]) {
+        @($Items.ToArray())
+    }
+    elseif ($Items -is [System.Array]) {
+        @($Items)
+    }
+    else {
+        ,@($Items)
+    }
+
+    $safe = @(
+        $raw |
+            Where-Object { $null -ne $_ } |
+            Where-Object {
+                -not [string]::IsNullOrWhiteSpace((Get-HfModelIdFromEntry -ModelEntry $_))
+            }
+    )
+
+    return ,@($safe)
+}
+
+function ConvertTo-HfSafeDiscoveryCandidateArray {
+    param(
+        [AllowNull()]
+        $Candidates
+    )
+
+    if ($null -eq $Candidates) {
+        return ,@()
+    }
+
+    $raw = if ($Candidates -is [System.Collections.Generic.List[object]]) {
+        @($Candidates.ToArray())
+    }
+    elseif ($Candidates -is [System.Array]) {
+        @($Candidates)
+    }
+    else {
+        @($Candidates)
+    }
+
+    $safe = @(
+        $raw |
+            Where-Object { Test-HfProviderBackedCandidateValid -Candidate $_ }
+    )
+
+    return ,@($safe)
+}
+
 function New-HfProviderBackedCandidateFromEntry {
     param(
-        [Parameter(Mandatory = $true)]
+        [AllowNull()]
         $ModelEntry
     )
+
+    if ($null -eq $ModelEntry) {
+        return $null
+    }
 
     $repositoryModelId = Get-HfRepositoryModelKey -ModelId (Get-HfModelIdFromEntry -ModelEntry $ModelEntry)
     if (-not (Test-HfRepositoryModelIdAllowed -ModelId $repositoryModelId)) {
@@ -943,11 +1052,11 @@ function Add-HfProviderBackedCandidate {
         [Parameter(Mandatory = $true)]
         [hashtable]$SeenRepositoryIds,
 
-        [Parameter(Mandatory = $true)]
+        [AllowNull()]
         $Candidate
     )
 
-    if ($null -eq $Candidate) {
+    if (-not (Test-HfProviderBackedCandidateValid -Candidate $Candidate)) {
         return
     }
 
@@ -962,6 +1071,30 @@ function Add-HfProviderBackedCandidate {
 
     $SeenRepositoryIds[$repoKey] = $true
     [void]$CandidatesList.Add($Candidate)
+}
+
+function Try-AddHfProviderBackedCandidateFromEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        $CandidatesList,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable]$SeenRepositoryIds,
+
+        [AllowNull()]
+        $ModelEntry
+    )
+
+    if ($null -eq $ModelEntry) {
+        return
+    }
+
+    $candidate = New-HfProviderBackedCandidateFromEntry -ModelEntry $ModelEntry
+    if (-not (Test-HfProviderBackedCandidateValid -Candidate $candidate)) {
+        return
+    }
+
+    Add-HfProviderBackedCandidate -CandidatesList $CandidatesList -SeenRepositoryIds $SeenRepositoryIds -Candidate $candidate
 }
 
 function Get-HfHubModelInfo {
@@ -998,19 +1131,28 @@ function Get-HfHubProviderBackedCandidates {
             continue
         }
 
-        $parsed = $response.Content | ConvertFrom-Json
-        $items = Get-HfModelsFromDiscoveryPayload -Parsed $parsed
+        if ([string]::IsNullOrWhiteSpace([string]$response.Content)) {
+            continue
+        }
+
+        try {
+            $parsed = $response.Content | ConvertFrom-Json
+        }
+        catch {
+            continue
+        }
+
+        $items = ConvertTo-HfSafeModelEntryArray -Items (Get-HfModelsFromDiscoveryPayload -Parsed $parsed)
         foreach ($entry in $items) {
             if ($candidates.Count -ge $Script:MaxDiscoverCandidates) {
                 break
             }
 
-            $candidate = New-HfProviderBackedCandidateFromEntry -ModelEntry $entry
-            Add-HfProviderBackedCandidate -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
+            Try-AddHfProviderBackedCandidateFromEntry -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -ModelEntry $entry
         }
     }
 
-    return $candidates
+    return (ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $candidates)
 }
 
 function Get-HfRouterFallbackCandidates {
@@ -1029,8 +1171,18 @@ function Get-HfRouterFallbackCandidates {
         return $candidates
     }
 
-    $parsed = $response.Content | ConvertFrom-Json
-    $items = Get-HfModelsFromDiscoveryPayload -Parsed $parsed
+    if ([string]::IsNullOrWhiteSpace([string]$response.Content)) {
+        return (ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $candidates)
+    }
+
+    try {
+        $parsed = $response.Content | ConvertFrom-Json
+    }
+    catch {
+        return (ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $candidates)
+    }
+
+    $items = ConvertTo-HfSafeModelEntryArray -Items (Get-HfModelsFromDiscoveryPayload -Parsed $parsed)
     $lookups = 0
 
     foreach ($entry in $items) {
@@ -1055,12 +1207,47 @@ function Get-HfRouterFallbackCandidates {
             continue
         }
 
-        $hubEntry = $hubResponse.Content | ConvertFrom-Json
-        $candidate = New-HfProviderBackedCandidateFromEntry -ModelEntry $hubEntry
-        Add-HfProviderBackedCandidate -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
+        if ([string]::IsNullOrWhiteSpace([string]$hubResponse.Content)) {
+            continue
+        }
+
+        try {
+            $hubEntry = $hubResponse.Content | ConvertFrom-Json
+        }
+        catch {
+            continue
+        }
+
+        Try-AddHfProviderBackedCandidateFromEntry -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -ModelEntry $hubEntry
     }
 
-    return $candidates
+    return (ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $candidates)
+}
+
+function Merge-HfProviderBackedCandidates {
+    param(
+        [AllowNull()]
+        $PrimaryCandidates,
+
+        [AllowNull()]
+        $SecondaryCandidates
+    )
+
+    $merged = New-Object System.Collections.Generic.List[object]
+    $seenRepositoryIds = @{}
+
+    foreach ($candidate in (ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $PrimaryCandidates)) {
+        Add-HfProviderBackedCandidate -CandidatesList $merged -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
+    }
+
+    foreach ($candidate in (ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $SecondaryCandidates)) {
+        if ($merged.Count -ge $Script:MaxDiscoverCandidates) {
+            break
+        }
+        Add-HfProviderBackedCandidate -CandidatesList $merged -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
+    }
+
+    return (ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $merged)
 }
 
 function Get-HfChatModelCandidates {
@@ -1069,27 +1256,21 @@ function Get-HfChatModelCandidates {
         [string]$Token
     )
 
-    $candidates = Get-HfHubProviderBackedCandidates -Token $Token
-    if ($candidates.Count -lt 2) {
-        $fallback = Get-HfRouterFallbackCandidates -Token $Token
-        $seenRepositoryIds = @{}
-        foreach ($existing in $candidates) {
-            $seenRepositoryIds[(Get-HfRepositoryModelKey -ModelId ([string]$existing.repositoryModelId))] = $true
-        }
-        foreach ($candidate in $fallback) {
-            if ($candidates.Count -ge $Script:MaxDiscoverCandidates) {
-                break
-            }
-            Add-HfProviderBackedCandidate -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
-        }
+    $hubCandidates = Get-HfHubProviderBackedCandidates -Token $Token
+    $candidates = $hubCandidates
+
+    if ($null -eq $candidates -or $candidates.Count -lt 2) {
+        $fallbackCandidates = Get-HfRouterFallbackCandidates -Token $Token
+        $candidates = Merge-HfProviderBackedCandidates -PrimaryCandidates $hubCandidates -SecondaryCandidates $fallbackCandidates
     }
 
-    if ($candidates.Count -eq 0) {
-        throw 'No live provider-backed conversational models were returned by Hugging Face Hub discovery.'
+    if ($null -eq $candidates -or $candidates.Count -eq 0) {
+        Write-Host 'DISCOVERY_CANDIDATES=0'
+        throw 'NO_PROVIDER_BACKED_CANDIDATES'
     }
 
-    $normalized = ConvertTo-HfCandidateArray -Candidates $candidates
-    return ,@($normalized)
+    Write-Host ('DISCOVERY_CANDIDATES={0}' -f $candidates.Count)
+    return ,@($candidates)
 }
 
 function Write-DiscoverReport {
@@ -1287,6 +1468,10 @@ function Get-HfDistinctModelIds {
     $seen = @{}
 
     foreach ($candidate in $Candidates) {
+        if (-not (Test-HfProviderBackedCandidateValid -Candidate $candidate)) {
+            continue
+        }
+
         $modelId = if ($candidate.PSObject.Properties.Name -contains 'repositoryModelId' -and -not [string]::IsNullOrWhiteSpace([string]$candidate.repositoryModelId)) {
             [string]$candidate.repositoryModelId
         }
@@ -1613,8 +1798,9 @@ function Invoke-AutoVerification {
             }
             throw $safe
         }
-        if ($candidates.Count -eq 0) {
-            throw 'No provider-backed conversational models were returned by Hugging Face discovery.'
+        if ($null -eq $candidates -or $candidates.Count -eq 0) {
+            Write-Host 'DISCOVERY_CANDIDATES=0'
+            throw 'NO_PROVIDER_BACKED_CANDIDATES'
         }
         Write-DiscoverReport -Candidates $candidates
 

@@ -154,6 +154,9 @@ if ($credVisible) {
             Write-ValidationLine 'EXTERNAL_BLOCKER=HF_INFERENCE_CREDITS_OR_PROVIDER_LIMIT'
             Write-ValidationLine 'BLOCK_REASON=HF_INFERENCE_CREDITS_OR_PROVIDER_LIMIT'
         }
+        elseif ($safe -match 'NO_PROVIDER_BACKED_CANDIDATES') {
+            Write-ValidationLine 'BLOCK_REASON=NO_PROVIDER_BACKED_CANDIDATES'
+        }
         $hfStatus = 'FAIL'
         $hfBlockReason = ''
     }

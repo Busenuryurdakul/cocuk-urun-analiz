@@ -287,6 +287,84 @@ if ($null -eq $providerCandidate -or $providerCandidate.modelId -ne 'org/model-a
     Add-Failure 'Provider-backed candidate must be created from live conversational hub mapping.'
 }
 
+$nullSkipList = New-Object System.Collections.Generic.List[object]
+$nullSkipSeen = @{}
+try {
+    Add-HfProviderBackedCandidate -CandidatesList $nullSkipList -SeenRepositoryIds $nullSkipSeen -Candidate $null
+    Write-Host 'DISCOVERY_NULL_ENTRY_SKIPPED: PASS'
+}
+catch {
+    Add-Failure ('DISCOVERY_NULL_ENTRY_SKIPPED: null candidate must not throw. ' + $_.Exception.Message)
+}
+
+$mixedEntries = ConvertTo-HfSafeModelEntryArray -Items @(
+    $null
+    [pscustomobject]@{ id = 'org/model-a' }
+    [pscustomobject]@{ id = '' }
+    [pscustomobject]@{ id = 'org/model-b' }
+)
+if ($mixedEntries.Count -ne 2) {
+    Add-Failure 'DISCOVERY_MIXED_NULL_AND_VALID: mixed null/invalid entries must keep only valid model ids.'
+}
+else {
+    Write-Host 'DISCOVERY_MIXED_NULL_AND_VALID: PASS'
+}
+
+$emptyMappingEntry = [pscustomobject]@{
+    id                       = 'org/empty-mapping'
+    inferenceProviderMapping = $null
+}
+if ($null -ne (New-HfProviderBackedCandidateFromEntry -ModelEntry $emptyMappingEntry)) {
+    Add-Failure 'DISCOVERY_EMPTY_PROVIDER_MAPPING_SKIPPED: empty provider mapping must not produce a candidate.'
+}
+else {
+    Write-Host 'DISCOVERY_EMPTY_PROVIDER_MAPPING_SKIPPED: PASS'
+}
+
+$missingIdEntry = [pscustomobject]@{
+    name = 'no-id-model'
+}
+if ($null -ne (New-HfProviderBackedCandidateFromEntry -ModelEntry $missingIdEntry)) {
+    Add-Failure 'DISCOVERY_MISSING_MODEL_ID_SKIPPED: missing model id must not produce a candidate.'
+}
+else {
+    Write-Host 'DISCOVERY_MISSING_MODEL_ID_SKIPPED: PASS'
+}
+
+$zeroCandidates = ConvertTo-HfSafeDiscoveryCandidateArray -Candidates @()
+if ($zeroCandidates.Count -ne 0) {
+    Add-Failure 'DISCOVERY_ZERO_CANDIDATES_SAFE: empty discovery must return empty array.'
+}
+else {
+    Write-Host 'DISCOVERY_ZERO_CANDIDATES_SAFE: PASS'
+}
+
+$singleCandidate = [pscustomobject]@{
+    modelId           = 'org/model-a'
+    repositoryModelId = 'org/model-a'
+    provider          = 'together'
+    providerBacked    = $true
+}
+$singleArray = ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $singleCandidate
+if ($singleArray.Count -ne 1 -or $singleArray[0].modelId -ne 'org/model-a') {
+    Add-Failure 'DISCOVERY_SINGLE_VALID_CANDIDATE_ARRAY_SAFE: single candidate must normalize to one-element array.'
+}
+else {
+    Write-Host 'DISCOVERY_SINGLE_VALID_CANDIDATE_ARRAY_SAFE: PASS'
+}
+
+$mixedCandidates = ConvertTo-HfSafeDiscoveryCandidateArray -Candidates @(
+    $null
+    $singleCandidate
+    [pscustomobject]@{ modelId = '' ; providerBacked = $true }
+)
+if ($mixedCandidates.Count -ne 1 -or ($mixedCandidates | Where-Object { $null -eq $_ }).Count -gt 0) {
+    Add-Failure 'DISCOVERY_NO_NULLS_IN_FINAL_ARRAY: final candidate array must not contain null entries.'
+}
+else {
+    Write-Host 'DISCOVERY_NO_NULLS_IN_FINAL_ARRAY: PASS'
+}
+
 $sourceVerify = Get-Content -Path $TargetScript -Raw -Encoding UTF8
 if ($sourceVerify -notmatch 'function Invoke-HfIndividualModelVerification') {
     Add-Failure 'VERIFY_TESTS_CANDIDATES_INDIVIDUALLY: individual model verification must exist.'
@@ -674,7 +752,7 @@ if ($source -notmatch 'function Get-HfModelsFromDiscoveryPayload') {
 
 Write-Host ''
 Write-Host 'STATIC_SECURITY_TEST=PASS'
-Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe,discovery_single_object_normalization,discovery_array_normalization,discovery_null_safe,discovery_returns_string_model_ids,discovery_distinct_model_selection,real_gateway_env_mapping,discovery_requires_live_provider,discovery_requires_conversational_task,discovery_ignores_staging_provider,discovery_warm_fallback,verify_tests_candidates_individually,verify_skips_failed_primary,verify_selects_two_distinct_working_models,verify_classifies_rate_limit,verify_classifies_credits_error'
+Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe,discovery_single_object_normalization,discovery_array_normalization,discovery_null_safe,discovery_returns_string_model_ids,discovery_distinct_model_selection,real_gateway_env_mapping,discovery_requires_live_provider,discovery_requires_conversational_task,discovery_ignores_staging_provider,discovery_warm_fallback,verify_tests_candidates_individually,verify_skips_failed_primary,verify_selects_two_distinct_working_models,verify_classifies_rate_limit,verify_classifies_credits_error,discovery_null_entry_skipped,discovery_mixed_null_and_valid,discovery_empty_provider_mapping_skipped,discovery_missing_model_id_skipped,discovery_zero_candidates_safe,discovery_single_valid_candidate_array_safe,discovery_no_nulls_in_final_array'
 
 if ($failures.Count -gt 0) {
     Write-Host 'STATIC_SECURITY_TEST=FAIL'
