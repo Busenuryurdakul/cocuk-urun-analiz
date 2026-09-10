@@ -4,10 +4,24 @@ $ErrorActionPreference = 'Stop'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $TargetScript = Join-Path $ScriptDir 'verify_hf_runtime.ps1'
+$IsolationScript = Join-Path $ScriptDir 'phase6_env_isolation.ps1'
 
 if (-not (Test-Path $TargetScript)) {
     throw "Missing target script: $TargetScript"
 }
+
+if (-not (Test-Path $IsolationScript)) {
+    throw "Missing isolation script: $IsolationScript"
+}
+
+. $IsolationScript
+
+$Script:InitialRuntimeSnapshot = Get-Phase6RuntimeEnvSnapshot
+$Script:HadRealHfToken = -not [string]::IsNullOrWhiteSpace($Script:InitialRuntimeSnapshot['HF_TOKEN'])
+$Script:InitialPrimaryModel = $Script:InitialRuntimeSnapshot['LLM_PRIMARY_MODEL_NAME']
+$Script:InitialSecondaryModel = $Script:InitialRuntimeSnapshot['LLM_SECONDARY_MODEL_NAME']
+
+try {
 
 $source = Get-Content -Path $TargetScript -Raw -Encoding UTF8
 $failures = New-Object System.Collections.Generic.List[string]
@@ -96,8 +110,28 @@ if ($source -notmatch 'HF_TOKEN_FORMAT_INVALID') {
     Add-Failure 'Invalid token format rejection must exist.'
 }
 
-if ($source -notmatch 'function Sanitize-HfAccessTokenRaw') {
-    Add-Failure 'Token sanitization helper must exist.'
+if ($source -notmatch 'function Resolve-HfSessionTokenFromEnv') {
+    Add-Failure 'Env token resolver must exist for session reuse.'
+}
+
+if ($source -notmatch 'HF_TOKEN_SESSION_REUSED') {
+    Add-Failure 'Existing env token reuse marker must exist.'
+}
+
+if ($source -notmatch 'ENV_PRIMARY_MODEL_PRESERVED') {
+    Add-Failure 'Preset primary model preservation marker must exist.'
+}
+
+if ($source -notmatch 'ENV_SECONDARY_MODEL_PRESERVED') {
+    Add-Failure 'Preset secondary model preservation marker must exist.'
+}
+
+if ($source -match 'powershell(\.exe)?\s+.*HF_TOKEN|powershell(\.exe)?\s+.*-Token\s+hf_') {
+    Add-Failure 'HF token must not be passed on child PowerShell command lines.'
+}
+
+if ($source -notmatch 'function Get-PresetHfModelPair') {
+    Add-Failure 'Preset model pair helper must exist.'
 }
 
 if ($source -notmatch 'function New-HfAuthorizationHeaders') {
@@ -164,18 +198,198 @@ catch {
 }
 
 $class401 = Get-HfErrorClass -StatusCode 401 -HttpStatusLabel 'AUTHENTICATION_FAILED'
-$class403 = Get-HfErrorClass -StatusCode 403 -HttpStatusLabel 'PERMISSION_DENIED'
+$class403Label = Get-HfErrorClass -StatusCode 403 -HttpStatusLabel 'PERMISSION_DENIED'
 $class404 = Get-HfErrorClass -StatusCode 404 -HttpStatusLabel 'ENDPOINT_NOT_FOUND'
-$class429 = Get-HfErrorClass -StatusCode 429 -HttpStatusLabel 'RATE_LIMITED'
+$class429Label = Get-HfErrorClass -StatusCode 429 -HttpStatusLabel 'RATE_LIMITED'
 $class503 = Get-HfErrorClass -StatusCode 503 -HttpStatusLabel 'PROVIDER_ERROR'
 $classTimeout = Get-HfErrorClass -StatusCode 0 -Message 'The operation has timed out'
+$class402 = Get-HfErrorClass -StatusCode 402
+$class429 = Get-HfErrorClass -StatusCode 429
+$class403 = Get-HfErrorClass -StatusCode 403
 
 if ($class401 -ne 'AUTHENTICATION_FAILED') { Add-Failure '401 must map to AUTHENTICATION_FAILED.' }
-if ($class403 -ne 'PERMISSION_DENIED') { Add-Failure '403 must map to PERMISSION_DENIED.' }
+if ($class403Label -ne 'PROVIDER_UNAVAILABLE') { Add-Failure '403 must map to PROVIDER_UNAVAILABLE.' }
 if ($class404 -ne 'ENDPOINT_NOT_FOUND') { Add-Failure '404 must map to ENDPOINT_NOT_FOUND.' }
+if ($class429Label -ne 'RATE_LIMITED') { Add-Failure '429 label must map to RATE_LIMITED.' }
+if ($class503 -ne 'SERVER_ERROR') { Add-Failure '5xx must map to SERVER_ERROR.' }
+if ($classTimeout -ne 'TIMEOUT') { Add-Failure 'Timeout messages must map to TIMEOUT.' }
+if ($class402 -ne 'INSUFFICIENT_CREDITS') { Add-Failure '402 must map to INSUFFICIENT_CREDITS.' }
 if ($class429 -ne 'RATE_LIMITED') { Add-Failure '429 must map to RATE_LIMITED.' }
-if ($class503 -ne 'PROVIDER_ERROR') { Add-Failure '5xx must map to PROVIDER_ERROR.' }
-if ($classTimeout -ne 'REQUEST_TIMEOUT') { Add-Failure 'Timeout messages must map to REQUEST_TIMEOUT.' }
+if ($class403 -ne 'PROVIDER_UNAVAILABLE') { Add-Failure '403 must map to PROVIDER_UNAVAILABLE.' }
+Write-Host 'VERIFY_CLASSIFIES_RATE_LIMIT: PASS'
+Write-Host 'VERIFY_CLASSIFIES_CREDITS_ERROR: PASS'
+
+$liveMapping = [pscustomobject]@{
+    providerKey = 'together'
+    status      = 'live'
+    task        = 'conversational'
+    providerId  = 'org/model-a'
+}
+$stagingMapping = [pscustomobject]@{
+    providerKey = 'together'
+    status      = 'staging'
+    task        = 'conversational'
+    providerId  = 'org/model-a'
+}
+$warmMapping = [pscustomobject]@{
+    providerKey = 'hf-inference'
+    status      = 'warm'
+    task        = 'conversational'
+    providerId  = 'org/model-b'
+}
+$nonConversationalMapping = [pscustomobject]@{
+    providerKey = 'together'
+    status      = 'live'
+    task        = 'text-generation'
+    providerId  = 'org/model-c'
+}
+
+if (-not (Test-HfProviderMappingEligible -Mapping $liveMapping -AllowWarmFallback)) {
+    Add-Failure 'DISCOVERY_REQUIRES_LIVE_PROVIDER: live conversational mapping must be eligible.'
+}
+else {
+    Write-Host 'DISCOVERY_REQUIRES_LIVE_PROVIDER: PASS'
+}
+
+if (Test-HfProviderMappingEligible -Mapping $stagingMapping -AllowWarmFallback) {
+    Add-Failure 'DISCOVERY_IGNORES_STAGING_PROVIDER: staging mappings must be rejected.'
+}
+else {
+    Write-Host 'DISCOVERY_IGNORES_STAGING_PROVIDER: PASS'
+}
+
+if (-not (Test-HfProviderMappingEligible -Mapping $warmMapping -AllowWarmFallback)) {
+    Add-Failure 'DISCOVERY_WARM_FALLBACK: warm conversational mapping must be eligible when fallback enabled.'
+}
+else {
+    Write-Host 'DISCOVERY_WARM_FALLBACK: PASS'
+}
+
+if (Test-HfProviderMappingEligible -Mapping $nonConversationalMapping -AllowWarmFallback) {
+    Add-Failure 'DISCOVERY_REQUIRES_CONVERSATIONAL_TASK: non-conversational mappings must be rejected.'
+}
+else {
+    Write-Host 'DISCOVERY_REQUIRES_CONVERSATIONAL_TASK: PASS'
+}
+
+$hubEntry = [pscustomobject]@{
+    id = 'org/model-a'
+    inferenceProviderMapping = [pscustomobject]@{
+        together = [pscustomobject]@{
+            status     = 'live'
+            task       = 'conversational'
+            providerId = 'org/model-a'
+        }
+    }
+}
+$providerCandidate = New-HfProviderBackedCandidateFromEntry -ModelEntry $hubEntry
+if ($null -eq $providerCandidate -or $providerCandidate.modelId -ne 'org/model-a' -or -not $providerCandidate.providerBacked) {
+    Add-Failure 'Provider-backed candidate must be created from live conversational hub mapping.'
+}
+
+$nullSkipList = New-Object System.Collections.Generic.List[object]
+$nullSkipSeen = @{}
+try {
+    Add-HfProviderBackedCandidate -CandidatesList $nullSkipList -SeenRepositoryIds $nullSkipSeen -Candidate $null
+    Write-Host 'DISCOVERY_NULL_ENTRY_SKIPPED: PASS'
+}
+catch {
+    Add-Failure ('DISCOVERY_NULL_ENTRY_SKIPPED: null candidate must not throw. ' + $_.Exception.Message)
+}
+
+$mixedEntries = ConvertTo-HfSafeModelEntryArray -Items @(
+    $null
+    [pscustomobject]@{ id = 'org/model-a' }
+    [pscustomobject]@{ id = '' }
+    [pscustomobject]@{ id = 'org/model-b' }
+)
+if ($mixedEntries.Count -ne 2) {
+    Add-Failure 'DISCOVERY_MIXED_NULL_AND_VALID: mixed null/invalid entries must keep only valid model ids.'
+}
+else {
+    Write-Host 'DISCOVERY_MIXED_NULL_AND_VALID: PASS'
+}
+
+$emptyMappingEntry = [pscustomobject]@{
+    id                       = 'org/empty-mapping'
+    inferenceProviderMapping = $null
+}
+if ($null -ne (New-HfProviderBackedCandidateFromEntry -ModelEntry $emptyMappingEntry)) {
+    Add-Failure 'DISCOVERY_EMPTY_PROVIDER_MAPPING_SKIPPED: empty provider mapping must not produce a candidate.'
+}
+else {
+    Write-Host 'DISCOVERY_EMPTY_PROVIDER_MAPPING_SKIPPED: PASS'
+}
+
+$missingIdEntry = [pscustomobject]@{
+    name = 'no-id-model'
+}
+if ($null -ne (New-HfProviderBackedCandidateFromEntry -ModelEntry $missingIdEntry)) {
+    Add-Failure 'DISCOVERY_MISSING_MODEL_ID_SKIPPED: missing model id must not produce a candidate.'
+}
+else {
+    Write-Host 'DISCOVERY_MISSING_MODEL_ID_SKIPPED: PASS'
+}
+
+$zeroCandidates = ConvertTo-HfSafeDiscoveryCandidateArray -Candidates @()
+if ($zeroCandidates.Count -ne 0) {
+    Add-Failure 'DISCOVERY_ZERO_CANDIDATES_SAFE: empty discovery must return empty array.'
+}
+else {
+    Write-Host 'DISCOVERY_ZERO_CANDIDATES_SAFE: PASS'
+}
+
+$singleCandidate = [pscustomobject]@{
+    modelId           = 'org/model-a'
+    repositoryModelId = 'org/model-a'
+    provider          = 'together'
+    providerBacked    = $true
+}
+$singleArray = ConvertTo-HfSafeDiscoveryCandidateArray -Candidates $singleCandidate
+if ($singleArray.Count -ne 1 -or $singleArray[0].modelId -ne 'org/model-a') {
+    Add-Failure 'DISCOVERY_SINGLE_VALID_CANDIDATE_ARRAY_SAFE: single candidate must normalize to one-element array.'
+}
+else {
+    Write-Host 'DISCOVERY_SINGLE_VALID_CANDIDATE_ARRAY_SAFE: PASS'
+}
+
+$mixedCandidates = ConvertTo-HfSafeDiscoveryCandidateArray -Candidates @(
+    $null
+    $singleCandidate
+    [pscustomobject]@{ modelId = '' ; providerBacked = $true }
+)
+if ($mixedCandidates.Count -ne 1 -or ($mixedCandidates | Where-Object { $null -eq $_ }).Count -gt 0) {
+    Add-Failure 'DISCOVERY_NO_NULLS_IN_FINAL_ARRAY: final candidate array must not contain null entries.'
+}
+else {
+    Write-Host 'DISCOVERY_NO_NULLS_IN_FINAL_ARRAY: PASS'
+}
+
+$sourceVerify = Get-Content -Path $TargetScript -Raw -Encoding UTF8
+if ($sourceVerify -notmatch 'function Invoke-HfIndividualModelVerification') {
+    Add-Failure 'VERIFY_TESTS_CANDIDATES_INDIVIDUALLY: individual model verification must exist.'
+}
+else {
+    Write-Host 'VERIFY_TESTS_CANDIDATES_INDIVIDUALLY: PASS'
+}
+
+if ($sourceVerify -notmatch 'VERIFY_CANDIDATE_ATTEMPT') {
+    Add-Failure 'VERIFY_TESTS_CANDIDATES_INDIVIDUALLY: candidate attempt logging must exist.'
+}
+
+if ($sourceVerify -match 'for \(\$i = 0; \$i -lt \(\$modelIds\.Count - 1\); \$i\+\+\)[\s\S]{0,400}PRIMARY_CANDIDATE') {
+    Add-Failure 'VERIFY_SKIPS_FAILED_PRIMARY: fixed-primary pair loop must not be used.'
+}
+else {
+    Write-Host 'VERIFY_SKIPS_FAILED_PRIMARY: PASS'
+}
+
+if ($sourceVerify -notmatch 'WORKING_MODEL_1=') {
+    Add-Failure 'VERIFY_SELECTS_TWO_DISTINCT_WORKING_MODELS: working model reporting must exist.'
+}
+else {
+    Write-Host 'VERIFY_SELECTS_TWO_DISTINCT_WORKING_MODELS: PASS'
+}
 
 $safe = Get-SafeErrorMessage -RawMessage 'Authorization: Bearer hf_abc123secretvalue' -Token 'hf_abc123secretvalue'
 if ($safe -match 'hf_abc123secretvalue') {
@@ -259,6 +473,163 @@ if ($headers.Authorization -match "[\r\n]") {
     Add-Failure 'Authorization header must not contain newline characters.'
 }
 
+# Env propagation: valid token in $env:HF_TOKEN must be reused without prompting.
+$tokenSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:HF_TOKEN = $Script:SyntheticHfToken
+try {
+    $resolved = Resolve-HfSessionTokenFromEnv
+    if ($resolved -ne $Script:SyntheticHfToken) {
+        Add-Failure 'ENV_TOKEN_PRESENT_PRESERVED: normalized env token must match fixture.'
+    }
+    if ($env:HF_TOKEN -ne $Script:SyntheticHfToken) {
+        Add-Failure 'ENV_TOKEN_PRESENT_PRESERVED: env HF_TOKEN must remain normalized fixture.'
+    }
+
+    $sessionToken = Initialize-HfSessionToken
+    if ($sessionToken -ne $Script:SyntheticHfToken) {
+        Add-Failure 'ENV_TOKEN_PRESENT_DOES_NOT_PROMPT: Initialize-HfSessionToken must return env token.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $tokenSnapshot
+}
+
+$modelSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:LLM_PRIMARY_MODEL_NAME = ' org/model-primary '
+$env:LLM_SECONDARY_MODEL_NAME = ' org/model-secondary '
+try {
+    $pair = Get-PresetHfModelPair
+    if ($null -eq $pair) {
+        Add-Failure 'ENV_PRIMARY_MODEL_PRESERVED: preset pair must resolve when both env vars are set.'
+    }
+    elseif ($pair.Primary -ne 'org/model-primary' -or $pair.Secondary -ne 'org/model-secondary') {
+        Add-Failure 'ENV model env vars must be trimmed, not overwritten with empty values.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $modelSnapshot
+}
+
+$emptyTokenSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:HF_TOKEN = '   '
+try {
+    if (Test-HfAccessTokenCandidate -Raw $env:HF_TOKEN) {
+        Add-Failure 'EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: whitespace-only env token must be rejected.'
+    }
+    if ($null -ne (Resolve-HfSessionTokenFromEnv)) {
+        Add-Failure 'EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: whitespace-only env token must not resolve.'
+    }
+    try {
+        $null = Normalize-HfAccessToken -Token $env:HF_TOKEN
+        Add-Failure 'EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: whitespace-only env token must throw on normalize.'
+    }
+    catch {
+        if ($_.Exception.Message -ne 'HF_TOKEN_EMPTY') {
+            Add-Failure ('EMPTY_ENV_TOKEN_PROMPTS_OR_BLOCKS_SAFELY: unexpected error ' + $_.Exception.Message)
+        }
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $emptyTokenSnapshot
+}
+
+$invalidTokenSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:HF_TOKEN = 'not_a_hf_token'
+try {
+    $null = Resolve-HfSessionTokenFromEnv
+    Add-Failure 'Invalid non-empty env token must not resolve silently.'
+}
+catch {
+    if ($_.Exception.Message -ne 'HF_TOKEN_FORMAT_INVALID') {
+        Add-Failure ('Invalid env token must throw HF_TOKEN_FORMAT_INVALID: ' + $_.Exception.Message)
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $invalidTokenSnapshot
+}
+
+$printTokenSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:HF_TOKEN = $Script:SyntheticHfToken
+try {
+    $hostOut = & {
+        $null = Initialize-HfSessionToken
+    } 2>&1 | Out-String
+    if ($hostOut -match [regex]::Escape($Script:SyntheticHfToken)) {
+        Add-Failure 'TOKEN_NOT_PRINTED: synthetic fixture token must never appear in stdout/stderr.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $printTokenSnapshot
+}
+
+$p0SourcePath = Join-Path $ScriptDir 'run_p0_final_validation.ps1'
+if (Test-Path $p0SourcePath) {
+    $p0Source = Get-Content -Path $p0SourcePath -Raw -Encoding UTF8
+    if ($p0Source -match 'powershell(\.exe)?\s+.*verify_hf_runtime') {
+        Add-Failure 'Parent validation must not spawn child PowerShell for HF verification.'
+    }
+    if ($p0Source -notmatch 'Test-Phase6CredentialVisible|Test-HfAccessTokenCandidate|Test-Phase6CredentialValid') {
+        Add-Failure 'Parent validation must validate HF_TOKEN format, not only whitespace.'
+    }
+    if ($p0Source -notmatch 'Get-Phase6RuntimeEnvSnapshot') {
+        Add-Failure 'Parent validation must snapshot runtime env before isolated stages.'
+    }
+    if ($p0Source -notmatch 'Set-Phase6MockRegressionEnv') {
+        Add-Failure 'Parent validation must isolate mock regression env from real model env.'
+    }
+    if ($p0Source -notmatch 'Set-Phase6AgentTestEnv') {
+        Add-Failure 'Parent validation must isolate agent pytest env.'
+    }
+    if ($p0Source -notmatch 'HF_TOKEN_VISIBLE_AFTER_STATIC') {
+        Add-Failure 'Parent validation must checkpoint HF token visibility after static tests.'
+    }
+}
+
+$isolationSourcePath = Join-Path $ScriptDir 'phase6_env_isolation.ps1'
+if (Test-Path $isolationSourcePath) {
+    $isolationSource = Get-Content -Path $isolationSourcePath -Raw -Encoding UTF8
+    if ($isolationSource -notmatch 'function Set-Phase6MockRegressionEnv') {
+        Add-Failure 'Mock regression env isolation helper must exist.'
+    }
+    if ($isolationSource -match 'Write-Host\s+\$env:HF_TOKEN|Write-Output\s+\$env:HF_TOKEN') {
+        Add-Failure 'Isolation helper must not print HF_TOKEN.'
+    }
+}
+
+$mockSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:LLM_PRIMARY_MODEL_NAME = 'Qwen/Qwen3-0.6B'
+$env:LLM_SECONDARY_MODEL_NAME = 'Qwen/Qwen2.5-0.5B-Instruct'
+try {
+    Set-Phase6MockRegressionEnv
+    if ($env:LLM_PRIMARY_MODEL_NAME -eq 'Qwen/Qwen3-0.6B') {
+        Add-Failure 'MOCK_REGRESSION_ISOLATED_FROM_REAL_MODEL_ENV: mock env must replace HF primary model.'
+    }
+    if ($env:LLM_PRIMARY_MODEL_NAME -ne 'llama3.2:latest') {
+        Add-Failure 'OLLAMA_TEST_NOT_USING_HF_PRIMARY_MODEL: mock regression must use canonical Ollama model name.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $mockSnapshot
+}
+
+$agentSnapshot = Get-Phase6RuntimeEnvSnapshot
+$env:LLM_PRIMARY_MODEL_NAME = 'Qwen/Qwen3-0.6B'
+$env:LLM_SECONDARY_MODEL_NAME = 'Qwen/Qwen2.5-0.5B-Instruct'
+$repoRoot = Split-Path (Split-Path $ScriptDir -Parent) -Parent
+try {
+    Set-Phase6AgentTestEnv -RepoRoot $repoRoot
+    if ($env:LLM_PRIMARY_MODEL_NAME -or $env:LLM_SECONDARY_MODEL_NAME) {
+        Add-Failure 'AGENT_TEST_ENV_ISOLATED: agent stage must clear real HF model env vars.'
+    }
+    $expectedPythonPath = Join-Path $repoRoot 'apps\agent\src'
+    if ([string]$env:PYTHONPATH -ne [string]$expectedPythonPath) {
+        Add-Failure 'AGENT_TEST_ENV_ISOLATED: agent stage must pin PYTHONPATH to current repo src.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $agentSnapshot
+}
+
 # Mock HTTP layer: ensure Authorization header is built but never returned in result objects
 $mockToken = 'mock-token-value-not-real'
 $mockResponse = Invoke-HfOpenAIRequest -Method GET -Uri 'http://127.0.0.1:9/unreachable-mock-endpoint' -Token $mockToken -TimeoutSec 1
@@ -273,9 +644,115 @@ if ($mockJson -match 'Authorization') {
     Add-Failure 'HTTP result must not contain Authorization header text.'
 }
 
+if (@(Format-Phase6SafeTestOutput -Lines '').Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: empty string Lines must return no output.'
+}
+if (@(Format-Phase6SafeTestOutput -Lines @()).Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: empty array Lines must return no output.'
+}
+if (@(Format-Phase6SafeTestOutput -Lines $null).Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: null Lines must return no output.'
+}
+if (@(ConvertTo-Phase6OutputLines -RawOutput '').Count -ne 0) {
+    Add-Failure 'EMPTY_OUTPUT_LINES: ConvertTo-Phase6OutputLines must normalize empty string.'
+}
+
+$singlePayload = @{ data = [pscustomobject]@{ id = 'org/model-a'; object = 'model' } } | ConvertTo-Json -Depth 4 | ConvertFrom-Json
+$singleItems = Get-HfModelsFromDiscoveryPayload -Parsed $singlePayload
+if ($singleItems.Count -ne 1 -or (Get-HfModelIdFromEntry -ModelEntry $singleItems[0]) -ne 'org/model-a') {
+    Add-Failure 'DISCOVERY_SINGLE_OBJECT_NORMALIZATION: single data object must normalize to one entry.'
+}
+else {
+    Write-Host 'DISCOVERY_SINGLE_OBJECT_NORMALIZATION: PASS'
+}
+
+$arrayPayload = @{
+    data = @(
+        [pscustomobject]@{ id = 'org/model-a'; object = 'model' }
+        [pscustomobject]@{ id = 'org/model-b'; object = 'model' }
+    )
+} | ConvertTo-Json -Depth 4 | ConvertFrom-Json
+$arrayItems = Get-HfModelsFromDiscoveryPayload -Parsed $arrayPayload
+if ($arrayItems.Count -ne 2) {
+    Add-Failure 'DISCOVERY_ARRAY_NORMALIZATION: array data must preserve all entries.'
+}
+else {
+    Write-Host 'DISCOVERY_ARRAY_NORMALIZATION: PASS'
+}
+
+$nullItems = Get-HfModelsFromDiscoveryPayload -Parsed $null
+if ($nullItems.Count -ne 0) {
+    Add-Failure 'DISCOVERY_NULL_SAFE: null payload must return empty list.'
+}
+else {
+    Write-Host 'DISCOVERY_NULL_SAFE: PASS'
+}
+
+$stringPayload = @{ data = @('org/model-a', 'org/model-b') } | ConvertTo-Json -Depth 4 | ConvertFrom-Json
+$stringItems = Get-HfModelsFromDiscoveryPayload -Parsed $stringPayload
+$stringIds = @($stringItems | ForEach-Object { Get-HfModelIdFromEntry -ModelEntry $_ })
+if ($stringIds.Count -ne 2 -or $stringIds[0] -ne 'org/model-a' -or $stringIds[1] -ne 'org/model-b') {
+    Add-Failure 'DISCOVERY_RETURNS_STRING_MODEL_IDS: string model ids must normalize.'
+}
+else {
+    Write-Host 'DISCOVERY_RETURNS_STRING_MODEL_IDS: PASS'
+}
+
+$distinctCandidates = @(
+    [pscustomobject]@{ modelId = 'org/model-a' }
+    [pscustomobject]@{ modelId = 'org/model-b' }
+    [pscustomobject]@{ modelId = 'org/model-a' }
+)
+$distinctIds = Get-HfDistinctModelIds -Candidates $distinctCandidates
+if ($distinctIds.Count -ne 2 -or $distinctIds[0] -ne 'org/model-a' -or $distinctIds[1] -ne 'org/model-b') {
+    Add-Failure 'DISCOVERY_DISTINCT_MODEL_SELECTION: duplicate model ids must be deduplicated.'
+}
+else {
+    Write-Host 'DISCOVERY_DISTINCT_MODEL_SELECTION: PASS'
+}
+
+$gatewaySnapshot = Get-Phase6RuntimeEnvSnapshot
+try {
+    $env:HF_TOKEN = $Script:SyntheticHfToken
+    Set-MiyunaLlmRuntimeEnvironment -PrimaryModel 'org/primary-model' -SecondaryModel 'org/secondary-model' -HfToken $Script:SyntheticHfToken
+    if ($env:LLM_USE_MOCK -ne 'false') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: LLM_USE_MOCK must be false.'
+    }
+    if ($env:LLM_PRIMARY_MODEL_NAME -ne 'org/primary-model') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: primary model name must be mapped.'
+    }
+    if ($env:LLM_SECONDARY_MODEL_NAME -ne 'org/secondary-model') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: secondary model name must be mapped.'
+    }
+    if ($env:LLM_PRIMARY_API_KEY -ne $Script:SyntheticHfToken -or $env:LLM_SECONDARY_API_KEY -ne $Script:SyntheticHfToken) {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: HF token must map to provider API keys.'
+    }
+    if ($env:LLM_PRIMARY_BASE_URL -ne 'https://router.huggingface.co/v1') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: primary base URL must target HF router.'
+    }
+    if ($env:LLM_SECONDARY_BASE_URL -ne 'https://router.huggingface.co/v1') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: secondary base URL must target HF router.'
+    }
+    Set-Phase6RealGatewayEnv -PrimaryModel 'org/worker-model' -SecondaryModel 'org/reviewer-model'
+    if ($env:LLM_PRIMARY_MODEL_NAME -ne 'org/worker-model' -or $env:LLM_SECONDARY_MODEL_NAME -ne 'org/reviewer-model') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: Set-Phase6RealGatewayEnv must refresh model names.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $gatewaySnapshot
+}
+Write-Host 'REAL_GATEWAY_ENV_MAPPING: PASS'
+
+if ($source -notmatch 'function ConvertTo-HfCandidateArray') {
+    Add-Failure 'Discovery must normalize candidates via ConvertTo-HfCandidateArray.'
+}
+if ($source -notmatch 'function Get-HfModelsFromDiscoveryPayload') {
+    Add-Failure 'Discovery must normalize router payload via Get-HfModelsFromDiscoveryPayload.'
+}
+
 Write-Host ''
 Write-Host 'STATIC_SECURITY_TEST=PASS'
-Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak'
+Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe,discovery_single_object_normalization,discovery_array_normalization,discovery_null_safe,discovery_returns_string_model_ids,discovery_distinct_model_selection,real_gateway_env_mapping,discovery_requires_live_provider,discovery_requires_conversational_task,discovery_ignores_staging_provider,discovery_warm_fallback,verify_tests_candidates_individually,verify_skips_failed_primary,verify_selects_two_distinct_working_models,verify_classifies_rate_limit,verify_classifies_credits_error,discovery_null_entry_skipped,discovery_mixed_null_and_valid,discovery_empty_provider_mapping_skipped,discovery_missing_model_id_skipped,discovery_zero_candidates_safe,discovery_single_valid_candidate_array_safe,discovery_no_nulls_in_final_array'
 
 if ($failures.Count -gt 0) {
     Write-Host 'STATIC_SECURITY_TEST=FAIL'
@@ -283,6 +760,43 @@ if ($failures.Count -gt 0) {
         Write-Host ('FAIL: ' + $failure)
     }
     exit 1
+}
+
+}
+finally {
+    Restore-Phase6RuntimeEnv $Script:InitialRuntimeSnapshot
+
+    if ($Script:HadRealHfToken -and [string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+        Write-Host 'STATIC_TESTS_RESTORE_HF_TOKEN: FAIL'
+        exit 1
+    }
+
+    if ($null -ne $Script:InitialPrimaryModel) {
+        if ([string]$env:LLM_PRIMARY_MODEL_NAME -ne [string]$Script:InitialPrimaryModel) {
+            Write-Host 'STATIC_TESTS_RESTORE_PRIMARY_MODEL: FAIL'
+            exit 1
+        }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($env:LLM_PRIMARY_MODEL_NAME)) {
+        Write-Host 'STATIC_TESTS_RESTORE_PRIMARY_MODEL: FAIL'
+        exit 1
+    }
+
+    if ($null -ne $Script:InitialSecondaryModel) {
+        if ([string]$env:LLM_SECONDARY_MODEL_NAME -ne [string]$Script:InitialSecondaryModel) {
+            Write-Host 'STATIC_TESTS_RESTORE_SECONDARY_MODEL: FAIL'
+            exit 1
+        }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($env:LLM_SECONDARY_MODEL_NAME)) {
+        Write-Host 'STATIC_TESTS_RESTORE_SECONDARY_MODEL: FAIL'
+        exit 1
+    }
+
+    Write-Host 'STATIC_TESTS_DO_NOT_CLEAR_REAL_ENV: PASS'
+    Write-Host 'STATIC_TESTS_RESTORE_HF_TOKEN: PASS'
+    Write-Host 'STATIC_TESTS_RESTORE_PRIMARY_MODEL: PASS'
+    Write-Host 'STATIC_TESTS_RESTORE_SECONDARY_MODEL: PASS'
 }
 
 exit 0

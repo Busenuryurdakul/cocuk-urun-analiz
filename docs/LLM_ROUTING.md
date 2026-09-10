@@ -54,6 +54,8 @@ llm:router:round_robin_state → last_selected
 
 **5 concurrent load test zorunlu** — routing fairness doğrulanmalı.
 
+**P0 PR-C validation:** `scripts/phase6/run_p0_final_validation.ps1` (mock CI regression + optional HF live smoke when `HF_TOKEN` is set). Optional Go E2E: `go test -tags=real_llm ./internal/llm/... ./internal/integration/...` with `LLM_USE_MOCK=false` and distinct `LLM_PRIMARY_MODEL_NAME` / `LLM_SECONDARY_MODEL_NAME`.
+
 ## 4. Worker / Reviewer Assignment vs Load Routing
 
 Worker/Reviewer rotation ile automatic load routing **ayrı katmanlardır** ve birbirine karıştırılmaz.

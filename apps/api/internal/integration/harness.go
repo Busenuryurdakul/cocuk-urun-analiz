@@ -65,6 +65,7 @@ type harnessConfig struct {
 	orchestratorURL string
 	startPython     bool
 	unavailable     bool
+	llmUseMock      *bool
 }
 
 func WithOrchestratorURL(url string) HarnessOption {
@@ -77,6 +78,12 @@ func WithUnavailableOrchestrator() HarnessOption {
 
 func WithPythonOrchestrator(start bool) HarnessOption {
 	return func(c *harnessConfig) { c.startPython = start }
+}
+
+func WithLLMUseMock(useMock bool) HarnessOption {
+	return func(c *harnessConfig) {
+		c.llmUseMock = &useMock
+	}
 }
 
 func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
@@ -126,6 +133,9 @@ func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 		MailQueueEnabled:     true,
 		MailSMTPHost:         "localhost",
 		MailSMTPPort:         "1025",
+	}
+	if cfg.llmUseMock != nil {
+		appCfg.LLMUseMock = *cfg.llmUseMock
 	}
 
 	application, err := app.New(ctx, appCfg)
@@ -203,6 +213,7 @@ func (h *Phase5Harness) startHTTPServer(t *testing.T) {
 	t.Helper()
 	resolver := &graph.Resolver{
 		Auth:               h.App.Auth,
+		Account:            h.App.Account,
 		Org:                h.App.Org,
 		Consent:            h.App.Consent,
 		Compliance:         h.App.Compliance,

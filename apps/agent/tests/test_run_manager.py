@@ -1,4 +1,5 @@
 import threading
+import time
 from unittest.mock import MagicMock
 
 from miyuna_agent.run_manager import CancelRunPayload, RunManager, StartRunPayload
@@ -14,6 +15,8 @@ def _tool(name: str):
 
 def test_run_manager_starts_lifecycle_thread() -> None:
     go_client = MagicMock()
+    go_client.claim_run_lease.return_value = True
+    go_client.heartbeat_run_lease.return_value = None
     go_client.fetch_run_context.return_value = MagicMock(
         trace_id="trace-1",
         product_id="prod-1",
@@ -21,6 +24,12 @@ def test_run_manager_starts_lifecycle_thread() -> None:
         compliance_profile="",
         config_snapshot_id="snap-1",
         llm_routing_policy_version="v1",
+        correlation_id="trace-1",
+        actor_user_id="user",
+        worker_rotation_pattern="RUN_A",
+        require_evidence=True,
+        ugc_count=0,
+        organization_id="org",
         capabilities=MagicMock(
             available_tools=(
                 _tool("policy_evaluator"),
@@ -50,6 +59,7 @@ def test_run_manager_starts_lifecycle_thread() -> None:
             correlation_id="trace-1",
             input_tokens=1,
             output_tokens=1,
+            escalation_used=False,
         ),
         MagicMock(
             call_id="call-2",
@@ -63,14 +73,26 @@ def test_run_manager_starts_lifecycle_thread() -> None:
             correlation_id="trace-1",
             input_tokens=1,
             output_tokens=1,
+            escalation_used=False,
         ),
     ]
 
     started = threading.Event()
+    finished = threading.Event()
+    thread_errors: list[BaseException] = []
 
     def worker_factory(target):
         started.set()
-        return threading.Thread(target=target, daemon=True)
+
+        def wrapped() -> None:
+            try:
+                target()
+            except BaseException as exc:  # noqa: BLE001
+                thread_errors.append(exc)
+            finally:
+                finished.set()
+
+        return threading.Thread(target=wrapped, daemon=True)
 
     manager = RunManager(go_client=go_client, llm_client=llm_client, _worker_factory=worker_factory)
     manager.start_run(
@@ -84,7 +106,9 @@ def test_run_manager_starts_lifecycle_thread() -> None:
         )
     )
     assert started.wait(timeout=2)
-    threading.Event().wait(0.5)
+    assert finished.wait(timeout=5), f"background errors={thread_errors!r}"
+    if thread_errors:
+        raise thread_errors[0]
     assert go_client.update_run_status.called
     assert go_client.record_event.called
     assert go_client.finalize_analysis.called
