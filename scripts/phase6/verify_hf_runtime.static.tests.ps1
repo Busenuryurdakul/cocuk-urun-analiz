@@ -435,10 +435,15 @@ finally {
 $agentSnapshot = Get-Phase6RuntimeEnvSnapshot
 $env:LLM_PRIMARY_MODEL_NAME = 'Qwen/Qwen3-0.6B'
 $env:LLM_SECONDARY_MODEL_NAME = 'Qwen/Qwen2.5-0.5B-Instruct'
+$repoRoot = Split-Path (Split-Path $ScriptDir -Parent) -Parent
 try {
-    Set-Phase6AgentTestEnv
+    Set-Phase6AgentTestEnv -RepoRoot $repoRoot
     if ($env:LLM_PRIMARY_MODEL_NAME -or $env:LLM_SECONDARY_MODEL_NAME) {
         Add-Failure 'AGENT_TEST_ENV_ISOLATED: agent stage must clear real HF model env vars.'
+    }
+    $expectedPythonPath = Join-Path $repoRoot 'apps\agent\src'
+    if ([string]$env:PYTHONPATH -ne [string]$expectedPythonPath) {
+        Add-Failure 'AGENT_TEST_ENV_ISOLATED: agent stage must pin PYTHONPATH to current repo src.'
     }
 }
 finally {

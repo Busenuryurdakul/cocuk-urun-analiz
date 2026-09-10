@@ -11,7 +11,8 @@ $Script:Phase6IsolationKeys = @(
     'LLM_SECONDARY_API_KEY',
     'LLM_USE_MOCK',
     'LLM_PROVIDER',
-    'LLM_BASE_URL'
+    'LLM_BASE_URL',
+    'PYTHONPATH'
 )
 
 function Get-Phase6RuntimeEnvSnapshot {
@@ -60,6 +61,17 @@ function Set-Phase6MockRegressionEnv {
 }
 
 function Set-Phase6AgentTestEnv {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoRoot
+    )
+
+    $agentSrc = Join-Path $RepoRoot 'apps\agent\src'
+    if (-not (Test-Path -LiteralPath $agentSrc)) {
+        throw "Agent source path not found: $agentSrc"
+    }
+
+    $env:PYTHONPATH = $agentSrc
     $env:LLM_USE_MOCK = 'true'
     Remove-Item Env:LLM_PRIMARY_MODEL_NAME -ErrorAction SilentlyContinue
     Remove-Item Env:LLM_SECONDARY_MODEL_NAME -ErrorAction SilentlyContinue
@@ -71,8 +83,12 @@ function Set-Phase6AgentTestEnv {
     Remove-Item Env:LLM_BASE_URL -ErrorAction SilentlyContinue
 }
 
-function Test-Phase6CredentialVisible {
-    if ([string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+function Test-Phase6CredentialPresent {
+    return -not [string]::IsNullOrWhiteSpace($env:HF_TOKEN)
+}
+
+function Test-Phase6CredentialValid {
+    if (-not (Test-Phase6CredentialPresent)) {
         return $false
     }
     if (Get-Command Test-HfAccessTokenCandidate -ErrorAction SilentlyContinue) {
@@ -81,13 +97,42 @@ function Test-Phase6CredentialVisible {
     return $true
 }
 
+function Test-Phase6CredentialVisible {
+    return (Test-Phase6CredentialValid)
+}
+
+function Restore-Phase6StartupCredentialEnv {
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable]$StartupSnapshot
+    )
+
+    if ($StartupSnapshot.ContainsKey('HF_TOKEN')) {
+        Set-Item -Path 'Env:HF_TOKEN' -Value $StartupSnapshot['HF_TOKEN']
+    }
+    if ($StartupSnapshot.ContainsKey('LLM_PRIMARY_MODEL_NAME')) {
+        Set-Item -Path 'Env:LLM_PRIMARY_MODEL_NAME' -Value $StartupSnapshot['LLM_PRIMARY_MODEL_NAME']
+    }
+    if ($StartupSnapshot.ContainsKey('LLM_SECONDARY_MODEL_NAME')) {
+        Set-Item -Path 'Env:LLM_SECONDARY_MODEL_NAME' -Value $StartupSnapshot['LLM_SECONDARY_MODEL_NAME']
+    }
+}
+
 function Write-Phase6CredentialCheckpoint {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Label
+        [string]$Label,
+
+        [ValidateSet('Present', 'Valid')]
+        [string]$Mode = 'Present'
     )
 
-    $visible = Test-Phase6CredentialVisible
+    $visible = if ($Mode -eq 'Valid') {
+        Test-Phase6CredentialValid
+    }
+    else {
+        Test-Phase6CredentialPresent
+    }
     Write-Host ("{0}: {1}" -f $Label, $(if ($visible) { 'YES' } else { 'NO' }))
 }
 

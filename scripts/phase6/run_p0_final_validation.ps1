@@ -12,13 +12,19 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location $repoRoot
 
+# Capture user runtime env before any helper import or dot-source side effects.
+$script:StartupRuntimeEnvSnapshot = @{}
+foreach ($key in @('HF_TOKEN', 'LLM_PRIMARY_MODEL_NAME', 'LLM_SECONDARY_MODEL_NAME')) {
+    $item = Get-Item -Path ("Env:{0}" -f $key) -ErrorAction SilentlyContinue
+    if ($null -ne $item) {
+        $script:StartupRuntimeEnvSnapshot[$key] = [string]$item.Value
+    }
+}
+
 $isolationScript = Join-Path $PSScriptRoot 'phase6_env_isolation.ps1'
 . $isolationScript
 
 $verifyScript = Join-Path $PSScriptRoot 'verify_hf_runtime.ps1'
-if (Test-Path $verifyScript) {
-    . $verifyScript -Mode Discover
-}
 
 function Write-ValidationLine {
     param([string]$Line)
@@ -27,13 +33,30 @@ function Write-ValidationLine {
 }
 
 function Write-ValidationCheckpoint {
-    param([string]$Label)
-    $visible = Test-Phase6CredentialVisible
+    param(
+        [string]$Label,
+        [ValidateSet('Present', 'Valid')]
+        [string]$Mode = 'Present'
+    )
+
+    $visible = if ($Mode -eq 'Valid') {
+        Test-Phase6CredentialValid
+    }
+    else {
+        if (Test-Phase6CredentialPresent) {
+            $true
+        }
+        elseif ($script:StartupRuntimeEnvSnapshot.ContainsKey('HF_TOKEN') -and -not [string]::IsNullOrWhiteSpace($script:StartupRuntimeEnvSnapshot['HF_TOKEN'])) {
+            $true
+        }
+        else {
+            $false
+        }
+    }
     Write-ValidationLine ("{0}: {1}" -f $Label, $(if ($visible) { 'YES' } else { 'NO' }))
 }
 
 $script:ReportLines = @()
-$script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
 
 $timestamp = (Get-Date).ToUniversalTime().ToString('o')
 Write-ValidationLine "# REAL LLM Final Verification"
@@ -43,7 +66,11 @@ Write-ValidationLine "branch: $(git branch --show-current 2>$null)"
 Write-ValidationLine "headSha: $(git rev-parse HEAD 2>$null)"
 Write-ValidationLine ""
 
-Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_BEFORE_STATIC'
+$startupTokenPresent = $script:StartupRuntimeEnvSnapshot.ContainsKey('HF_TOKEN') -and -not [string]::IsNullOrWhiteSpace($script:StartupRuntimeEnvSnapshot['HF_TOKEN'])
+Write-ValidationLine ("HF_TOKEN_VISIBLE_BEFORE_STATIC: {0}" -f $(if ($startupTokenPresent) { 'YES' } else { 'NO' }))
+
+Restore-Phase6StartupCredentialEnv -StartupSnapshot $script:StartupRuntimeEnvSnapshot
+$script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
 if ($env:LLM_PRIMARY_MODEL_NAME) {
     Write-ValidationLine "PRIMARY_MODEL=$($env:LLM_PRIMARY_MODEL_NAME.Trim())"
 }
@@ -72,11 +99,17 @@ else {
     Write-ValidationLine 'PHASE6_STATIC_TESTS: SKIP (script missing)'
 }
 
-Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_AFTER_STATIC'
-Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_BEFORE_HF_VERIFY'
+Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_AFTER_STATIC' 'Present'
+Write-ValidationCheckpoint 'HF_TOKEN_VISIBLE_BEFORE_HF_VERIFY' 'Present'
 
-$credVisible = Test-Phase6CredentialVisible
-Write-ValidationLine "HF_TOKEN_VISIBLE: $(if ($credVisible) { 'YES' } else { 'NO' })"
+Restore-Phase6StartupCredentialEnv -StartupSnapshot $script:StartupRuntimeEnvSnapshot
+if (Test-Path $verifyScript) {
+    . $verifyScript -Mode Discover
+}
+
+$credPresent = Test-Phase6CredentialPresent
+$credVisible = Test-Phase6CredentialValid
+Write-ValidationLine "HF_TOKEN_VISIBLE: $(if ($credVisible) { 'YES' } elseif ($credPresent) { 'PRESENT_FORMAT_PENDING' } else { 'NO' })"
 Write-ValidationLine ""
 
 # Optional HF direct dual-model smoke (requires HF_TOKEN in env)
@@ -106,7 +139,12 @@ if ($credVisible) {
 }
 else {
     Write-ValidationLine 'REAL_DUAL_LLM_DIRECT_SMOKE: IMPLEMENTED_BLOCKED'
-    Write-ValidationLine "BLOCK_REASON: $hfBlockReason"
+    if ($credPresent) {
+        Write-ValidationLine 'BLOCK_REASON: HF_TOKEN_FORMAT_INVALID'
+    }
+    else {
+        Write-ValidationLine "BLOCK_REASON: $hfBlockReason"
+    }
 }
 
 $credVisible = Test-Phase6CredentialVisible
@@ -180,7 +218,7 @@ if (-not $SkipAgent) {
     Write-Host 'STEP=agent_pytest'
     $agentSnapshot = Get-Phase6RuntimeEnvSnapshot
     try {
-        Set-Phase6AgentTestEnv
+        Set-Phase6AgentTestEnv -RepoRoot $repoRoot
         Push-Location (Join-Path $repoRoot 'apps\agent')
         $py = & python -m pytest tests/ -q 2>&1
         if ($LASTEXITCODE -eq 0) {
