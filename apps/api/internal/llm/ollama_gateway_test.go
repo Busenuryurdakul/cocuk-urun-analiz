@@ -85,13 +85,16 @@ func testGatewayHTTP(t *testing.T) (*Gateway, primitive.ObjectID, primitive.Obje
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	modelName := envOrDefault("LLM_PRIMARY_MODEL_NAME", "llama3.2:latest")
+	providerModels := map[string]string{
+		ModelKeyCareful: envOrDefault("LLM_PRIMARY_MODEL_NAME", "llama3.2:latest"),
+		ModelKeyResult:  envOrDefault("LLM_SECONDARY_MODEL_NAME", "llama3.2:latest"),
+	}
 	for _, key := range []string{ModelKeyCareful, ModelKeyResult} {
 		model, err := gw.deps.Models.FindByKey(ctx, key)
 		if err != nil {
 			t.Fatalf("find model %s: %v", key, err)
 		}
-		model.ProviderModelName = modelName
+		model.ProviderModelName = providerModels[key]
 		if err := gw.deps.Models.Upsert(ctx, model); err != nil {
 			t.Fatalf("update model %s: %v", key, err)
 		}

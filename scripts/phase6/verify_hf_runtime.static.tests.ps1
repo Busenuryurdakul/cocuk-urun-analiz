@@ -388,7 +388,7 @@ if (Test-Path $p0SourcePath) {
     if ($p0Source -match 'powershell(\.exe)?\s+.*verify_hf_runtime') {
         Add-Failure 'Parent validation must not spawn child PowerShell for HF verification.'
     }
-    if ($p0Source -notmatch 'Test-Phase6CredentialVisible|Test-HfAccessTokenCandidate') {
+    if ($p0Source -notmatch 'Test-Phase6CredentialVisible|Test-HfAccessTokenCandidate|Test-Phase6CredentialValid') {
         Add-Failure 'Parent validation must validate HF_TOKEN format, not only whitespace.'
     }
     if ($p0Source -notmatch 'Get-Phase6RuntimeEnvSnapshot') {
@@ -477,9 +477,102 @@ if (@(ConvertTo-Phase6OutputLines -RawOutput '').Count -ne 0) {
     Add-Failure 'EMPTY_OUTPUT_LINES: ConvertTo-Phase6OutputLines must normalize empty string.'
 }
 
+$singlePayload = @{ data = [pscustomobject]@{ id = 'org/model-a'; object = 'model' } } | ConvertTo-Json -Depth 4 | ConvertFrom-Json
+$singleItems = Get-HfModelsFromDiscoveryPayload -Parsed $singlePayload
+if ($singleItems.Count -ne 1 -or (Get-HfModelIdFromEntry -ModelEntry $singleItems[0]) -ne 'org/model-a') {
+    Add-Failure 'DISCOVERY_SINGLE_OBJECT_NORMALIZATION: single data object must normalize to one entry.'
+}
+else {
+    Write-Host 'DISCOVERY_SINGLE_OBJECT_NORMALIZATION: PASS'
+}
+
+$arrayPayload = @{
+    data = @(
+        [pscustomobject]@{ id = 'org/model-a'; object = 'model' }
+        [pscustomobject]@{ id = 'org/model-b'; object = 'model' }
+    )
+} | ConvertTo-Json -Depth 4 | ConvertFrom-Json
+$arrayItems = Get-HfModelsFromDiscoveryPayload -Parsed $arrayPayload
+if ($arrayItems.Count -ne 2) {
+    Add-Failure 'DISCOVERY_ARRAY_NORMALIZATION: array data must preserve all entries.'
+}
+else {
+    Write-Host 'DISCOVERY_ARRAY_NORMALIZATION: PASS'
+}
+
+$nullItems = Get-HfModelsFromDiscoveryPayload -Parsed $null
+if ($nullItems.Count -ne 0) {
+    Add-Failure 'DISCOVERY_NULL_SAFE: null payload must return empty list.'
+}
+else {
+    Write-Host 'DISCOVERY_NULL_SAFE: PASS'
+}
+
+$stringPayload = @{ data = @('org/model-a', 'org/model-b') } | ConvertTo-Json -Depth 4 | ConvertFrom-Json
+$stringItems = Get-HfModelsFromDiscoveryPayload -Parsed $stringPayload
+$stringIds = @($stringItems | ForEach-Object { Get-HfModelIdFromEntry -ModelEntry $_ })
+if ($stringIds.Count -ne 2 -or $stringIds[0] -ne 'org/model-a' -or $stringIds[1] -ne 'org/model-b') {
+    Add-Failure 'DISCOVERY_RETURNS_STRING_MODEL_IDS: string model ids must normalize.'
+}
+else {
+    Write-Host 'DISCOVERY_RETURNS_STRING_MODEL_IDS: PASS'
+}
+
+$distinctCandidates = @(
+    [pscustomobject]@{ modelId = 'org/model-a' }
+    [pscustomobject]@{ modelId = 'org/model-b' }
+    [pscustomobject]@{ modelId = 'org/model-a' }
+)
+$distinctIds = Get-HfDistinctModelIds -Candidates $distinctCandidates
+if ($distinctIds.Count -ne 2 -or $distinctIds[0] -ne 'org/model-a' -or $distinctIds[1] -ne 'org/model-b') {
+    Add-Failure 'DISCOVERY_DISTINCT_MODEL_SELECTION: duplicate model ids must be deduplicated.'
+}
+else {
+    Write-Host 'DISCOVERY_DISTINCT_MODEL_SELECTION: PASS'
+}
+
+$gatewaySnapshot = Get-Phase6RuntimeEnvSnapshot
+try {
+    $env:HF_TOKEN = $Script:SyntheticHfToken
+    Set-MiyunaLlmRuntimeEnvironment -PrimaryModel 'org/primary-model' -SecondaryModel 'org/secondary-model' -HfToken $Script:SyntheticHfToken
+    if ($env:LLM_USE_MOCK -ne 'false') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: LLM_USE_MOCK must be false.'
+    }
+    if ($env:LLM_PRIMARY_MODEL_NAME -ne 'org/primary-model') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: primary model name must be mapped.'
+    }
+    if ($env:LLM_SECONDARY_MODEL_NAME -ne 'org/secondary-model') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: secondary model name must be mapped.'
+    }
+    if ($env:LLM_PRIMARY_API_KEY -ne $Script:SyntheticHfToken -or $env:LLM_SECONDARY_API_KEY -ne $Script:SyntheticHfToken) {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: HF token must map to provider API keys.'
+    }
+    if ($env:LLM_PRIMARY_BASE_URL -ne 'https://router.huggingface.co/v1') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: primary base URL must target HF router.'
+    }
+    if ($env:LLM_SECONDARY_BASE_URL -ne 'https://router.huggingface.co/v1') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: secondary base URL must target HF router.'
+    }
+    Set-Phase6RealGatewayEnv -PrimaryModel 'org/worker-model' -SecondaryModel 'org/reviewer-model'
+    if ($env:LLM_PRIMARY_MODEL_NAME -ne 'org/worker-model' -or $env:LLM_SECONDARY_MODEL_NAME -ne 'org/reviewer-model') {
+        Add-Failure 'REAL_GATEWAY_ENV_MAPPING: Set-Phase6RealGatewayEnv must refresh model names.'
+    }
+}
+finally {
+    Restore-Phase6RuntimeEnv $gatewaySnapshot
+}
+Write-Host 'REAL_GATEWAY_ENV_MAPPING: PASS'
+
+if ($source -notmatch 'function ConvertTo-HfCandidateArray') {
+    Add-Failure 'Discovery must normalize candidates via ConvertTo-HfCandidateArray.'
+}
+if ($source -notmatch 'function Get-HfModelsFromDiscoveryPayload') {
+    Add-Failure 'Discovery must normalize router payload via Get-HfModelsFromDiscoveryPayload.'
+}
+
 Write-Host ''
 Write-Host 'STATIC_SECURITY_TEST=PASS'
-Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe'
+Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe,discovery_single_object_normalization,discovery_array_normalization,discovery_null_safe,discovery_returns_string_model_ids,discovery_distinct_model_selection,real_gateway_env_mapping'
 
 if ($failures.Count -gt 0) {
     Write-Host 'STATIC_SECURITY_TEST=FAIL'

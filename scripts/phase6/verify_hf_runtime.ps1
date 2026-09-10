@@ -415,6 +415,15 @@ function Get-HfErrorClass {
     if ($Message -match '(?i)loading|model is currently loading|cold start') {
         return 'MODEL_LOADING'
     }
+    if ($Message -match '(?i)model_not_found|"type"\s*:\s*"invalid_request_error".*model|model[^"\n]{0,80}(not found|not supported|does not exist|unavailable|unknown model|not served|not available)') {
+        return 'MODEL_NOT_SERVED'
+    }
+    if ($StatusCode -eq 404 -and $Message -match '(?i)model') {
+        return 'MODEL_NOT_SERVED'
+    }
+    if ($StatusCode -eq 400 -and $Message -match '(?i)model') {
+        return 'MODEL_NOT_AVAILABLE'
+    }
     return 'REQUEST_FAILED'
 }
 
@@ -593,6 +602,113 @@ function Get-ProviderFromModelId {
     return $null
 }
 
+function ConvertTo-HfObjectArray {
+    param(
+        [AllowNull()]
+        $Value
+    )
+
+    if ($null -eq $Value) {
+        return ,@()
+    }
+
+    if ($Value -is [string]) {
+        return ,@($Value)
+    }
+
+    if ($Value -is [System.Collections.Generic.List[object]]) {
+        return ,@($Value.ToArray())
+    }
+
+    if ($Value -is [System.Array]) {
+        return ,@($Value)
+    }
+
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        return ,@($Value)
+    }
+
+    if ($Value -is [System.Collections.IEnumerable]) {
+        return ,@($Value)
+    }
+
+    return ,@($Value)
+}
+
+function Get-HfModelsFromDiscoveryPayload {
+    param(
+        [AllowNull()]
+        $Parsed
+    )
+
+    if ($null -eq $Parsed) {
+        return @()
+    }
+
+    if ($Parsed.PSObject.Properties.Name -contains 'data') {
+        $items = ConvertTo-HfObjectArray -Value $Parsed.data
+        return ,@($items)
+    }
+
+    if ($Parsed.PSObject.Properties.Name -contains 'models') {
+        $items = ConvertTo-HfObjectArray -Value $Parsed.models
+        return ,@($items)
+    }
+
+    if ($Parsed -is [System.Array]) {
+        return ,@($Parsed)
+    }
+
+    return ,@(ConvertTo-HfObjectArray -Value $Parsed)
+}
+
+function Get-HfModelIdFromEntry {
+    param(
+        [AllowNull()]
+        $ModelEntry
+    )
+
+    if ($null -eq $ModelEntry) {
+        return ''
+    }
+
+    if ($ModelEntry -is [string]) {
+        return $ModelEntry.Trim()
+    }
+
+    foreach ($prop in @('id', 'model', 'name', 'modelId')) {
+        if ($ModelEntry.PSObject.Properties.Name -contains $prop) {
+            $value = [string]$ModelEntry.$prop
+            if (-not [string]::IsNullOrWhiteSpace($value)) {
+                return $value.Trim()
+            }
+        }
+    }
+
+    return ''
+}
+
+function ConvertTo-HfCandidateArray {
+    param(
+        [AllowNull()]
+        $Candidates
+    )
+
+    if ($null -eq $Candidates) {
+        return ,@()
+    }
+
+    if ($Candidates -is [System.Collections.Generic.List[object]]) {
+        return ,@($Candidates.ToArray())
+    }
+
+    if ($Candidates -is [System.Array]) {
+        return ,@($Candidates)
+    }
+
+    return ,@($Candidates)
+}
+
 function Test-ModelSupportsChat {
     param($ModelEntry)
 
@@ -600,7 +716,7 @@ function Test-ModelSupportsChat {
         return $false
     }
 
-    $modelId = [string]$ModelEntry.id
+    $modelId = Get-HfModelIdFromEntry -ModelEntry $ModelEntry
     if ([string]::IsNullOrWhiteSpace($modelId)) {
         return $false
     }
@@ -611,6 +727,10 @@ function Test-ModelSupportsChat {
         if ($lowerId.Contains($hint)) {
             return $false
         }
+    }
+
+    if ($ModelEntry -is [string]) {
+        return $true
     }
 
     if ($ModelEntry.PSObject.Properties.Name -contains 'capabilities') {
@@ -632,8 +752,22 @@ function Test-ModelSupportsChat {
 function ConvertTo-HfModelCandidate {
     param($ModelEntry)
 
-    $modelId = [string]$ModelEntry.id
+    $modelId = Get-HfModelIdFromEntry -ModelEntry $ModelEntry
+    if ([string]::IsNullOrWhiteSpace($modelId)) {
+        return $null
+    }
+
     $provider = Get-ProviderFromModelId -ModelId $modelId
+    if ($ModelEntry -is [string]) {
+        return [pscustomobject]@{
+            modelId         = $modelId
+            provider        = $provider
+            chatCompatible  = $true
+            contextLength   = $null
+            pricing         = $null
+        }
+    }
+
     if ($ModelEntry.PSObject.Properties.Name -contains 'owned_by' -and -not [string]::IsNullOrWhiteSpace([string]$ModelEntry.owned_by)) {
         if ([string]::IsNullOrWhiteSpace($provider)) {
             $provider = [string]$ModelEntry.owned_by
@@ -678,13 +812,7 @@ function Get-HfChatModelCandidates {
     }
 
     $parsed = $response.Content | ConvertFrom-Json
-    $items = @()
-    if ($null -ne $parsed.data) {
-        $items = @($parsed.data)
-    }
-    elseif ($parsed -is [System.Array]) {
-        $items = @($parsed)
-    }
+    $items = Get-HfModelsFromDiscoveryPayload -Parsed $parsed
 
     $candidates = New-Object System.Collections.Generic.List[object]
     foreach ($entry in $items) {
@@ -692,6 +820,9 @@ function Get-HfChatModelCandidates {
             continue
         }
         $candidate = ConvertTo-HfModelCandidate -ModelEntry $entry
+        if ($null -eq $candidate) {
+            continue
+        }
         if (-not [string]::IsNullOrWhiteSpace($candidate.modelId)) {
             [void]$candidates.Add($candidate)
         }
@@ -700,14 +831,17 @@ function Get-HfChatModelCandidates {
         }
     }
 
-    return ,@($candidates)
+    $normalized = ConvertTo-HfCandidateArray -Candidates $candidates
+    return ,@($normalized)
 }
 
 function Write-DiscoverReport {
     param(
         [Parameter(Mandatory = $true)]
-        [array]$Candidates
+        $Candidates
     )
+
+    $Candidates = ConvertTo-HfCandidateArray -Candidates $Candidates
 
     Write-Host ''
     Write-Host 'HF_MODEL_CANDIDATES (max 20, chat-compatible, synthetic metadata only)'
@@ -881,8 +1015,10 @@ function Write-VerifyReport {
 function Get-HfDistinctModelIds {
     param(
         [Parameter(Mandatory = $true)]
-        [array]$Candidates
+        $Candidates
     )
+
+    $Candidates = ConvertTo-HfCandidateArray -Candidates $Candidates
 
     $ids = New-Object System.Collections.Generic.List[string]
     $seen = @{}
@@ -908,11 +1044,12 @@ function Invoke-HfDualModelVerificationWithFallback {
         [string]$Token,
 
         [Parameter(Mandatory = $true)]
-        [array]$Candidates,
+        $Candidates,
 
         [int]$MaxPairAttempts = 6
     )
 
+    $Candidates = ConvertTo-HfCandidateArray -Candidates $Candidates
     $modelIds = Get-HfDistinctModelIds -Candidates $Candidates
     if ($modelIds.Count -lt 2) {
         throw 'DISCOVER_INSUFFICIENT_MODELS'
@@ -1015,13 +1152,15 @@ function Write-MiyunaRuntimeEnvArtifact {
 function Write-AutoVerificationArtifacts {
     param(
         [Parameter(Mandatory = $true)]
-        [array]$Candidates,
+        $Candidates,
 
         [Parameter(Mandatory = $true)]
         $VerifyOutcome,
 
         [string]$PublicEnvArtifactPath
     )
+
+    $Candidates = ConvertTo-HfCandidateArray -Candidates $Candidates
 
     $repoRoot = Get-RepoRoot
     $artifactsDir = Join-Path $repoRoot 'artifacts\phase6'
@@ -1132,9 +1271,15 @@ function Invoke-AutoVerification {
             Write-Host 'PRESET_MODELS_SMOKE_FAILED — falling back to discovery'
             if ($primaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$primaryResult.ErrorClass)) {
                 Write-Host ('PRIMARY_SMOKE_FAILED errorClass={0}' -f $primaryResult.ErrorClass)
+                if ($primaryResult.ErrorClass -in @('MODEL_NOT_SERVED', 'MODEL_NOT_AVAILABLE', 'ENDPOINT_NOT_FOUND')) {
+                    Write-Host ('PRESET_PRIMARY_STATUS={0}' -f $primaryResult.ErrorClass)
+                }
             }
             if ($secondaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$secondaryResult.ErrorClass)) {
                 Write-Host ('SECONDARY_SMOKE_FAILED errorClass={0}' -f $secondaryResult.ErrorClass)
+                if ($secondaryResult.ErrorClass -in @('MODEL_NOT_SERVED', 'MODEL_NOT_AVAILABLE', 'ENDPOINT_NOT_FOUND')) {
+                    Write-Host ('PRESET_SECONDARY_STATUS={0}' -f $secondaryResult.ErrorClass)
+                }
             }
         }
     }
@@ -1142,7 +1287,16 @@ function Invoke-AutoVerification {
     if ($null -eq $verifyOutcome) {
         Write-Host ''
         Write-Host 'STEP=Discover'
-        $candidates = Get-HfChatModelCandidates -Token $token
+        try {
+            $candidates = Get-HfChatModelCandidates -Token $token
+        }
+        catch {
+            $safe = Get-SafeErrorMessage -RawMessage $_.Exception.Message -Token $token
+            if ($null -ne $_.InvocationInfo -and -not [string]::IsNullOrWhiteSpace([string]$_.InvocationInfo.PositionMessage)) {
+                Write-Host ('DISCOVERY_ERROR_AT={0}' -f (Get-SafeErrorMessage -RawMessage $_.InvocationInfo.PositionMessage -Token $token))
+            }
+            throw $safe
+        }
         if ($candidates.Count -eq 0) {
             throw 'No chat-compatible models were returned by the Hugging Face models endpoint.'
         }
@@ -1182,6 +1336,7 @@ function Invoke-Phase6HfRuntime {
     )
 
     $token = $null
+    $autoResult = $null
 
     try {
         Enable-HfTls12Support
@@ -1214,6 +1369,8 @@ function Invoke-Phase6HfRuntime {
                 }
             }
         }
+
+        return $autoResult
     }
     finally {
         Clear-HfSecretState -TokenRef ([ref]$token)

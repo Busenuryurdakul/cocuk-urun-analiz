@@ -101,6 +101,32 @@ function Test-Phase6CredentialVisible {
     return (Test-Phase6CredentialValid)
 }
 
+function Set-Phase6RealGatewayEnv {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PrimaryModel,
+
+        [Parameter(Mandatory = $true)]
+        [string]$SecondaryModel
+    )
+
+    if ([string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+        throw 'HF_TOKEN_MISSING_FOR_REAL_GATEWAY'
+    }
+
+    $hfBaseUrl = 'https://router.huggingface.co/v1'
+
+    $env:LLM_USE_MOCK = 'false'
+    $env:LLM_PRIMARY_BASE_URL = $hfBaseUrl
+    $env:LLM_PRIMARY_API_KEY = $env:HF_TOKEN
+    $env:LLM_PRIMARY_MODEL_NAME = $PrimaryModel.Trim()
+    $env:LLM_SECONDARY_BASE_URL = $hfBaseUrl
+    $env:LLM_SECONDARY_API_KEY = $env:HF_TOKEN
+    $env:LLM_SECONDARY_MODEL_NAME = $SecondaryModel.Trim()
+    Remove-Item Env:LLM_PROVIDER -ErrorAction SilentlyContinue
+    Remove-Item Env:LLM_BASE_URL -ErrorAction SilentlyContinue
+}
+
 function Restore-Phase6StartupCredentialEnv {
     param(
         [Parameter(Mandatory = $true)]

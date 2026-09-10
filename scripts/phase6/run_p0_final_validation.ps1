@@ -115,16 +115,31 @@ Write-ValidationLine ""
 # Optional HF direct dual-model smoke (requires HF_TOKEN in env)
 $hfStatus = 'IMPLEMENTED_BLOCKED'
 $hfBlockReason = 'PROVIDER_CREDENTIAL_NOT_AVAILABLE'
+$script:RealPrimaryModel = $null
+$script:RealSecondaryModel = $null
+$realGatewayStatus = 'IMPLEMENTED_BLOCKED'
+$realPipelineStatus = 'IMPLEMENTED_BLOCKED'
+
 if ($credVisible) {
     Write-Host 'STEP=hf_auto_verification'
     try {
-        $null = Invoke-Phase6HfRuntime -Mode Auto -ForceNewToken:$ForceHfPrompt
+        $hfAutoResult = Invoke-Phase6HfRuntime -Mode Auto -ForceNewToken:$ForceHfPrompt
+        if ($null -eq $hfAutoResult -or $null -eq $hfAutoResult.VerifyOutcome) {
+            throw 'HF auto verification did not return a verify outcome.'
+        }
+
+        $script:RealPrimaryModel = [string]$hfAutoResult.VerifyOutcome.PrimaryResult.ModelId
+        $script:RealSecondaryModel = [string]$hfAutoResult.VerifyOutcome.SecondaryResult.ModelId
+        Set-Phase6RealGatewayEnv -PrimaryModel $script:RealPrimaryModel -SecondaryModel $script:RealSecondaryModel
         $script:RuntimeEnvSnapshot = Get-Phase6RuntimeEnvSnapshot
         $hfStatus = 'PASS'
         $hfBlockReason = ''
+
         Write-ValidationLine 'REAL_DUAL_LLM_DIRECT_SMOKE: PASS'
-        Write-ValidationLine 'REAL_ROUTING_VERIFIED: PENDING_API_GATEWAY_E2E'
-        Write-ValidationLine 'REAL_FALLBACK_VERIFIED: PENDING_API_GATEWAY_E2E'
+        Write-ValidationLine "REAL_PRIMARY_MODEL=$($script:RealPrimaryModel)"
+        Write-ValidationLine "REAL_SECONDARY_MODEL=$($script:RealSecondaryModel)"
+        $modelsDifferent = ($script:RealPrimaryModel.Trim() -ne $script:RealSecondaryModel.Trim())
+        Write-ValidationLine ("MODELS_DIFFERENT: {0}" -f $(if ($modelsDifferent) { 'YES' } else { 'NO' }))
     }
     catch {
         $safe = $_.Exception.Message
@@ -147,18 +162,29 @@ else {
     }
 }
 
-$credVisible = Test-Phase6CredentialVisible
-if ($credVisible -and $env:LLM_PRIMARY_MODEL_NAME -and $env:LLM_SECONDARY_MODEL_NAME -and ($env:LLM_PRIMARY_MODEL_NAME.Trim() -ne $env:LLM_SECONDARY_MODEL_NAME.Trim())) {
+if ($hfStatus -eq 'PASS' -and $script:RealPrimaryModel -and $script:RealSecondaryModel -and ($script:RealPrimaryModel.Trim() -ne $script:RealSecondaryModel.Trim())) {
     Write-Host 'STEP=go_real_llm_tagged'
     $realSnapshot = Get-Phase6RuntimeEnvSnapshot
     try {
+        Set-Phase6RealGatewayEnv -PrimaryModel $script:RealPrimaryModel -SecondaryModel $script:RealSecondaryModel
         Push-Location (Join-Path $repoRoot 'apps\api')
-        $env:LLM_USE_MOCK = 'false'
         $goReal = & go test -tags=real_llm ./internal/llm/... ./internal/integration/... -count=1 -timeout 10m -run 'Real' 2>&1
         if ($LASTEXITCODE -eq 0) {
+            $realGatewayStatus = 'PASS'
+            $realPipelineStatus = 'PASS'
+            Write-ValidationLine 'REAL_WORKER: PASS'
+            Write-ValidationLine 'REAL_REVIEWER: PASS'
+            Write-ValidationLine 'DUAL_MODEL_ROUTING: PASS'
+            Write-ValidationLine 'PERSONA_SEPARATION: PASS'
             Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: PASS'
         }
         else {
+            $realGatewayStatus = 'FAIL'
+            $realPipelineStatus = 'FAIL'
+            Write-ValidationLine 'REAL_WORKER: FAIL'
+            Write-ValidationLine 'REAL_REVIEWER: FAIL'
+            Write-ValidationLine 'DUAL_MODEL_ROUTING: FAIL'
+            Write-ValidationLine 'PERSONA_SEPARATION: FAIL'
             Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: FAIL'
             foreach ($line in (Format-Phase6SafeTestOutput -Lines (ConvertTo-Phase6OutputLines -RawOutput $goReal))) {
                 Write-ValidationLine "  $line"
@@ -172,8 +198,17 @@ if ($credVisible -and $env:LLM_PRIMARY_MODEL_NAME -and $env:LLM_SECONDARY_MODEL_
     }
 }
 else {
+    Write-ValidationLine 'REAL_WORKER: IMPLEMENTED_BLOCKED'
+    Write-ValidationLine 'REAL_REVIEWER: IMPLEMENTED_BLOCKED'
+    Write-ValidationLine 'DUAL_MODEL_ROUTING: IMPLEMENTED_BLOCKED'
+    Write-ValidationLine 'PERSONA_SEPARATION: IMPLEMENTED_BLOCKED'
     Write-ValidationLine 'REAL_FINAL_PIPELINE_E2E: IMPLEMENTED_BLOCKED'
-    Write-ValidationLine 'BLOCK_REASON: PROVIDER_CREDENTIAL_OR_DISTINCT_MODELS_NOT_AVAILABLE'
+    if ($hfStatus -ne 'PASS') {
+        Write-ValidationLine 'BLOCK_REASON: REAL_DUAL_LLM_DIRECT_SMOKE_NOT_PASS'
+    }
+    else {
+        Write-ValidationLine 'BLOCK_REASON: PROVIDER_CREDENTIAL_OR_DISTINCT_MODELS_NOT_AVAILABLE'
+    }
 }
 
 Write-Host 'STEP=go_mock_regression'
