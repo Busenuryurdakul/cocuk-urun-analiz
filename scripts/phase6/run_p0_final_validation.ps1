@@ -136,6 +136,8 @@ if ($credVisible) {
         $hfBlockReason = ''
 
         Write-ValidationLine 'REAL_DUAL_LLM_DIRECT_SMOKE: PASS'
+        Write-ValidationLine "WORKING_MODEL_1=$($script:RealPrimaryModel)"
+        Write-ValidationLine "WORKING_MODEL_2=$($script:RealSecondaryModel)"
         Write-ValidationLine "REAL_PRIMARY_MODEL=$($script:RealPrimaryModel)"
         Write-ValidationLine "REAL_SECONDARY_MODEL=$($script:RealSecondaryModel)"
         $modelsDifferent = ($script:RealPrimaryModel.Trim() -ne $script:RealSecondaryModel.Trim())
@@ -148,6 +150,10 @@ if ($credVisible) {
         }
         if ($safe.Length -gt 200) { $safe = $safe.Substring(0, 200) }
         Write-ValidationLine "REAL_DUAL_LLM_DIRECT_SMOKE: FAIL ($safe)"
+        if ($safe -match 'HF_INFERENCE_CREDITS_OR_PROVIDER_LIMIT') {
+            Write-ValidationLine 'EXTERNAL_BLOCKER=HF_INFERENCE_CREDITS_OR_PROVIDER_LIMIT'
+            Write-ValidationLine 'BLOCK_REASON=HF_INFERENCE_CREDITS_OR_PROVIDER_LIMIT'
+        }
         $hfStatus = 'FAIL'
         $hfBlockReason = ''
     }

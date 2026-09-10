@@ -198,18 +198,120 @@ catch {
 }
 
 $class401 = Get-HfErrorClass -StatusCode 401 -HttpStatusLabel 'AUTHENTICATION_FAILED'
-$class403 = Get-HfErrorClass -StatusCode 403 -HttpStatusLabel 'PERMISSION_DENIED'
+$class403Label = Get-HfErrorClass -StatusCode 403 -HttpStatusLabel 'PERMISSION_DENIED'
 $class404 = Get-HfErrorClass -StatusCode 404 -HttpStatusLabel 'ENDPOINT_NOT_FOUND'
-$class429 = Get-HfErrorClass -StatusCode 429 -HttpStatusLabel 'RATE_LIMITED'
+$class429Label = Get-HfErrorClass -StatusCode 429 -HttpStatusLabel 'RATE_LIMITED'
 $class503 = Get-HfErrorClass -StatusCode 503 -HttpStatusLabel 'PROVIDER_ERROR'
 $classTimeout = Get-HfErrorClass -StatusCode 0 -Message 'The operation has timed out'
+$class402 = Get-HfErrorClass -StatusCode 402
+$class429 = Get-HfErrorClass -StatusCode 429
+$class403 = Get-HfErrorClass -StatusCode 403
 
 if ($class401 -ne 'AUTHENTICATION_FAILED') { Add-Failure '401 must map to AUTHENTICATION_FAILED.' }
-if ($class403 -ne 'PERMISSION_DENIED') { Add-Failure '403 must map to PERMISSION_DENIED.' }
+if ($class403Label -ne 'PROVIDER_UNAVAILABLE') { Add-Failure '403 must map to PROVIDER_UNAVAILABLE.' }
 if ($class404 -ne 'ENDPOINT_NOT_FOUND') { Add-Failure '404 must map to ENDPOINT_NOT_FOUND.' }
+if ($class429Label -ne 'RATE_LIMITED') { Add-Failure '429 label must map to RATE_LIMITED.' }
+if ($class503 -ne 'SERVER_ERROR') { Add-Failure '5xx must map to SERVER_ERROR.' }
+if ($classTimeout -ne 'TIMEOUT') { Add-Failure 'Timeout messages must map to TIMEOUT.' }
+if ($class402 -ne 'INSUFFICIENT_CREDITS') { Add-Failure '402 must map to INSUFFICIENT_CREDITS.' }
 if ($class429 -ne 'RATE_LIMITED') { Add-Failure '429 must map to RATE_LIMITED.' }
-if ($class503 -ne 'PROVIDER_ERROR') { Add-Failure '5xx must map to PROVIDER_ERROR.' }
-if ($classTimeout -ne 'REQUEST_TIMEOUT') { Add-Failure 'Timeout messages must map to REQUEST_TIMEOUT.' }
+if ($class403 -ne 'PROVIDER_UNAVAILABLE') { Add-Failure '403 must map to PROVIDER_UNAVAILABLE.' }
+Write-Host 'VERIFY_CLASSIFIES_RATE_LIMIT: PASS'
+Write-Host 'VERIFY_CLASSIFIES_CREDITS_ERROR: PASS'
+
+$liveMapping = [pscustomobject]@{
+    providerKey = 'together'
+    status      = 'live'
+    task        = 'conversational'
+    providerId  = 'org/model-a'
+}
+$stagingMapping = [pscustomobject]@{
+    providerKey = 'together'
+    status      = 'staging'
+    task        = 'conversational'
+    providerId  = 'org/model-a'
+}
+$warmMapping = [pscustomobject]@{
+    providerKey = 'hf-inference'
+    status      = 'warm'
+    task        = 'conversational'
+    providerId  = 'org/model-b'
+}
+$nonConversationalMapping = [pscustomobject]@{
+    providerKey = 'together'
+    status      = 'live'
+    task        = 'text-generation'
+    providerId  = 'org/model-c'
+}
+
+if (-not (Test-HfProviderMappingEligible -Mapping $liveMapping -AllowWarmFallback)) {
+    Add-Failure 'DISCOVERY_REQUIRES_LIVE_PROVIDER: live conversational mapping must be eligible.'
+}
+else {
+    Write-Host 'DISCOVERY_REQUIRES_LIVE_PROVIDER: PASS'
+}
+
+if (Test-HfProviderMappingEligible -Mapping $stagingMapping -AllowWarmFallback) {
+    Add-Failure 'DISCOVERY_IGNORES_STAGING_PROVIDER: staging mappings must be rejected.'
+}
+else {
+    Write-Host 'DISCOVERY_IGNORES_STAGING_PROVIDER: PASS'
+}
+
+if (-not (Test-HfProviderMappingEligible -Mapping $warmMapping -AllowWarmFallback)) {
+    Add-Failure 'DISCOVERY_WARM_FALLBACK: warm conversational mapping must be eligible when fallback enabled.'
+}
+else {
+    Write-Host 'DISCOVERY_WARM_FALLBACK: PASS'
+}
+
+if (Test-HfProviderMappingEligible -Mapping $nonConversationalMapping -AllowWarmFallback) {
+    Add-Failure 'DISCOVERY_REQUIRES_CONVERSATIONAL_TASK: non-conversational mappings must be rejected.'
+}
+else {
+    Write-Host 'DISCOVERY_REQUIRES_CONVERSATIONAL_TASK: PASS'
+}
+
+$hubEntry = [pscustomobject]@{
+    id = 'org/model-a'
+    inferenceProviderMapping = [pscustomobject]@{
+        together = [pscustomobject]@{
+            status     = 'live'
+            task       = 'conversational'
+            providerId = 'org/model-a'
+        }
+    }
+}
+$providerCandidate = New-HfProviderBackedCandidateFromEntry -ModelEntry $hubEntry
+if ($null -eq $providerCandidate -or $providerCandidate.modelId -ne 'org/model-a' -or -not $providerCandidate.providerBacked) {
+    Add-Failure 'Provider-backed candidate must be created from live conversational hub mapping.'
+}
+
+$sourceVerify = Get-Content -Path $TargetScript -Raw -Encoding UTF8
+if ($sourceVerify -notmatch 'function Invoke-HfIndividualModelVerification') {
+    Add-Failure 'VERIFY_TESTS_CANDIDATES_INDIVIDUALLY: individual model verification must exist.'
+}
+else {
+    Write-Host 'VERIFY_TESTS_CANDIDATES_INDIVIDUALLY: PASS'
+}
+
+if ($sourceVerify -notmatch 'VERIFY_CANDIDATE_ATTEMPT') {
+    Add-Failure 'VERIFY_TESTS_CANDIDATES_INDIVIDUALLY: candidate attempt logging must exist.'
+}
+
+if ($sourceVerify -match 'for \(\$i = 0; \$i -lt \(\$modelIds\.Count - 1\); \$i\+\+\)[\s\S]{0,400}PRIMARY_CANDIDATE') {
+    Add-Failure 'VERIFY_SKIPS_FAILED_PRIMARY: fixed-primary pair loop must not be used.'
+}
+else {
+    Write-Host 'VERIFY_SKIPS_FAILED_PRIMARY: PASS'
+}
+
+if ($sourceVerify -notmatch 'WORKING_MODEL_1=') {
+    Add-Failure 'VERIFY_SELECTS_TWO_DISTINCT_WORKING_MODELS: working model reporting must exist.'
+}
+else {
+    Write-Host 'VERIFY_SELECTS_TWO_DISTINCT_WORKING_MODELS: PASS'
+}
 
 $safe = Get-SafeErrorMessage -RawMessage 'Authorization: Bearer hf_abc123secretvalue' -Token 'hf_abc123secretvalue'
 if ($safe -match 'hf_abc123secretvalue') {
@@ -572,7 +674,7 @@ if ($source -notmatch 'function Get-HfModelsFromDiscoveryPayload') {
 
 Write-Host ''
 Write-Host 'STATIC_SECURITY_TEST=PASS'
-Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe,discovery_single_object_normalization,discovery_array_normalization,discovery_null_safe,discovery_returns_string_model_ids,discovery_distinct_model_selection,real_gateway_env_mapping'
+Write-Host 'TESTS_RUN=token_trim,control_char_reject,bearer_prefix_reject,header_build,no_token_output,tls12_enabled,no_cert_bypass,use_basic_parsing,safe_error_categories,invalid_header_category,mode_validation,verify_param_validation,error_classification,mock_http_no_secret_leak,env_token_present_does_not_prompt,env_token_present_preserved,env_primary_model_preserved,env_secondary_model_preserved,empty_env_token_blocks_safely,token_not_printed,token_not_in_command_line,static_tests_do_not_clear_real_env,static_tests_restore_hf_token,static_tests_restore_primary_model,static_tests_restore_secondary_model,mock_regression_isolated_from_real_model_env,ollama_test_not_using_hf_primary_model,agent_test_env_isolated,empty_output_lines_safe,discovery_single_object_normalization,discovery_array_normalization,discovery_null_safe,discovery_returns_string_model_ids,discovery_distinct_model_selection,real_gateway_env_mapping,discovery_requires_live_provider,discovery_requires_conversational_task,discovery_ignores_staging_provider,discovery_warm_fallback,verify_tests_candidates_individually,verify_skips_failed_primary,verify_selects_two_distinct_working_models,verify_classifies_rate_limit,verify_classifies_credits_error'
 
 if ($failures.Count -gt 0) {
     Write-Host 'STATIC_SECURITY_TEST=FAIL'

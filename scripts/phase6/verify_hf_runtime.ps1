@@ -17,9 +17,26 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $Script:HfModelsEndpoint = 'https://router.huggingface.co/v1/models'
+$Script:HfHubModelsEndpoint = 'https://huggingface.co/api/models'
 $Script:HfChatEndpoint = 'https://router.huggingface.co/v1/chat/completions'
 $Script:MaxDiscoverCandidates = 20
+$Script:MaxVerifyAttempts = 20
 $Script:SmokeMaxTokens = 16
+$Script:HfSupportedInferenceProviders = @(
+    'hf-inference',
+    'together',
+    'fireworks-ai',
+    'cerebras',
+    'cohere',
+    'fal-ai',
+    'hyperbolic',
+    'nebius',
+    'novita',
+    'openai',
+    'replicate',
+    'sambanova',
+    'black-forest-labs'
+)
 
 function Enable-HfTls12Support {
     if ([Net.ServicePointManager]::SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
@@ -394,23 +411,31 @@ function Get-HfErrorClass {
         [string]$HttpStatusLabel = ''
     )
 
+    if ($Message -match '(?i)credits? exhausted|insufficient credits|payment required|billing') {
+        return 'INSUFFICIENT_CREDITS'
+    }
+    if ($Message -match '(?i)rate limit|too many requests') {
+        return 'RATE_LIMITED'
+    }
+
     if (-not [string]::IsNullOrWhiteSpace($HttpStatusLabel)) {
         switch ($HttpStatusLabel) {
             'AUTHENTICATION_FAILED' { return 'AUTHENTICATION_FAILED' }
-            'PERMISSION_DENIED' { return 'PERMISSION_DENIED' }
+            'PERMISSION_DENIED' { return 'PROVIDER_UNAVAILABLE' }
             'ENDPOINT_NOT_FOUND' { return 'ENDPOINT_NOT_FOUND' }
             'RATE_LIMITED' { return 'RATE_LIMITED' }
-            'PROVIDER_ERROR' { return 'PROVIDER_ERROR' }
+            'PROVIDER_ERROR' { return 'SERVER_ERROR' }
         }
     }
 
     if ($StatusCode -eq 401) { return 'AUTHENTICATION_FAILED' }
-    if ($StatusCode -eq 403) { return 'PERMISSION_DENIED' }
+    if ($StatusCode -eq 402) { return 'INSUFFICIENT_CREDITS' }
+    if ($StatusCode -eq 403) { return 'PROVIDER_UNAVAILABLE' }
     if ($StatusCode -eq 404) { return 'ENDPOINT_NOT_FOUND' }
     if ($StatusCode -eq 429) { return 'RATE_LIMITED' }
-    if ($StatusCode -ge 500) { return 'PROVIDER_ERROR' }
+    if ($StatusCode -ge 500) { return 'SERVER_ERROR' }
     if ($Message -match '(?i)timeout|timed out|operation has timed out') {
-        return 'REQUEST_TIMEOUT'
+        return 'TIMEOUT'
     }
     if ($Message -match '(?i)loading|model is currently loading|cold start') {
         return 'MODEL_LOADING'
@@ -424,7 +449,19 @@ function Get-HfErrorClass {
     if ($StatusCode -eq 400 -and $Message -match '(?i)model') {
         return 'MODEL_NOT_AVAILABLE'
     }
+    if ($StatusCode -eq 400) {
+        return 'BAD_REQUEST'
+    }
     return 'REQUEST_FAILED'
+}
+
+function Test-HfExternalInferenceBlockerClass {
+    param(
+        [AllowNull()]
+        [string]$ErrorClass
+    )
+
+    return ($ErrorClass -in @('INSUFFICIENT_CREDITS', 'RATE_LIMITED', 'PROVIDER_UNAVAILABLE'))
 }
 
 function Invoke-HfWebRequestCompat {
@@ -709,19 +746,17 @@ function ConvertTo-HfCandidateArray {
     return ,@($Candidates)
 }
 
-function Test-ModelSupportsChat {
-    param($ModelEntry)
+function Test-HfRepositoryModelIdAllowed {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ModelId
+    )
 
-    if ($null -eq $ModelEntry) {
+    if ([string]::IsNullOrWhiteSpace($ModelId)) {
         return $false
     }
 
-    $modelId = Get-HfModelIdFromEntry -ModelEntry $ModelEntry
-    if ([string]::IsNullOrWhiteSpace($modelId)) {
-        return $false
-    }
-
-    $lowerId = $modelId.ToLowerInvariant()
+    $lowerId = $ModelId.ToLowerInvariant()
     $blockedHints = @('embed', 'embedding', 'rerank', 'whisper', 'speech', 'tts', 'vision-encode')
     foreach ($hint in $blockedHints) {
         if ($lowerId.Contains($hint)) {
@@ -729,71 +764,303 @@ function Test-ModelSupportsChat {
         }
     }
 
-    if ($ModelEntry -is [string]) {
-        return $true
-    }
-
-    if ($ModelEntry.PSObject.Properties.Name -contains 'capabilities') {
-        $caps = $ModelEntry.capabilities
-        if ($null -ne $caps) {
-            if ($caps.PSObject.Properties.Name -contains 'chat' -and $caps.chat -eq $false) {
-                return $false
-            }
-            if ($caps.PSObject.Properties.Name -contains 'completion' -and $caps.completion -eq $false -and
-                $caps.PSObject.Properties.Name -contains 'chat' -and $caps.chat -eq $false) {
-                return $false
-            }
-        }
-    }
-
     return $true
 }
 
-function ConvertTo-HfModelCandidate {
-    param($ModelEntry)
+function Get-HfRepositoryModelKey {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ModelId
+    )
 
-    $modelId = Get-HfModelIdFromEntry -ModelEntry $ModelEntry
-    if ([string]::IsNullOrWhiteSpace($modelId)) {
+    $normalized = $ModelId.Trim()
+    if ($normalized.Contains(':')) {
+        return $normalized.Split(':')[0]
+    }
+
+    return $normalized
+}
+
+function Get-HfInferenceProviderMappingsFromEntry {
+    param(
+        [AllowNull()]
+        $ModelEntry
+    )
+
+    $mappings = New-Object System.Collections.Generic.List[object]
+    if ($null -eq $ModelEntry) {
+        return @()
+    }
+
+    if ($ModelEntry.PSObject.Properties.Name -notcontains 'inferenceProviderMapping') {
+        return @()
+    }
+
+    $raw = $ModelEntry.inferenceProviderMapping
+    if ($null -eq $raw) {
+        return @()
+    }
+
+    foreach ($prop in $raw.PSObject.Properties) {
+        $details = $prop.Value
+        if ($null -eq $details) {
+            continue
+        }
+
+        [void]$mappings.Add([pscustomobject]@{
+            providerKey   = [string]$prop.Name
+            status        = [string]$details.status
+            task          = [string]$details.task
+            providerId    = [string]$details.providerId
+            providerModel = [string]$details.providerId
+        })
+    }
+
+    return ,@($mappings.ToArray())
+}
+
+function Test-HfProviderMappingEligible {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Mapping,
+
+        [switch]$AllowWarmFallback
+    )
+
+    if ($null -eq $Mapping) {
+        return $false
+    }
+
+    $status = ([string]$Mapping.status).Trim().ToLowerInvariant()
+    if ($status -eq 'staging') {
+        return $false
+    }
+
+    if ($status -eq 'live') {
+        $statusOk = $true
+    }
+    elseif ($AllowWarmFallback -and $status -eq 'warm') {
+        $statusOk = $true
+    }
+    else {
+        return $false
+    }
+
+    $task = ([string]$Mapping.task).Trim().ToLowerInvariant()
+    if ($task -ne 'conversational') {
+        return $false
+    }
+
+    $providerKey = ([string]$Mapping.providerKey).Trim()
+    if ([string]::IsNullOrWhiteSpace($providerKey)) {
+        return $false
+    }
+
+    if ($Script:HfSupportedInferenceProviders -notcontains $providerKey) {
+        return $false
+    }
+
+    return $statusOk
+}
+
+function Select-HfBestProviderMapping {
+    param(
+        [Parameter(Mandatory = $true)]
+        [array]$Mappings
+    )
+
+    $eligible = @($Mappings | Where-Object { Test-HfProviderMappingEligible -Mapping $_ -AllowWarmFallback })
+    if ($eligible.Count -eq 0) {
         return $null
     }
 
-    $provider = Get-ProviderFromModelId -ModelId $modelId
-    if ($ModelEntry -is [string]) {
-        return [pscustomobject]@{
-            modelId         = $modelId
-            provider        = $provider
-            chatCompatible  = $true
-            contextLength   = $null
-            pricing         = $null
+    return ($eligible | Sort-Object @{
+        Expression = {
+            if (([string]$_.status).ToLowerInvariant() -eq 'live') { 0 } else { 1 }
         }
+    }, @{
+        Expression = {
+            $idx = [array]::IndexOf($Script:HfSupportedInferenceProviders, [string]$_.providerKey)
+            if ($idx -lt 0) { 999 } else { $idx }
+        }
+    } | Select-Object -First 1)
+}
+
+function New-HfProviderBackedCandidateFromEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        $ModelEntry
+    )
+
+    $repositoryModelId = Get-HfRepositoryModelKey -ModelId (Get-HfModelIdFromEntry -ModelEntry $ModelEntry)
+    if (-not (Test-HfRepositoryModelIdAllowed -ModelId $repositoryModelId)) {
+        return $null
     }
 
-    if ($ModelEntry.PSObject.Properties.Name -contains 'owned_by' -and -not [string]::IsNullOrWhiteSpace([string]$ModelEntry.owned_by)) {
-        if ([string]::IsNullOrWhiteSpace($provider)) {
-            $provider = [string]$ModelEntry.owned_by
-        }
-    }
-
-    $contextLength = $null
-    foreach ($prop in @('context_length', 'contextLength', 'max_model_len')) {
-        if ($ModelEntry.PSObject.Properties.Name -contains $prop) {
-            $contextLength = $ModelEntry.$prop
-            break
-        }
-    }
-
-    $pricing = $null
-    if ($ModelEntry.PSObject.Properties.Name -contains 'pricing') {
-        $pricing = $ModelEntry.pricing
+    $mappings = Get-HfInferenceProviderMappingsFromEntry -ModelEntry $ModelEntry
+    $bestMapping = Select-HfBestProviderMapping -Mappings $mappings
+    if ($null -eq $bestMapping) {
+        return $null
     }
 
     return [pscustomobject]@{
-        modelId         = $modelId
-        provider        = $provider
-        chatCompatible  = $true
-        contextLength   = $contextLength
-        pricing         = $pricing
+        modelId             = $repositoryModelId
+        repositoryModelId   = $repositoryModelId
+        provider            = [string]$bestMapping.providerKey
+        providerModelId     = [string]$bestMapping.providerId
+        task                = [string]$bestMapping.task
+        status              = [string]$bestMapping.status
+        providerBacked      = $true
+        chatCompatible      = $true
     }
+}
+
+function Build-HfHubModelsListUri {
+    param(
+        [string]$Provider = $null,
+        [int]$Limit = 50
+    )
+
+    $query = @(
+        ('limit={0}' -f $Limit)
+        'sort=downloads'
+        'direction=-1'
+        'expand[]=inferenceProviderMapping'
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($Provider)) {
+        $query += ('inference_provider={0}' -f [uri]::EscapeDataString($Provider.Trim()))
+    }
+
+    return ('{0}?{1}' -f $Script:HfHubModelsEndpoint, ($query -join '&'))
+}
+
+function Add-HfProviderBackedCandidate {
+    param(
+        [Parameter(Mandatory = $true)]
+        $CandidatesList,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable]$SeenRepositoryIds,
+
+        [Parameter(Mandatory = $true)]
+        $Candidate
+    )
+
+    if ($null -eq $Candidate) {
+        return
+    }
+
+    $repoKey = Get-HfRepositoryModelKey -ModelId ([string]$Candidate.repositoryModelId)
+    if ([string]::IsNullOrWhiteSpace($repoKey)) {
+        return
+    }
+
+    if ($SeenRepositoryIds.ContainsKey($repoKey)) {
+        return
+    }
+
+    $SeenRepositoryIds[$repoKey] = $true
+    [void]$CandidatesList.Add($Candidate)
+}
+
+function Get-HfHubModelInfo {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Token,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ModelId
+    )
+
+    $uri = ('{0}/{1}?expand[]=inferenceProviderMapping' -f $Script:HfHubModelsEndpoint, $ModelId.Trim())
+    return (Invoke-HfOpenAIRequest -Method GET -Uri $uri -Token $Token -TimeoutSec 60)
+}
+
+function Get-HfHubProviderBackedCandidates {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Token
+    )
+
+    $candidates = New-Object System.Collections.Generic.List[object]
+    $seenRepositoryIds = @{}
+    $providerQueries = @($null) + $Script:HfSupportedInferenceProviders
+
+    foreach ($provider in $providerQueries) {
+        if ($candidates.Count -ge $Script:MaxDiscoverCandidates) {
+            break
+        }
+
+        $uri = Build-HfHubModelsListUri -Provider $provider -Limit 50
+        $response = Invoke-HfOpenAIRequest -Method GET -Uri $uri -Token $Token -TimeoutSec 90
+        if (-not $response.Ok) {
+            continue
+        }
+
+        $parsed = $response.Content | ConvertFrom-Json
+        $items = Get-HfModelsFromDiscoveryPayload -Parsed $parsed
+        foreach ($entry in $items) {
+            if ($candidates.Count -ge $Script:MaxDiscoverCandidates) {
+                break
+            }
+
+            $candidate = New-HfProviderBackedCandidateFromEntry -ModelEntry $entry
+            Add-HfProviderBackedCandidate -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
+        }
+    }
+
+    return $candidates
+}
+
+function Get-HfRouterFallbackCandidates {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Token,
+
+        [int]$MaxHubLookups = 15
+    )
+
+    $candidates = New-Object System.Collections.Generic.List[object]
+    $seenRepositoryIds = @{}
+
+    $response = Invoke-HfOpenAIRequest -Method GET -Uri $Script:HfModelsEndpoint -Token $Token -TimeoutSec 90
+    if (-not $response.Ok) {
+        return $candidates
+    }
+
+    $parsed = $response.Content | ConvertFrom-Json
+    $items = Get-HfModelsFromDiscoveryPayload -Parsed $parsed
+    $lookups = 0
+
+    foreach ($entry in $items) {
+        if ($candidates.Count -ge $Script:MaxDiscoverCandidates) {
+            break
+        }
+        if ($lookups -ge $MaxHubLookups) {
+            break
+        }
+
+        $routerModelId = Get-HfRepositoryModelKey -ModelId (Get-HfModelIdFromEntry -ModelEntry $entry)
+        if (-not (Test-HfRepositoryModelIdAllowed -ModelId $routerModelId)) {
+            continue
+        }
+        if ($seenRepositoryIds.ContainsKey($routerModelId)) {
+            continue
+        }
+
+        $lookups++
+        $hubResponse = Get-HfHubModelInfo -Token $Token -ModelId $routerModelId
+        if (-not $hubResponse.Ok) {
+            continue
+        }
+
+        $hubEntry = $hubResponse.Content | ConvertFrom-Json
+        $candidate = New-HfProviderBackedCandidateFromEntry -ModelEntry $hubEntry
+        Add-HfProviderBackedCandidate -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
+    }
+
+    return $candidates
 }
 
 function Get-HfChatModelCandidates {
@@ -802,33 +1069,23 @@ function Get-HfChatModelCandidates {
         [string]$Token
     )
 
-    $response = Invoke-HfOpenAIRequest -Method GET -Uri $Script:HfModelsEndpoint -Token $Token -TimeoutSec 90
-    if (-not $response.Ok) {
-        Write-HfRequestFailureDiagnostics -Response $response
-        if ($response.StatusCode -gt 0) {
-            throw ('Models discovery failed with HTTP {0} ({1}).' -f $response.StatusCode, $response.HttpStatusLabel)
+    $candidates = Get-HfHubProviderBackedCandidates -Token $Token
+    if ($candidates.Count -lt 2) {
+        $fallback = Get-HfRouterFallbackCandidates -Token $Token
+        $seenRepositoryIds = @{}
+        foreach ($existing in $candidates) {
+            $seenRepositoryIds[(Get-HfRepositoryModelKey -ModelId ([string]$existing.repositoryModelId))] = $true
         }
-        throw ('Models discovery failed before HTTP response ({0}).' -f $response.ErrorClass)
+        foreach ($candidate in $fallback) {
+            if ($candidates.Count -ge $Script:MaxDiscoverCandidates) {
+                break
+            }
+            Add-HfProviderBackedCandidate -CandidatesList $candidates -SeenRepositoryIds $seenRepositoryIds -Candidate $candidate
+        }
     }
 
-    $parsed = $response.Content | ConvertFrom-Json
-    $items = Get-HfModelsFromDiscoveryPayload -Parsed $parsed
-
-    $candidates = New-Object System.Collections.Generic.List[object]
-    foreach ($entry in $items) {
-        if (-not (Test-ModelSupportsChat -ModelEntry $entry)) {
-            continue
-        }
-        $candidate = ConvertTo-HfModelCandidate -ModelEntry $entry
-        if ($null -eq $candidate) {
-            continue
-        }
-        if (-not [string]::IsNullOrWhiteSpace($candidate.modelId)) {
-            [void]$candidates.Add($candidate)
-        }
-        if ($candidates.Count -ge $Script:MaxDiscoverCandidates) {
-            break
-        }
+    if ($candidates.Count -eq 0) {
+        throw 'No live provider-backed conversational models were returned by Hugging Face Hub discovery.'
     }
 
     $normalized = ConvertTo-HfCandidateArray -Candidates $candidates
@@ -844,7 +1101,7 @@ function Write-DiscoverReport {
     $Candidates = ConvertTo-HfCandidateArray -Candidates $Candidates
 
     Write-Host ''
-    Write-Host 'HF_MODEL_CANDIDATES (max 20, chat-compatible, synthetic metadata only)'
+    Write-Host 'HF_MODEL_CANDIDATES (max 20, live provider-backed conversational models only)'
     Write-Host '----------------------------------------------------------------'
     $index = 0
     foreach ($candidate in $Candidates) {
@@ -853,7 +1110,13 @@ function Write-DiscoverReport {
         if (-not [string]::IsNullOrWhiteSpace([string]$candidate.provider)) {
             Write-Host ('    provider={0}' -f $candidate.provider)
         }
-        Write-Host '    chatCompatible=true'
+        if (-not [string]::IsNullOrWhiteSpace([string]$candidate.status)) {
+            Write-Host ('    status={0}' -f $candidate.status)
+        }
+        if (-not [string]::IsNullOrWhiteSpace([string]$candidate.task)) {
+            Write-Host ('    task={0}' -f $candidate.task)
+        }
+        Write-Host '    providerBacked=true'
         if ($null -ne $candidate.contextLength) {
             Write-Host ('    contextLength={0}' -f $candidate.contextLength)
         }
@@ -1024,7 +1287,13 @@ function Get-HfDistinctModelIds {
     $seen = @{}
 
     foreach ($candidate in $Candidates) {
-        $modelId = [string]$candidate.modelId
+        $modelId = if ($candidate.PSObject.Properties.Name -contains 'repositoryModelId' -and -not [string]::IsNullOrWhiteSpace([string]$candidate.repositoryModelId)) {
+            [string]$candidate.repositoryModelId
+        }
+        else {
+            [string]$candidate.modelId
+        }
+        $modelId = Get-HfRepositoryModelKey -ModelId $modelId
         if ([string]::IsNullOrWhiteSpace($modelId)) {
             continue
         }
@@ -1038,6 +1307,89 @@ function Get-HfDistinctModelIds {
     return ,@($ids.ToArray())
 }
 
+function Write-HfVerifyFailureDiagnostic {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Role,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ModelId,
+
+        [Parameter(Mandatory = $true)]
+        $Result
+    )
+
+    $class = if (-not [string]::IsNullOrWhiteSpace([string]$Result.ErrorClass)) {
+        [string]$Result.ErrorClass
+    }
+    else {
+        'REQUEST_FAILED'
+    }
+    $status = if ($null -ne $Result.HttpStatus) { [int]$Result.HttpStatus } else { 0 }
+    Write-Host ('{0}_VERIFY_FAILED model={1} class={2} status={3}' -f $Role.ToUpperInvariant(), $ModelId, $class, $status)
+}
+
+function Invoke-HfIndividualModelVerification {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Token,
+
+        [Parameter(Mandatory = $true)]
+        $Candidates,
+
+        [int]$MaxAttempts = $Script:MaxVerifyAttempts
+    )
+
+    $Candidates = ConvertTo-HfCandidateArray -Candidates $Candidates
+    $modelIds = Get-HfDistinctModelIds -Candidates $Candidates
+    if ($modelIds.Count -lt 1) {
+        throw 'DISCOVER_INSUFFICIENT_MODELS'
+    }
+
+    $workingModels = New-Object System.Collections.Generic.List[object]
+    $externalBlockers = @{}
+    $attempts = 0
+
+    foreach ($modelId in $modelIds) {
+        if ($workingModels.Count -ge 2) {
+            break
+        }
+        if ($attempts -ge $MaxAttempts) {
+            break
+        }
+
+        $attempts++
+        Write-Host ('VERIFY_CANDIDATE_ATTEMPT={0} MODEL={1}' -f $attempts, $modelId)
+
+        $result = Invoke-HfChatSmokeTest -Token $Token -ModelId $modelId
+        if ($result.Health -eq 'PASS') {
+            Write-Host ('WORKING_MODEL_{0}={1}' -f ($workingModels.Count + 1), $modelId)
+            [void]$workingModels.Add($result)
+            continue
+        }
+
+        Write-HfVerifyFailureDiagnostic -Role 'CANDIDATE' -ModelId $modelId -Result $result
+        if (Test-HfExternalInferenceBlockerClass -ErrorClass ([string]$result.ErrorClass)) {
+            $externalBlockers[[string]$result.ErrorClass] = $true
+        }
+    }
+
+    if ($workingModels.Count -ge 2) {
+        return [pscustomobject]@{
+            PrimaryResult   = $workingModels[0]
+            SecondaryResult = $workingModels[1]
+            PairAttempts    = $attempts
+            ExternalBlocker = $null
+        }
+    }
+
+    if ($externalBlockers.ContainsKey('INSUFFICIENT_CREDITS') -or $externalBlockers.ContainsKey('RATE_LIMITED') -or $externalBlockers.ContainsKey('PROVIDER_UNAVAILABLE')) {
+        throw 'HF_INFERENCE_CREDITS_OR_PROVIDER_LIMIT'
+    }
+
+    throw 'VERIFY_NO_WORKING_MODEL_PAIR'
+}
+
 function Invoke-HfDualModelVerificationWithFallback {
     param(
         [Parameter(Mandatory = $true)]
@@ -1046,50 +1398,10 @@ function Invoke-HfDualModelVerificationWithFallback {
         [Parameter(Mandatory = $true)]
         $Candidates,
 
-        [int]$MaxPairAttempts = 6
+        [int]$MaxPairAttempts = $Script:MaxVerifyAttempts
     )
 
-    $Candidates = ConvertTo-HfCandidateArray -Candidates $Candidates
-    $modelIds = Get-HfDistinctModelIds -Candidates $Candidates
-    if ($modelIds.Count -lt 2) {
-        throw 'DISCOVER_INSUFFICIENT_MODELS'
-    }
-
-    $attempts = 0
-    for ($i = 0; $i -lt ($modelIds.Count - 1); $i++) {
-        for ($j = $i + 1; $j -lt $modelIds.Count; $j++) {
-            if ($attempts -ge $MaxPairAttempts) {
-                break
-            }
-
-            $attempts++
-            Write-Host ('VERIFY_PAIR_ATTEMPT={0} PRIMARY_CANDIDATE={1} SECONDARY_CANDIDATE={2}' -f $attempts, $modelIds[$i], $modelIds[$j])
-
-            $primaryResult = Invoke-HfChatSmokeTest -Token $Token -ModelId $modelIds[$i]
-            $secondaryResult = Invoke-HfChatSmokeTest -Token $Token -ModelId $modelIds[$j]
-
-            if ($primaryResult.Health -eq 'PASS' -and $secondaryResult.Health -eq 'PASS') {
-                return [pscustomobject]@{
-                    PrimaryResult = $primaryResult
-                    SecondaryResult = $secondaryResult
-                    PairAttempts    = $attempts
-                }
-            }
-
-            if ($primaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$primaryResult.ErrorClass)) {
-                Write-Host ('PRIMARY_SMOKE_FAILED errorClass={0}' -f $primaryResult.ErrorClass)
-            }
-            if ($secondaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$secondaryResult.ErrorClass)) {
-                Write-Host ('SECONDARY_SMOKE_FAILED errorClass={0}' -f $secondaryResult.ErrorClass)
-            }
-        }
-
-        if ($attempts -ge $MaxPairAttempts) {
-            break
-        }
-    }
-
-    throw 'VERIFY_NO_WORKING_MODEL_PAIR'
+    return (Invoke-HfIndividualModelVerification -Token $Token -Candidates $Candidates -MaxAttempts $MaxPairAttempts)
 }
 
 function Set-MiyunaLlmRuntimeEnvironment {
@@ -1205,7 +1517,9 @@ function Write-AutoVerificationReport {
     Write-Host ('REAL_ROUTING_VERIFIED={0}' -f 'PENDING_API_RESTART')
     Write-Host ('REAL_FALLBACK_VERIFIED={0}' -f 'PENDING_API_RESTART')
     Write-Host ('MOCK_ONLY_IMPLEMENTATION={0}' -f 'NO')
-    Write-Host ('VERIFY_PAIR_ATTEMPTS={0}' -f $VerifyOutcome.PairAttempts)
+    Write-Host ('VERIFY_CANDIDATE_ATTEMPTS={0}' -f $VerifyOutcome.PairAttempts)
+    Write-Host ('WORKING_MODEL_1={0}' -f $VerifyOutcome.PrimaryResult.ModelId)
+    Write-Host ('WORKING_MODEL_2={0}' -f $VerifyOutcome.SecondaryResult.ModelId)
     Write-Host ('VERIFICATION_SUMMARY_JSON={0}' -f $SummaryPath)
     Write-Host ('MIYUNA_RUNTIME_PUBLIC_PS1={0}' -f $PublicEnvArtifactPath)
     Write-Host ''
@@ -1257,30 +1571,32 @@ function Invoke-AutoVerification {
         Write-Host ('ENV_PRIMARY_MODEL_PRESERVED={0}' -f $preset.Primary)
         Write-Host ('ENV_SECONDARY_MODEL_PRESERVED={0}' -f $preset.Secondary)
 
-        $primaryResult = Invoke-HfChatSmokeTest -Token $token -ModelId $preset.Primary
-        $secondaryResult = Invoke-HfChatSmokeTest -Token $token -ModelId $preset.Secondary
+        $workingPreset = New-Object System.Collections.Generic.List[object]
+        foreach ($presetModel in @($preset.Primary, $preset.Secondary)) {
+            $presetResult = Invoke-HfChatSmokeTest -Token $token -ModelId $presetModel
+            if ($presetResult.Health -eq 'PASS') {
+                [void]$workingPreset.Add($presetResult)
+                Write-Host ('WORKING_MODEL_{0}={1}' -f $workingPreset.Count, $presetModel)
+            }
+            else {
+                $role = if ($presetModel -eq $preset.Primary) { 'PRIMARY' } else { 'SECONDARY' }
+                Write-HfVerifyFailureDiagnostic -Role $role -ModelId $presetModel -Result $presetResult
+                if ($presetResult.ErrorClass -in @('MODEL_NOT_SERVED', 'MODEL_NOT_AVAILABLE', 'ENDPOINT_NOT_FOUND')) {
+                    Write-Host ('PRESET_{0}_STATUS={1}' -f $role, $presetResult.ErrorClass)
+                }
+            }
+        }
 
-        if ($primaryResult.Health -eq 'PASS' -and $secondaryResult.Health -eq 'PASS') {
+        if ($workingPreset.Count -ge 2) {
             $verifyOutcome = [pscustomobject]@{
-                PrimaryResult = $primaryResult
-                SecondaryResult = $secondaryResult
-                PairAttempts    = 1
+                PrimaryResult   = $workingPreset[0]
+                SecondaryResult = $workingPreset[1]
+                PairAttempts    = 2
+                ExternalBlocker = $null
             }
         }
         else {
             Write-Host 'PRESET_MODELS_SMOKE_FAILED — falling back to discovery'
-            if ($primaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$primaryResult.ErrorClass)) {
-                Write-Host ('PRIMARY_SMOKE_FAILED errorClass={0}' -f $primaryResult.ErrorClass)
-                if ($primaryResult.ErrorClass -in @('MODEL_NOT_SERVED', 'MODEL_NOT_AVAILABLE', 'ENDPOINT_NOT_FOUND')) {
-                    Write-Host ('PRESET_PRIMARY_STATUS={0}' -f $primaryResult.ErrorClass)
-                }
-            }
-            if ($secondaryResult.Health -ne 'PASS' -and -not [string]::IsNullOrWhiteSpace([string]$secondaryResult.ErrorClass)) {
-                Write-Host ('SECONDARY_SMOKE_FAILED errorClass={0}' -f $secondaryResult.ErrorClass)
-                if ($secondaryResult.ErrorClass -in @('MODEL_NOT_SERVED', 'MODEL_NOT_AVAILABLE', 'ENDPOINT_NOT_FOUND')) {
-                    Write-Host ('PRESET_SECONDARY_STATUS={0}' -f $secondaryResult.ErrorClass)
-                }
-            }
         }
     }
 
@@ -1298,13 +1614,13 @@ function Invoke-AutoVerification {
             throw $safe
         }
         if ($candidates.Count -eq 0) {
-            throw 'No chat-compatible models were returned by the Hugging Face models endpoint.'
+            throw 'No provider-backed conversational models were returned by Hugging Face discovery.'
         }
         Write-DiscoverReport -Candidates $candidates
 
         Write-Host ''
         Write-Host 'STEP=Verify'
-        $verifyOutcome = Invoke-HfDualModelVerificationWithFallback -Token $token -Candidates $candidates
+        $verifyOutcome = Invoke-HfIndividualModelVerification -Token $token -Candidates $candidates
     }
 
     Write-Host ''
