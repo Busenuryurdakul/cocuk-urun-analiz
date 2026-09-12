@@ -11,7 +11,10 @@ export function resolveDeliveryAddress(email: string): string {
 export function mailhogRecipientCandidates(email: string): string[] {
   const normalized = email.trim().toLowerCase();
   const resolved = resolveDeliveryAddress(normalized).toLowerCase();
-  return [...new Set([normalized, resolved])];
+  if (normalized === resolved) {
+    return [normalized];
+  }
+  return [normalized, resolved];
 }
 
 export function mailhogMatchesRecipient(toHeader: string, accountEmail: string): boolean {

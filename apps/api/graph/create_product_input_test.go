@@ -49,4 +49,3 @@ func TestCreateProductInputAcceptsManualCatalogFields(t *testing.T) {
 		t.Fatalf("variable coercion: %v", err)
 	}
 }
-
