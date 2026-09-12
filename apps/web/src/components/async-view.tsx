@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ReactNode } from "react";
 
 type AsyncViewState = "loading" | "error" | "empty" | "unauthorized" | "retry" | "success";
@@ -66,8 +67,11 @@ function DefaultEmpty() {
 
 function DefaultUnauthorized() {
   return (
-    <div className="alert-warn text-center">
-      <p>Bu içeriği görüntüleme yetkiniz yok.</p>
+    <div className="alert-warn space-y-3 text-center">
+      <p>Bu içeriği görüntüleme yetkiniz yok. Devam etmek için giriş yapın.</p>
+      <Link href="/auth/login" className="btn-primary inline-flex">
+        Giriş yap
+      </Link>
     </div>
   );
 }

@@ -13,6 +13,7 @@ type AppShellProps = {
   orgId?: string;
   accountEmail?: string;
   actions?: ReactNode;
+  restricted?: boolean;
   children: ReactNode;
 };
 
@@ -23,6 +24,7 @@ export function AppShell({
   orgId,
   accountEmail,
   actions,
+  restricted = false,
   children,
 }: AppShellProps) {
   const pathname = usePathname();
@@ -67,22 +69,30 @@ export function AppShell({
       <aside className="bg-forest-deep px-5 py-6 text-paper lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
         <Logo href="/workspace" tone="paper" size="sm" />
         <nav className="mt-8 space-y-1">
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={item.match(pathname) ? "nav-item-active" : "nav-item"}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
-              {item.label}
+          {!restricted &&
+            items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={item.match(pathname) ? "nav-item-active" : "nav-item"}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+                {item.label}
+              </Link>
+            ))}
+          {restricted && (
+            <Link href="/auth/login" className="nav-item">
+              Giriş yap
             </Link>
-          ))}
+          )}
         </nav>
         <div className="mt-auto hidden pt-8 lg:block">
-          {accountEmail && <p className="truncate px-3 text-xs text-paper/50">{accountEmail}</p>}
-          <button type="button" onClick={() => void logout()} className="nav-item mt-2 w-full text-left">
-            Çıkış
-          </button>
+          {accountEmail && !restricted && <p className="truncate px-3 text-xs text-paper/50">{accountEmail}</p>}
+          {!restricted && (
+            <button type="button" onClick={() => void logout()} className="nav-item mt-2 w-full text-left">
+              Çıkış
+            </button>
+          )}
         </div>
       </aside>
 
@@ -97,10 +107,16 @@ export function AppShell({
         </header>
         {children}
         <div className="mt-8 flex items-center justify-between lg:hidden">
-          {accountEmail && <p className="text-xs text-muted">{accountEmail}</p>}
-          <button type="button" onClick={() => void logout()} className="link-quiet">
-            Çıkış
-          </button>
+          {accountEmail && !restricted && <p className="text-xs text-muted">{accountEmail}</p>}
+          {!restricted ? (
+            <button type="button" onClick={() => void logout()} className="link-quiet">
+              Çıkış
+            </button>
+          ) : (
+            <Link href="/auth/login" className="link-quiet">
+              Giriş yap
+            </Link>
+          )}
         </div>
       </div>
     </div>

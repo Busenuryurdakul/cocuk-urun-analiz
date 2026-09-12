@@ -4,6 +4,9 @@ const crypto = require("crypto");
 const os = require("os");
 const fs = require("fs");
 
+// Cross-site auth cookies (Vercel web → Render API) must work in the desktop shell.
+app.commandLine.appendSwitch("disable-features", "ThirdPartyCookiePhaseout,CookieDeprecationFacilitatedTesting");
+
 let keytar;
 try {
   keytar = require("keytar");
@@ -118,8 +121,9 @@ function hardenSession(ses) {
     event.preventDefault();
   });
   ses.cookies.on("changed", (_event, cookie, _cause, removed) => {
-    if (cookie.name !== "miyuna_refresh") return;
-    void persistRefreshToken(removed ? "" : cookie.value);
+    if (cookie.name === "miyuna_refresh") {
+      void persistRefreshToken(removed ? "" : cookie.value);
+    }
   });
 }
 

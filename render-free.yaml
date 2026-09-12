@@ -22,7 +22,7 @@ projects:
             plan: free
             region: frankfurt
             repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
-            branch: feature/phase-6-llm-gateway
+            branch: main
             dockerfilePath: ./infra/render/agent/Dockerfile
             dockerContext: .
             healthCheckPath: /health
@@ -41,7 +41,7 @@ projects:
             plan: free
             region: frankfurt
             repo: https://github.com/Busenuryurdakul/cocuk-urun-analiz
-            branch: feature/phase-6-llm-gateway
+            branch: main
             dockerfilePath: ./infra/render/api/Dockerfile
             dockerContext: .
             healthCheckPath: /health

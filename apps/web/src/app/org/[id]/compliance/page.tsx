@@ -20,6 +20,21 @@ type Consent = {
   withdrawnAt?: string | null;
 };
 
+const CONSENT_PURPOSES: Record<string, { label: string; description: string }> = {
+  REGISTRATION: {
+    label: "Kayıt ve hesap",
+    description: "Hesap oluşturma, kimlik doğrulama ve temel hizmet kayıtları için onay.",
+  },
+  DATA_PROCESSING: {
+    label: "Veri işleme",
+    description: "Ürün analizi, LLM çağrıları ve operasyonel loglama kapsamında veri işleme.",
+  },
+  ORG_MEMBERSHIP: {
+    label: "Organizasyon üyeliği",
+    description: "Ekip üyeliği, davetler ve organizasyon içi erişim yönetimi.",
+  },
+};
+
 export default function OrgCompliancePage() {
   const params = useParams<{ id: string }>();
   const orgId = params.id;
@@ -89,6 +104,7 @@ export default function OrgCompliancePage() {
       title="Uyumluluk"
       kicker="Organizasyon"
       orgId={orgId}
+      restricted={view === "unauthorized"}
       description="Compliance Engine her zaman açıktır; OFF profili desteklenmez."
     >
       {view === "loading" && <AsyncView state="loading" />}
@@ -125,6 +141,9 @@ export default function OrgCompliancePage() {
           </form>
           <section className="card space-y-3">
             <h2 className="font-display text-xl">Onaylarım</h2>
+            <p className="text-sm text-muted">
+              Aktif politika: {policy.profile} / {policy.version}. Onay vermeden önce kapsamı okuyun.
+            </p>
             {consents.length === 0 ? (
               <AsyncView state="empty" />
             ) : (
@@ -132,7 +151,7 @@ export default function OrgCompliancePage() {
                 {consents.map((c) => (
                   <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl bg-cream px-3 py-2">
                     <span>
-                      {c.purpose} ({c.policyVersion})
+                      {CONSENT_PURPOSES[c.purpose]?.label ?? c.purpose} ({c.policyVersion})
                     </span>
                     {!c.withdrawnAt ? (
                       <button type="button" className="text-sm font-semibold text-red-700 underline" onClick={() => void withdrawConsent(c.purpose)}>
@@ -145,13 +164,17 @@ export default function OrgCompliancePage() {
                 ))}
               </ul>
             )}
-            <div className="flex flex-wrap gap-2 pt-2">
-              {["REGISTRATION", "DATA_PROCESSING", "ORG_MEMBERSHIP"].map((p) => (
-                <button key={p} type="button" className="btn-secondary !px-3 !py-1.5 text-xs" onClick={() => void grantConsent(p)}>
-                  {p} onayla
-                </button>
+            <ul className="space-y-2 border-t border-sand pt-4 text-sm">
+              {(["REGISTRATION", "DATA_PROCESSING", "ORG_MEMBERSHIP"] as const).map((purpose) => (
+                <li key={purpose} className="rounded-xl border border-sand/70 px-3 py-3">
+                  <p className="font-medium">{CONSENT_PURPOSES[purpose].label}</p>
+                  <p className="mt-1 text-muted">{CONSENT_PURPOSES[purpose].description}</p>
+                  <button type="button" className="btn-secondary mt-3 !px-3 !py-1.5 text-xs" onClick={() => void grantConsent(purpose)}>
+                    {CONSENT_PURPOSES[purpose].label} onayla
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         </div>
       )}

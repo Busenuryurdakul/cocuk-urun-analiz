@@ -46,11 +46,14 @@ export default function OrgProductsPage() {
       title="Ürünler"
       kicker="Organizasyon"
       orgId={orgId}
+      restricted={view === "unauthorized"}
       description="Veritabanındaki canonical ürünler — eksik alanlar uydurulmaz, kaynaklarıyla gösterilir."
       actions={
-        <Link href={`/org/${orgId}/products/new`} className="btn-accent">
-          Ürün ekle
-        </Link>
+        view === "success" ? (
+          <Link href={`/org/${orgId}/products/new`} className="btn-accent">
+            Ürün ekle
+          </Link>
+        ) : undefined
       }
     >
       {view === "loading" && <AsyncView state="loading" />}

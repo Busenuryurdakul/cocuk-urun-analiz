@@ -44,6 +44,12 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   ALREADY_MEMBER: "Bu e-posta zaten bu organizasyonun üyesi.",
   INVITATION_PENDING: "Bu e-postaya zaten bekleyen bir davet var.",
   CONSENT_REQUIRED: "Davet için uyumluluk onayı gerekli. Uyumluluk sayfasından onayları verip tekrar deneyin.",
+  UNAUTHORIZED: "Oturum açmanız gerekiyor.",
+  FORBIDDEN: "Bu işlem için yetkiniz yok.",
+  GRAPHQL_VALIDATION_FAILED:
+    "İstek geçersiz. Form alanları API şemasıyla uyuşmuyor olabilir; sayfayı yenileyip tekrar deneyin.",
+  LLM_MODEL_DISABLED:
+    "Kullanılabilir LLM modeli yok. Sağlık durumunu kontrol edin; production ortamında API anahtarlarının tanımlı olduğundan emin olun.",
 };
 
 function isNetworkFailure(err: unknown): boolean {
@@ -59,7 +65,7 @@ function isNetworkFailure(err: unknown): boolean {
   );
 }
 
-export function authErrorMessage(err: unknown, fallback = "İşlem başarısız"): string {
+export function graphqlErrorMessage(err: unknown, fallback = "İşlem başarısız"): string {
   const code = graphqlErrorCode(err);
   if (code && AUTH_ERROR_MESSAGES[code]) {
     return AUTH_ERROR_MESSAGES[code];
@@ -68,6 +74,10 @@ export function authErrorMessage(err: unknown, fallback = "İşlem başarısız"
     return "Sunucuya bağlanılamadı. Lütfen biraz sonra tekrar deneyin.";
   }
   return fallback;
+}
+
+export function authErrorMessage(err: unknown, fallback = "İşlem başarısız"): string {
+  return graphqlErrorMessage(err, fallback);
 }
 
 type MiyunaDesktop = {
@@ -157,6 +167,11 @@ export async function graphqlRequest<T>(
   });
 
   if (!res.ok) {
+    const payload = (await res.json().catch(() => null)) as GraphQLResponse<T> | null;
+    if (payload?.errors?.length) {
+      const code = payload.errors[0].extensions?.code ?? payload.errors[0].message;
+      throw new GraphQLRequestError(code);
+    }
     throw new Error(`GraphQL HTTP ${res.status}`);
   }
 

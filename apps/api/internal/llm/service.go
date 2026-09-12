@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -88,9 +89,24 @@ func (s *Service) ActiveConfiguration(ctx context.Context, actorID, orgID primit
 		return nil, err
 	}
 	if settings, err := s.OrgSettings.FindByOrg(ctx, orgID); err == nil && settings.ActiveConfigSnapshotID != nil {
-		return s.Snapshots.FindByID(ctx, *settings.ActiveConfigSnapshotID)
+		snap, snapErr := s.Snapshots.FindByID(ctx, *settings.ActiveConfigSnapshotID)
+		if snapErr == nil {
+			return snap, nil
+		}
+		if !errors.Is(snapErr, repository.ErrNotFound) {
+			return nil, snapErr
+		}
+	} else if err != nil && !errors.Is(err, repository.ErrNotFound) {
+		return nil, err
 	}
-	return s.Snapshots.FindLatestPublished(ctx, &orgID, domain.ConfigSnapshotKindPhase6LLM)
+	snap, err := s.Snapshots.FindLatestPublished(ctx, &orgID, domain.ConfigSnapshotKindPhase6LLM)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return snap, nil
 }
 
 func (s *Service) ConfigurationHistory(ctx context.Context, actorID, orgID primitive.ObjectID, limit int64) ([]domain.ConfigSnapshot, error) {

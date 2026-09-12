@@ -161,6 +161,7 @@ func (g *Gateway) Complete(ctx context.Context, req GatewayRequest) (GatewayResp
 		PersonaKey:      personaKey,
 		Policy:          policy,
 		Models:          models,
+		IgnoreHealth:    g.deps.UseMock,
 	})
 	if err != nil {
 		return GatewayResponse{}, err
@@ -452,7 +453,10 @@ func (g *Gateway) Health(ctx context.Context) ([]ModelHealth, error) {
 	for _, m := range models {
 		p := providerByID[m.ProviderID]
 		status := m.HealthStatus
-		if !g.deps.UseMock {
+		if g.deps.UseMock {
+			status = domain.LLMHealthHealthy
+			_ = g.deps.Models.UpdateHealth(ctx, m.ModelKey, status)
+		} else {
 			err := g.deps.HTTP.HealthCheck(ctx, ResolveBaseURLRef(p.BaseURLRef), ResolveSecretRef(p.SecretRef), m.ProviderModelName)
 			if err != nil {
 				status = domain.LLMHealthUnhealthy

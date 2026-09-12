@@ -129,6 +129,7 @@ export default function OrgMembersPage() {
       title="Üyeler"
       kicker="Organizasyon"
       orgId={orgId}
+      restricted={view === "unauthorized"}
       description="Davet gönderin; roller OWNER, ADMIN, ANALYST veya VIEWER olabilir."
     >
       {view === "loading" && members.length === 0 && <AsyncView state="loading" />}

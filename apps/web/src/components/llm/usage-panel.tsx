@@ -40,6 +40,7 @@ type UsagePanelProps = {
   title?: string;
   compact?: boolean;
   periodLabel?: string;
+  showDetailLink?: boolean;
 };
 
 function isEscalationReason(reason: string): boolean {
@@ -53,6 +54,7 @@ export function UsagePanel({
   title = "Model kullanımı",
   compact = false,
   periodLabel = "bu ay",
+  showDetailLink = true,
 }: UsagePanelProps) {
   const escalationCalls = usage.recentCalls.filter((call) => isEscalationReason(call.routingReason)).length;
 
@@ -64,7 +66,7 @@ export function UsagePanel({
           <h2 className="mt-1 font-display text-2xl">{title}</h2>
           <p className="mt-1 text-sm text-muted">Cursor benzeri özet — {periodLabel}</p>
         </div>
-        {!compact && (
+        {!compact && showDetailLink && (
           <Link href={`/org/${orgId}/llm`} className="btn-secondary !px-3 !py-1.5 text-xs">
             Detaylı panel
           </Link>

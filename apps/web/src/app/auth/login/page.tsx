@@ -13,6 +13,7 @@ import {
   graphqlErrorCode,
   graphqlRequest,
 } from "@/lib/graphql";
+import { clearPendingToken, savePendingToken } from "@/lib/pending-auth";
 
 type LoginStatus =
   | "EMAIL_OTP_REQUIRED"
@@ -41,9 +42,9 @@ export default function LoginPage() {
     const fingerprint = await deviceFingerprintAsync();
     const version = await appVersion();
     try {
-      const data = await graphqlRequest<{ login: { status: LoginStatus; mfaSetup?: { secret: string; otpauthUrl: string; setupToken: string } } }>(
+      const data = await graphqlRequest<{ login: { status: LoginStatus; pendingToken?: string | null; mfaSetup?: { secret: string; otpauthUrl: string; setupToken: string } } }>(
         `mutation Login($input: LoginInput!) {
-          login(input: $input) { status mfaSetup { secret otpauthUrl setupToken } }
+          login(input: $input) { status pendingToken mfaSetup { secret otpauthUrl setupToken } }
         }`,
         {
           input: {
@@ -58,6 +59,7 @@ export default function LoginPage() {
       );
       switch (data.login.status) {
         case "EMAIL_OTP_REQUIRED":
+          savePendingToken(data.login.pendingToken);
           router.push("/auth/email-otp");
           break;
         case "MFA_SETUP_REQUIRED":
@@ -67,12 +69,15 @@ export default function LoginPage() {
           router.push("/auth/mfa");
           break;
         case "MFA_REQUIRED":
+          savePendingToken(data.login.pendingToken);
           router.push("/auth/mfa?step=verify");
           break;
         case "DEVICE_VERIFICATION_REQUIRED":
+          savePendingToken(data.login.pendingToken);
           router.push("/auth/email-otp");
           break;
         default:
+          clearPendingToken();
           router.push("/workspace");
       }
     } catch (err) {

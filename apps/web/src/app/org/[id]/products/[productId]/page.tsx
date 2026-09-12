@@ -174,6 +174,7 @@ export default function ProductDetailPage() {
       title={product ? productTitle(product) : "Ürün detayı"}
       kicker="Ürün"
       orgId={orgId}
+      restricted={view === "unauthorized"}
       description={product ? productSubtitle(product) || "Kanıt, deneyim ve marketplace kaynakları." : "Kanıt, deneyim ve marketplace kaynakları."}
     >
       {view === "loading" && <AsyncView state="loading" />}

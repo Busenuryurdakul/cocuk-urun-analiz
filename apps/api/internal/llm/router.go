@@ -17,6 +17,7 @@ type RouteRequest struct {
 	PersonaKey      string
 	Policy          *domain.LLMRoutingPolicy
 	Models          []domain.LLMModel
+	IgnoreHealth    bool
 }
 
 type RouteDecision struct {
@@ -33,7 +34,7 @@ func (r *Router) Decide(ctx context.Context, req RouteRequest) (RouteDecision, e
 	if req.Policy == nil {
 		return RouteDecision{}, ErrRoutingFailed
 	}
-	candidates := filterSelectableModels(req.Models)
+	candidates := filterSelectableModels(req.Models, req.IgnoreHealth)
 	if len(candidates) < 1 {
 		return RouteDecision{}, ErrInsufficientModels
 	}
@@ -150,13 +151,14 @@ func preferredModelsForTask(policy *domain.LLMRoutingPolicy, taskType string) []
 	return nil
 }
 
-func filterSelectableModels(models []domain.LLMModel) []domain.LLMModel {
+func filterSelectableModels(models []domain.LLMModel, ignoreHealth bool) []domain.LLMModel {
 	out := make([]domain.LLMModel, 0, len(models))
 	for _, m := range models {
 		if m.Status == domain.LLMModelActive || m.Status == domain.LLMModelDegraded {
-			if m.HealthStatus != domain.LLMHealthUnhealthy {
-				out = append(out, m)
+			if !ignoreHealth && m.HealthStatus == domain.LLMHealthUnhealthy {
+				continue
 			}
+			out = append(out, m)
 		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].ModelKey < out[j].ModelKey })

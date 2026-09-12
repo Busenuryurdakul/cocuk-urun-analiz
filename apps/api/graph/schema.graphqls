@@ -85,7 +85,7 @@ type Mutation {
   confirmMFA(input: ConfirmMFAInput!): Boolean!
   login(input: LoginInput!): LoginPayload!
   verifyLoginEmailOTP(input: VerifyLoginEmailOTPInput!): LoginPayload!
-  resendLoginEmailOTP: LoginPayload!
+  resendLoginEmailOTP(input: ResendLoginEmailOTPInput): LoginPayload!
   verifyLoginMFA(input: VerifyLoginMFAInput!): LoginPayload!
   verifyDevice(input: VerifyDeviceInput!): LoginPayload!
   revokeDevice(deviceId: ID!): Boolean!
@@ -159,16 +159,27 @@ input VerifyLoginEmailOTPInput {
   code: String!
   deviceFingerprint: String!
   turnstileToken: String
+  """Fallback when pending cookie is unavailable (e.g. desktop cross-origin)."""
+  pendingToken: String
+}
+
+input ResendLoginEmailOTPInput {
+  """Fallback when pending cookie is unavailable (e.g. desktop cross-origin)."""
+  pendingToken: String
 }
 
 input VerifyLoginMFAInput {
   code: String!
   deviceFingerprint: String!
+  """Fallback when pending cookie is unavailable (e.g. desktop cross-origin)."""
+  pendingToken: String
 }
 
 input VerifyDeviceInput {
   code: String!
   deviceFingerprint: String!
+  """Fallback when pending cookie is unavailable (e.g. desktop cross-origin)."""
+  pendingToken: String
 }
 
 input CreateOrganizationInput {
@@ -326,6 +337,8 @@ type LoginPayload {
   status: LoginStatus!
   user: User
   mfaSetup: MFASetupPayload
+  """Present while login awaits OTP/MFA; store client-side when cookies are blocked."""
+  pendingToken: String
 }
 
 type Device {
@@ -548,6 +561,16 @@ input CreateProductInput {
   brand: String
   category: String
   description: String
+  targetAge: String
+  materials: String
+  safetyWarnings: String
+  currentPrice: String
+  originalPrice: String
+  currency: String
+  seller: String
+  rating: String
+  reviewCount: String
+  stockStatus: String
   source: MarketplaceSource!
   sourceProductId: String!
   sourceUrl: String

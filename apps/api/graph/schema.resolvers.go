@@ -23,6 +23,7 @@ import (
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/marketplace"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/product"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/rbac"
+	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/repository"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/ugc"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -186,7 +187,7 @@ func (r *mutationResolver) VerifyLoginEmailOtp(ctx context.Context, input model.
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
-	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	pendingToken, ok := pendingTokenFromRequest(req, input.PendingToken)
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
@@ -199,12 +200,16 @@ func (r *mutationResolver) VerifyLoginEmailOtp(ctx context.Context, input model.
 }
 
 // ResendLoginEmailOtp is the resolver for the resendLoginEmailOTP field.
-func (r *mutationResolver) ResendLoginEmailOtp(ctx context.Context) (*model.LoginPayload, error) {
+func (r *mutationResolver) ResendLoginEmailOtp(ctx context.Context, input *model.ResendLoginEmailOTPInput) (*model.LoginPayload, error) {
 	req, ok := httpx.RequestFrom(ctx)
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
-	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	var fallback *string
+	if input != nil {
+		fallback = input.PendingToken
+	}
+	pendingToken, ok := pendingTokenFromRequest(req, fallback)
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
@@ -222,7 +227,7 @@ func (r *mutationResolver) VerifyLoginMfa(ctx context.Context, input model.Verif
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
-	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	pendingToken, ok := pendingTokenFromRequest(req, input.PendingToken)
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
@@ -240,7 +245,7 @@ func (r *mutationResolver) VerifyDevice(ctx context.Context, input model.VerifyD
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
-	pendingToken, ok := cookies.Get(req, cookies.PendingCookie)
+	pendingToken, ok := pendingTokenFromRequest(req, input.PendingToken)
 	if !ok {
 		return nil, gqlError("INVALID_TOKEN", errUnauthorized)
 	}
@@ -592,6 +597,16 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 		Brand:           deref(input.Brand),
 		Category:        deref(input.Category),
 		Description:     deref(input.Description),
+		TargetAge:       deref(input.TargetAge),
+		Materials:       deref(input.Materials),
+		SafetyWarnings:  deref(input.SafetyWarnings),
+		CurrentPrice:    deref(input.CurrentPrice),
+		OriginalPrice:   deref(input.OriginalPrice),
+		Currency:        deref(input.Currency),
+		Seller:          deref(input.Seller),
+		Rating:          deref(input.Rating),
+		ReviewCount:     deref(input.ReviewCount),
+		StockStatus:     deref(input.StockStatus),
 		Source:          domain.MarketplaceSource(input.Source),
 		SourceProductID: input.SourceProductID,
 		SourceURL:       deref(input.SourceURL),
@@ -1564,6 +1579,9 @@ func (r *queryResolver) ActiveLLMConfiguration(ctx context.Context, organization
 	}
 	snap, err := r.LLMService.ActiveConfiguration(ctx, actorID, orgID)
 	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, nil
+		}
 		return nil, mapPhase6Error(err)
 	}
 	return toModelLLMConfiguration(snap), nil
