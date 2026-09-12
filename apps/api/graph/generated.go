@@ -328,9 +328,10 @@ type ComplexityRoot struct {
 	}
 
 	LoginPayload struct {
-		MfaSetup func(childComplexity int) int
-		Status   func(childComplexity int) int
-		User     func(childComplexity int) int
+		MfaSetup     func(childComplexity int) int
+		PendingToken func(childComplexity int) int
+		Status       func(childComplexity int) int
+		User         func(childComplexity int) int
 	}
 
 	MFASetupPayload struct {
@@ -392,7 +393,7 @@ type ComplexityRoot struct {
 		RemoveMember                        func(childComplexity int, input model.RemoveMemberInput) int
 		RequestAccountDeletion              func(childComplexity int) int
 		ResendEmailVerification             func(childComplexity int, input model.ResendEmailVerificationInput) int
-		ResendLoginEmailOtp                 func(childComplexity int) int
+		ResendLoginEmailOtp                 func(childComplexity int, input *model.ResendLoginEmailOTPInput) int
 		RevokeDevice                        func(childComplexity int, deviceID string) int
 		RollbackLLMConfiguration            func(childComplexity int, input model.RollbackLLMConfigurationInput) int
 		SetOrganizationModels               func(childComplexity int, input model.SetOrganizationModelsInput) int
@@ -593,7 +594,7 @@ type MutationResolver interface {
 	ConfirmMfa(ctx context.Context, input model.ConfirmMFAInput) (bool, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.LoginPayload, error)
 	VerifyLoginEmailOtp(ctx context.Context, input model.VerifyLoginEmailOTPInput) (*model.LoginPayload, error)
-	ResendLoginEmailOtp(ctx context.Context) (*model.LoginPayload, error)
+	ResendLoginEmailOtp(ctx context.Context, input *model.ResendLoginEmailOTPInput) (*model.LoginPayload, error)
 	VerifyLoginMfa(ctx context.Context, input model.VerifyLoginMFAInput) (*model.LoginPayload, error)
 	VerifyDevice(ctx context.Context, input model.VerifyDeviceInput) (*model.LoginPayload, error)
 	RevokeDevice(ctx context.Context, deviceID string) (bool, error)
@@ -1924,6 +1925,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.LoginPayload.MfaSetup(childComplexity), true
+	case "LoginPayload.pendingToken":
+		if e.complexity.LoginPayload.PendingToken == nil {
+			break
+		}
+
+		return e.complexity.LoginPayload.PendingToken(childComplexity), true
 	case "LoginPayload.status":
 		if e.complexity.LoginPayload.Status == nil {
 			break
@@ -2334,7 +2341,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			break
 		}
 
-		return e.complexity.Mutation.ResendLoginEmailOtp(childComplexity), true
+		args, err := ec.field_Mutation_resendLoginEmailOTP_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ResendLoginEmailOtp(childComplexity, args["input"].(*model.ResendLoginEmailOTPInput)), true
 	case "Mutation.revokeDevice":
 		if e.complexity.Mutation.RevokeDevice == nil {
 			break
@@ -3456,6 +3468,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputRemoveMemberInput,
 		ec.unmarshalInputResendEmailVerificationInput,
+		ec.unmarshalInputResendLoginEmailOTPInput,
 		ec.unmarshalInputRollbackLLMConfigurationInput,
 		ec.unmarshalInputSetOrganizationModelsInput,
 		ec.unmarshalInputSetOrganizationPersonaInput,
@@ -3822,6 +3835,17 @@ func (ec *executionContext) field_Mutation_resendEmailVerification_args(ctx cont
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNResendEmailVerificationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐResendEmailVerificationInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_resendLoginEmailOTP_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalOResendLoginEmailOTPInput2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐResendLoginEmailOTPInput)
 	if err != nil {
 		return nil, err
 	}
@@ -10656,6 +10680,35 @@ func (ec *executionContext) fieldContext_LoginPayload_mfaSetup(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _LoginPayload_pendingToken(ctx context.Context, field graphql.CollectedField, obj *model.LoginPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_LoginPayload_pendingToken,
+		func(ctx context.Context) (any, error) {
+			return obj.PendingToken, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_LoginPayload_pendingToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MFASetupPayload_secret(ctx context.Context, field graphql.CollectedField, obj *model.MFASetupPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -11621,6 +11674,8 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 				return ec.fieldContext_LoginPayload_user(ctx, field)
 			case "mfaSetup":
 				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
+			case "pendingToken":
+				return ec.fieldContext_LoginPayload_pendingToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -11670,6 +11725,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyLoginEmailOTP(ctx contex
 				return ec.fieldContext_LoginPayload_user(ctx, field)
 			case "mfaSetup":
 				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
+			case "pendingToken":
+				return ec.fieldContext_LoginPayload_pendingToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -11695,7 +11752,8 @@ func (ec *executionContext) _Mutation_resendLoginEmailOTP(ctx context.Context, f
 		field,
 		ec.fieldContext_Mutation_resendLoginEmailOTP,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Mutation().ResendLoginEmailOtp(ctx)
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ResendLoginEmailOtp(ctx, fc.Args["input"].(*model.ResendLoginEmailOTPInput))
 		},
 		nil,
 		ec.marshalNLoginPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLoginPayload,
@@ -11704,7 +11762,7 @@ func (ec *executionContext) _Mutation_resendLoginEmailOTP(ctx context.Context, f
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_resendLoginEmailOTP(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_resendLoginEmailOTP(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -11718,9 +11776,22 @@ func (ec *executionContext) fieldContext_Mutation_resendLoginEmailOTP(_ context.
 				return ec.fieldContext_LoginPayload_user(ctx, field)
 			case "mfaSetup":
 				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
+			case "pendingToken":
+				return ec.fieldContext_LoginPayload_pendingToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_resendLoginEmailOTP_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -11756,6 +11827,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyLoginMFA(ctx context.Con
 				return ec.fieldContext_LoginPayload_user(ctx, field)
 			case "mfaSetup":
 				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
+			case "pendingToken":
+				return ec.fieldContext_LoginPayload_pendingToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -11805,6 +11878,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyDevice(ctx context.Conte
 				return ec.fieldContext_LoginPayload_user(ctx, field)
 			case "mfaSetup":
 				return ec.fieldContext_LoginPayload_mfaSetup(ctx, field)
+			case "pendingToken":
+				return ec.fieldContext_LoginPayload_pendingToken(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
 		},
@@ -20267,7 +20342,7 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "brand", "category", "description", "source", "sourceProductId", "sourceUrl", "sku"}
+	fieldsInOrder := [...]string{"organizationId", "name", "brand", "category", "description", "targetAge", "materials", "safetyWarnings", "currentPrice", "originalPrice", "currency", "seller", "rating", "reviewCount", "stockStatus", "source", "sourceProductId", "sourceUrl", "sku"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20309,6 +20384,76 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 				return it, err
 			}
 			it.Description = data
+		case "targetAge":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetAge"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TargetAge = data
+		case "materials":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("materials"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Materials = data
+		case "safetyWarnings":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("safetyWarnings"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SafetyWarnings = data
+		case "currentPrice":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentPrice"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrentPrice = data
+		case "originalPrice":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originalPrice"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OriginalPrice = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "seller":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seller"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Seller = data
+		case "rating":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rating"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Rating = data
+		case "reviewCount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCount"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCount = data
+		case "stockStatus":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stockStatus"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StockStatus = data
 		case "source":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
 			data, err := ec.unmarshalNMarketplaceSource2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMarketplaceSource(ctx, v)
@@ -20840,6 +20985,33 @@ func (ec *executionContext) unmarshalInputResendEmailVerificationInput(ctx conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputResendLoginEmailOTPInput(ctx context.Context, obj any) (model.ResendLoginEmailOTPInput, error) {
+	var it model.ResendLoginEmailOTPInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"pendingToken"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "pendingToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pendingToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PendingToken = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRollbackLLMConfigurationInput(ctx context.Context, obj any) (model.RollbackLLMConfigurationInput, error) {
 	var it model.RollbackLLMConfigurationInput
 	asMap := map[string]any{}
@@ -21326,7 +21498,7 @@ func (ec *executionContext) unmarshalInputVerifyDeviceInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"code", "deviceFingerprint"}
+	fieldsInOrder := [...]string{"code", "deviceFingerprint", "pendingToken"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21347,6 +21519,13 @@ func (ec *executionContext) unmarshalInputVerifyDeviceInput(ctx context.Context,
 				return it, err
 			}
 			it.DeviceFingerprint = data
+		case "pendingToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pendingToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PendingToken = data
 		}
 	}
 
@@ -21360,7 +21539,7 @@ func (ec *executionContext) unmarshalInputVerifyLoginEmailOTPInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"code", "deviceFingerprint", "turnstileToken"}
+	fieldsInOrder := [...]string{"code", "deviceFingerprint", "turnstileToken", "pendingToken"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21388,6 +21567,13 @@ func (ec *executionContext) unmarshalInputVerifyLoginEmailOTPInput(ctx context.C
 				return it, err
 			}
 			it.TurnstileToken = data
+		case "pendingToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pendingToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PendingToken = data
 		}
 	}
 
@@ -21401,7 +21587,7 @@ func (ec *executionContext) unmarshalInputVerifyLoginMFAInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"code", "deviceFingerprint"}
+	fieldsInOrder := [...]string{"code", "deviceFingerprint", "pendingToken"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21422,6 +21608,13 @@ func (ec *executionContext) unmarshalInputVerifyLoginMFAInput(ctx context.Contex
 				return it, err
 			}
 			it.DeviceFingerprint = data
+		case "pendingToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pendingToken"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PendingToken = data
 		}
 	}
 
@@ -23466,6 +23659,8 @@ func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._LoginPayload_user(ctx, field, obj)
 		case "mfaSetup":
 			out.Values[i] = ec._LoginPayload_mfaSetup(ctx, field, obj)
+		case "pendingToken":
+			out.Values[i] = ec._LoginPayload_pendingToken(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -28738,6 +28933,14 @@ func (ec *executionContext) marshalOQualityStatus2ᚖgithubᚗcomᚋBusenuryurda
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOResendLoginEmailOTPInput2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐResendLoginEmailOTPInput(ctx context.Context, v any) (*model.ResendLoginEmailOTPInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputResendLoginEmailOTPInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

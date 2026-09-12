@@ -117,6 +117,16 @@ type CreateProductInput struct {
 	Brand           *string           `json:"brand,omitempty"`
 	Category        *string           `json:"category,omitempty"`
 	Description     *string           `json:"description,omitempty"`
+	TargetAge       *string           `json:"targetAge,omitempty"`
+	Materials       *string           `json:"materials,omitempty"`
+	SafetyWarnings  *string           `json:"safetyWarnings,omitempty"`
+	CurrentPrice    *string           `json:"currentPrice,omitempty"`
+	OriginalPrice   *string           `json:"originalPrice,omitempty"`
+	Currency        *string           `json:"currency,omitempty"`
+	Seller          *string           `json:"seller,omitempty"`
+	Rating          *string           `json:"rating,omitempty"`
+	ReviewCount     *string           `json:"reviewCount,omitempty"`
+	StockStatus     *string           `json:"stockStatus,omitempty"`
 	Source          MarketplaceSource `json:"source"`
 	SourceProductID string            `json:"sourceProductId"`
 	SourceURL       *string           `json:"sourceUrl,omitempty"`
@@ -369,6 +379,8 @@ type LoginPayload struct {
 	Status   LoginStatus      `json:"status"`
 	User     *User            `json:"user,omitempty"`
 	MfaSetup *MFASetupPayload `json:"mfaSetup,omitempty"`
+	// Present while login awaits OTP/MFA; store client-side when cookies are blocked.
+	PendingToken *string `json:"pendingToken,omitempty"`
 }
 
 type MFASetupPayload struct {
@@ -513,6 +525,11 @@ type ResendEmailVerificationInput struct {
 	TurnstileToken *string `json:"turnstileToken,omitempty"`
 }
 
+type ResendLoginEmailOTPInput struct {
+	// Fallback when pending cookie is unavailable (e.g. desktop cross-origin).
+	PendingToken *string `json:"pendingToken,omitempty"`
+}
+
 type ReviewInsight struct {
 	Topic   string `json:"topic"`
 	Count   int    `json:"count"`
@@ -641,17 +658,23 @@ type ValidateLLMConfigurationInput struct {
 type VerifyDeviceInput struct {
 	Code              string `json:"code"`
 	DeviceFingerprint string `json:"deviceFingerprint"`
+	// Fallback when pending cookie is unavailable (e.g. desktop cross-origin).
+	PendingToken *string `json:"pendingToken,omitempty"`
 }
 
 type VerifyLoginEmailOTPInput struct {
 	Code              string  `json:"code"`
 	DeviceFingerprint string  `json:"deviceFingerprint"`
 	TurnstileToken    *string `json:"turnstileToken,omitempty"`
+	// Fallback when pending cookie is unavailable (e.g. desktop cross-origin).
+	PendingToken *string `json:"pendingToken,omitempty"`
 }
 
 type VerifyLoginMFAInput struct {
 	Code              string `json:"code"`
 	DeviceFingerprint string `json:"deviceFingerprint"`
+	// Fallback when pending cookie is unavailable (e.g. desktop cross-origin).
+	PendingToken *string `json:"pendingToken,omitempty"`
 }
 
 type WithdrawConsentInput struct {

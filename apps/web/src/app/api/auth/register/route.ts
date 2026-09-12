@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { mailhogMatchesRecipient } from "@/lib/mail-delivery-routing";
 
 const VERIFY_RE = /https?:\/\/[^\s"'<>]+\/auth\/verify-email\?token=([A-Za-z0-9_-]+)/;
 
@@ -18,7 +19,7 @@ async function localVerifyToken(email: string): Promise<string | null> {
         for (const item of payload.items ?? []) {
           const to = (item.Content?.Headers?.To ?? []).join(" ").toLowerCase();
           const body = `${item.Content?.Body ?? ""}\n${item.Raw?.Data ?? ""}`;
-          if (to && !to.includes(email.toLowerCase())) continue;
+          if (to && !mailhogMatchesRecipient(to, email)) continue;
           const match = body.match(VERIFY_RE);
           if (match?.[1]) return match[1];
         }

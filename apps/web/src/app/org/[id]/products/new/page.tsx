@@ -4,7 +4,100 @@ import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
-import { graphqlRequest } from "@/lib/graphql";
+import { graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
+
+function slugify(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+function buildCreateProductInput(params: {
+  orgId: string;
+  name: string;
+  brand: string;
+  category: string;
+  description: string;
+  targetAge: string;
+  materials: string;
+  safetyWarnings: string;
+  currentPrice: string;
+  originalPrice: string;
+  currency: string;
+  seller: string;
+  rating: string;
+  reviewCount: string;
+  stockStatus: string;
+  sku: string;
+  source: string;
+  sourceProductId: string;
+  sourceUrl: string;
+}): Record<string, string> {
+  const input: Record<string, string> = {
+    organizationId: params.orgId,
+    name: params.name.trim(),
+    source: params.source,
+    sourceProductId: params.sourceProductId.trim() || slugify(params.name),
+  };
+
+  const optional: Array<[keyof typeof params, string]> = [
+    ["brand", params.brand],
+    ["category", params.category],
+    ["description", params.description],
+    ["targetAge", params.targetAge],
+    ["materials", params.materials],
+    ["safetyWarnings", params.safetyWarnings],
+    ["currentPrice", params.currentPrice],
+    ["originalPrice", params.originalPrice],
+    ["currency", params.currency],
+    ["seller", params.seller],
+    ["rating", params.rating],
+    ["reviewCount", params.reviewCount],
+    ["stockStatus", params.stockStatus],
+    ["sku", params.sku],
+    ["sourceUrl", params.sourceUrl],
+  ];
+
+  for (const [key, value] of optional) {
+    const trimmed = value.trim();
+    if (trimmed) {
+      input[key] = trimmed;
+    }
+  }
+
+  return input;
+}
+
+function validateProductForm(values: {
+  currentPrice: string;
+  originalPrice: string;
+  rating: string;
+  reviewCount: string;
+  sourceUrl: string;
+}): string | null {
+  const pricePattern = /^\d+(\.\d+)?$/;
+  if (values.currentPrice.trim() && !pricePattern.test(values.currentPrice.trim())) {
+    return "Güncel fiyat pozitif bir sayı olmalıdır.";
+  }
+  if (values.originalPrice.trim() && !pricePattern.test(values.originalPrice.trim())) {
+    return "Liste fiyatı pozitif bir sayı olmalıdır.";
+  }
+  if (values.rating.trim() && !pricePattern.test(values.rating.trim())) {
+    return "Puan sayısal olmalıdır.";
+  }
+  if (values.reviewCount.trim() && !/^\d+$/.test(values.reviewCount.trim())) {
+    return "Yorum sayısı tam sayı olmalıdır.";
+  }
+  if (values.sourceUrl.trim()) {
+    try {
+      const url = new URL(values.sourceUrl.trim());
+      if (!["http:", "https:"].includes(url.protocol)) {
+        return "Kaynak URL http veya https ile başlamalıdır.";
+      }
+    } catch {
+      return "Kaynak URL geçerli bir adres olmalıdır.";
+    }
+  }
+  return null;
+}
 
 export default function NewProductPage() {
   const params = useParams<{ id: string }>();
@@ -33,6 +126,13 @@ export default function NewProductPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const validationError = validateProductForm({ currentPrice, originalPrice, rating, reviewCount, sourceUrl });
+    if (validationError) {
+      setState("error");
+      setError(validationError);
+      return;
+    }
+
     setState("loading");
     setError("");
     try {
@@ -43,27 +143,27 @@ export default function NewProductPage() {
           }
         }`,
         {
-          input: {
-            organizationId: orgId,
+          input: buildCreateProductInput({
+            orgId,
             name,
-            brand: brand || null,
-            category: category || null,
-            description: description || null,
-            targetAge: targetAge || null,
-            materials: materials || null,
-            safetyWarnings: safetyWarnings || null,
-            currentPrice: currentPrice || null,
-            originalPrice: originalPrice || null,
-            currency: currency || null,
-            seller: seller || null,
-            rating: rating || null,
-            reviewCount: reviewCount || null,
-            stockStatus: stockStatus || null,
-            sku: sku || null,
+            brand,
+            category,
+            description,
+            targetAge,
+            materials,
+            safetyWarnings,
+            currentPrice,
+            originalPrice,
+            currency,
+            seller,
+            rating,
+            reviewCount,
+            stockStatus,
+            sku,
             source,
-            sourceProductId: sourceProductId || name.toLowerCase().replace(/\s+/g, "-"),
-            sourceUrl: sourceUrl || null,
-          },
+            sourceProductId,
+            sourceUrl,
+          }),
         },
       );
       router.push(`/org/${orgId}/products/${data.createProduct.product.id}`);
@@ -72,7 +172,7 @@ export default function NewProductPage() {
         setState("unauthorized");
       } else {
         setState("error");
-        setError(err instanceof Error ? err.message : "Kayıt başarısız");
+        setError(graphqlErrorMessage(err, "Kayıt başarısız"));
       }
     }
   }
@@ -82,6 +182,7 @@ export default function NewProductPage() {
       title="Yeni ürün"
       kicker="Ürünler"
       orgId={orgId}
+      restricted={state === "unauthorized"}
       description="Kaynakta olmayan alanları boş bırakın; sistem bunları uydurmaz."
     >
       {state === "unauthorized" && <AsyncView state="unauthorized" />}
@@ -122,11 +223,11 @@ export default function NewProductPage() {
             </label>
             <label className="label">
               Güncel fiyat
-              <input className="input" value={currentPrice} onChange={(e) => setCurrentPrice(e.target.value)} />
+              <input className="input" inputMode="decimal" min="0" value={currentPrice} onChange={(e) => setCurrentPrice(e.target.value)} />
             </label>
             <label className="label">
               Liste fiyatı
-              <input className="input" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} />
+              <input className="input" inputMode="decimal" min="0" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} />
             </label>
             <label className="label">
               Para birimi
@@ -138,11 +239,11 @@ export default function NewProductPage() {
             </label>
             <label className="label">
               Puan
-              <input className="input" value={rating} onChange={(e) => setRating(e.target.value)} />
+              <input className="input" inputMode="decimal" min="0" max="5" value={rating} onChange={(e) => setRating(e.target.value)} />
             </label>
             <label className="label">
               Yorum sayısı
-              <input className="input" value={reviewCount} onChange={(e) => setReviewCount(e.target.value)} />
+              <input className="input" inputMode="numeric" min="0" value={reviewCount} onChange={(e) => setReviewCount(e.target.value)} />
             </label>
             <label className="label">
               Stok
@@ -164,7 +265,7 @@ export default function NewProductPage() {
           </label>
           <label className="label">
             Kaynak URL
-            <input className="input" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} />
+            <input className="input" type="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..." />
           </label>
           {state === "error" && <p className="alert-error">{error}</p>}
           <button type="submit" disabled={state === "loading"} className="btn-primary">

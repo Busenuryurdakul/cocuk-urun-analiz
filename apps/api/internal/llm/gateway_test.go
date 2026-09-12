@@ -51,6 +51,30 @@ func TestRouterRequiresAtLeastOneModel(t *testing.T) {
 	}
 }
 
+func TestRouterIgnoresUnhealthyWhenRequested(t *testing.T) {
+	router := &Router{}
+	policy := &domain.LLMRoutingPolicy{
+		Version:          domain.LLMPlatformDefaultRoutingVersion,
+		DefaultModelKey:  ModelKeyCareful,
+		FallbackModelKey: ModelKeyResult,
+	}
+	models := []domain.LLMModel{
+		{ModelKey: ModelKeyCareful, Status: domain.LLMModelActive, HealthStatus: domain.LLMHealthUnhealthy},
+		{ModelKey: ModelKeyResult, Status: domain.LLMModelActive, HealthStatus: domain.LLMHealthUnhealthy},
+	}
+	decision, err := router.Decide(context.Background(), RouteRequest{
+		Policy:       policy,
+		Models:       models,
+		IgnoreHealth: true,
+	})
+	if err != nil {
+		t.Fatalf("decide: %v", err)
+	}
+	if decision.PrimaryModelKey == "" || decision.FallbackModelKey == "" {
+		t.Fatalf("expected primary and fallback, got %#v", decision)
+	}
+}
+
 func TestEnforcerBlocksInjection(t *testing.T) {
 	enforcer := &Enforcer{}
 	_, err := enforcer.PreCall(context.Background(), &domain.Organization{ComplianceProfile: string(domain.ProfileKVKK)}, EnforcementInput{

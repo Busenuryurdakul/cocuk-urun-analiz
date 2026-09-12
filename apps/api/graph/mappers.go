@@ -35,6 +35,15 @@ func setupTokenFromRequest(req *http.Request, fallback *string) (string, bool) {
 	return cookies.Get(req, cookies.SetupCookie)
 }
 
+func pendingTokenFromRequest(req *http.Request, fallback *string) (string, bool) {
+	if fallback != nil {
+		if token := strings.TrimSpace(*fallback); token != "" {
+			return token, true
+		}
+	}
+	return cookies.Get(req, cookies.PendingCookie)
+}
+
 func gqlError(code string, err error) error {
 	return &gqlerror.Error{
 		Message: err.Error(),
@@ -63,7 +72,11 @@ func mapAuthError(err error) error {
 	case errors.Is(err, orgsvc.ErrLastOwner):
 		return gqlError("LAST_OWNER", err)
 	case errors.Is(err, orgsvc.ErrPersonalOrg):
-		return gqlError("FORBIDDEN", errForbidden)
+		return gqlError("PERSONAL_ORG", err)
+	case errors.Is(err, orgsvc.ErrAlreadyMember):
+		return gqlError("ALREADY_MEMBER", err)
+	case errors.Is(err, orgsvc.ErrInvitationPending):
+		return gqlError("INVITATION_PENDING", err)
 	case errors.Is(err, orgsvc.ErrInvalidRole):
 		return gqlError("INVALID_ROLE", err)
 	case errors.Is(err, orgsvc.ErrInvitationExpired):
@@ -145,6 +158,10 @@ func toModelLoginPayload(result *auth.LoginResult) *model.LoginPayload {
 			OtpauthURL: result.MFASetup.OTPAuthURL,
 			SetupToken: result.MFASetup.Token,
 		}
+	}
+	if result.Pending != nil && result.Pending.Token != "" {
+		token := result.Pending.Token
+		payload.PendingToken = &token
 	}
 	return payload
 }

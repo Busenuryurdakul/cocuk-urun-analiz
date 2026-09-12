@@ -7,6 +7,7 @@ import { AsyncView } from "@/components/async-view";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { MfaSetupPanel } from "@/components/mfa-setup-panel";
 import { authErrorMessage, deviceFingerprintAsync, graphqlRequest } from "@/lib/graphql";
+import { clearPendingToken, readPendingToken, savePendingToken } from "@/lib/pending-auth";
 
 type MfaSetupInfo = {
   secret: string;
@@ -72,15 +73,18 @@ export default function MFAPageClient() {
     const code = new FormData(e.currentTarget).get("code") as string;
     const fingerprint = await deviceFingerprintAsync();
     try {
-      const data = await graphqlRequest<{ verifyLoginMFA: { status: string } }>(
+      const pendingToken = readPendingToken();
+      const data = await graphqlRequest<{ verifyLoginMFA: { status: string; pendingToken?: string | null } }>(
         `mutation VerifyLoginMFA($input: VerifyLoginMFAInput!) {
-          verifyLoginMFA(input: $input) { status }
+          verifyLoginMFA(input: $input) { status pendingToken }
         }`,
-        { input: { code, deviceFingerprint: fingerprint } },
+        { input: { code, deviceFingerprint: fingerprint, pendingToken } },
       );
+      savePendingToken(data.verifyLoginMFA.pendingToken);
       if (data.verifyLoginMFA.status === "EMAIL_OTP_REQUIRED") {
         router.push("/auth/email-otp");
       } else {
+        clearPendingToken();
         router.push("/workspace");
       }
     } catch (err) {
@@ -104,7 +108,7 @@ export default function MFAPageClient() {
         <form onSubmit={onVerifySubmit} className="card space-y-4">
           <label className="label">
             Authenticator kodu
-            <input name="code" required className="input" autoComplete="one-time-code" inputMode="numeric" />
+            <input name="code" required className="input" autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} />
           </label>
           <button type="submit" className="btn-primary w-full">
             Doğrula

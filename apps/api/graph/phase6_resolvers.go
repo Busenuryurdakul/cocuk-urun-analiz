@@ -98,6 +98,9 @@ func toModelLLMPersonas(items []domain.LLMPersona) []*model.LLMPersona {
 }
 
 func toModelLLMConfiguration(snap *domain.ConfigSnapshot) *model.LLMConfiguration {
+	if snap == nil {
+		return nil
+	}
 	out := &model.LLMConfiguration{
 		ID:                   snap.ID.Hex(),
 		RoutingPolicyVersion: snap.LLMRoutingPolicyVersion,

@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { authErrorMessage, deviceFingerprintAsync, graphqlRequest } from "@/lib/graphql";
+import { clearPendingToken, readPendingToken } from "@/lib/pending-auth";
 
 export default function DeviceVerifyPage() {
   const router = useRouter();
@@ -20,8 +21,13 @@ export default function DeviceVerifyPage() {
       await graphqlRequest(`mutation VerifyDevice($input: VerifyDeviceInput!) {
         verifyDevice(input: $input) { status }
       }`, {
-        input: { code, deviceFingerprint: await deviceFingerprintAsync() },
+        input: {
+          code,
+          deviceFingerprint: await deviceFingerprintAsync(),
+          pendingToken: readPendingToken(),
+        },
       });
+      clearPendingToken();
       router.push("/workspace");
     } catch (err) {
       setError(authErrorMessage(err, "Cihaz doğrulama başarısız"));

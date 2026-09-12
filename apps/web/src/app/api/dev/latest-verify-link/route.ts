@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { mailhogMatchesRecipient } from "@/lib/mail-delivery-routing";
 
 const VERIFY_RE = /https?:\/\/[^\s"'<>]+\/auth\/verify-email\?token=[A-Za-z0-9_-]+/;
 
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       const headers = item.Content?.Headers ?? {};
       const to = (headers.To ?? []).join(" ").toLowerCase();
       const body = `${item.Content?.Body ?? ""}\n${item.Raw?.Data ?? ""}`;
-      if (to && !to.includes(email)) {
+      if (to && !mailhogMatchesRecipient(to, email)) {
         continue;
       }
       const match = body.match(VERIFY_RE);

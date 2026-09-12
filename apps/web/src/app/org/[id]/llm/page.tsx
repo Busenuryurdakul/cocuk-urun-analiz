@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
 import { UsagePanel, type UsageDashboardData } from "@/components/llm/usage-panel";
-import { graphqlRequest } from "@/lib/graphql";
+import { authErrorMessage, graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
 import { monthStartIsoDate } from "@/lib/llm-events";
 
 type Model = {
@@ -86,12 +86,14 @@ function OrgLLMPageContent() {
   const [testResult, setTestResult] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [view, setView] = useState<"loading" | "success" | "error" | "unauthorized">("loading");
+  const [view, setView] = useState<"loading" | "success" | "unauthorized">("loading");
 
   const load = useCallback(async () => {
     setView("loading");
+    setLoadError("");
     try {
       const data = await graphqlRequest<{
         llmModels: Model[];
@@ -99,9 +101,8 @@ function OrgLLMPageContent() {
         activeLLMConfiguration: Config | null;
         llmConfigurationDrafts: Draft[];
         llmOrgSettings: OrgSettings | null;
-        llmUsageDashboard: UsageDashboardData;
       }>(
-        `query($id: ID!, $fromDate: String!) {
+        `query($id: ID!) {
           llmModels(organizationId: $id) { modelKey displayName status healthStatus defaultForPlatform fallbackForPlatform }
           llmHealth(organizationId: $id) { modelKey displayName healthStatus providerKey }
           activeLLMConfiguration(organizationId: $id) {
@@ -111,18 +112,13 @@ function OrgLLMPageContent() {
             id status routingPolicyVersion personaKey personaVersion defaultModelKey fallbackModelKey validationErrors updatedAt
           }
           llmOrgSettings(organizationId: $id) { organizationId personaKey defaultModelKey fallbackModelKey }
-          llmUsageDashboard(organizationId: $id, fromDate: $fromDate, recentLimit: 12) {
-            summary { callCount inputTokens outputTokens totalTokens estimatedCostUsd fallbackCount }
-            byModel { modelKey displayName callCount inputTokens outputTokens totalTokens estimatedCostUsd }
-            recentCalls { id modelKey personaKey routingReason fallbackUsed inputTokens outputTokens latencyMs status createdAt }
-          }
         }`,
-        { id: orgId, fromDate },
+        { id: orgId },
       );
-      setModels(data.llmModels);
-      setHealth(data.llmHealth);
+      setModels(data.llmModels ?? []);
+      setHealth(data.llmHealth ?? []);
       setConfig(data.activeLLMConfiguration);
-      setDrafts(data.llmConfigurationDrafts);
+      setDrafts(data.llmConfigurationDrafts ?? []);
       if (data.activeLLMConfiguration) {
         const historyKey = `miyuna:llm-snapshots:${orgId}`;
         const stored = typeof window !== "undefined" ? window.localStorage.getItem(historyKey) : null;
@@ -137,18 +133,30 @@ function OrgLLMPageContent() {
         }
       }
       setOrgSettings(data.llmOrgSettings);
-      setUsage(data.llmUsageDashboard);
       const settings = data.llmOrgSettings;
       if (settings?.personaKey) setPersonaKey(settings.personaKey);
       if (settings?.defaultModelKey) setDefaultModelKey(settings.defaultModelKey);
       if (settings?.fallbackModelKey) setFallbackModelKey(settings.fallbackModelKey);
+
+      const usageResult = await graphqlRequest<{ llmUsageDashboard: UsageDashboardData }>(
+        `query($id: ID!, $fromDate: String!) {
+          llmUsageDashboard(organizationId: $id, fromDate: $fromDate, recentLimit: 12) {
+            summary { callCount inputTokens outputTokens totalTokens estimatedCostUsd fallbackCount }
+            byModel { modelKey displayName callCount inputTokens outputTokens totalTokens estimatedCostUsd }
+            recentCalls { id modelKey personaKey routingReason fallbackUsed inputTokens outputTokens latencyMs status createdAt }
+          }
+        }`,
+        { id: orgId, fromDate },
+      ).catch(() => null);
+      setUsage(usageResult?.llmUsageDashboard ?? null);
       setView("success");
     } catch (err) {
       if (err instanceof Error && (err.message === "UNAUTHORIZED" || err.message === "FORBIDDEN")) {
         setView("unauthorized");
-      } else {
-        setView("error");
+        return;
       }
+      setLoadError(authErrorMessage(err, "LLM paneli yüklenemedi"));
+      setView("success");
     }
   }, [fromDate, orgId]);
 
@@ -345,7 +353,7 @@ function OrgLLMPageContent() {
         ].join("\n"),
       );
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Test başarısız");
+      setSaveError(graphqlErrorMessage(err, "Test başarısız"));
     } finally {
       setTesting(false);
     }
@@ -375,24 +383,22 @@ function OrgLLMPageContent() {
       orgId={orgId}
       title="LLM kontrol paneli"
       kicker="Yapay zeka"
+      restricted={view === "unauthorized"}
       description="Hızlı model ile başlayın, uzun süreçlerde ağır modele yükseltin. Kullanımı Cursor benzeri panelden izleyin."
     >
       {view === "loading" && <AsyncView state="loading" />}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
-      {view === "error" && (
-        <AsyncView
-          state="retry"
-          retry={
-            <button type="button" className="btn-secondary" onClick={() => void load()}>
-              Tekrar dene
-            </button>
-          }
-        />
-      )}
-
       {view === "success" && (
         <div className="space-y-6">
-          {usage && <UsagePanel orgId={orgId} usage={usage} />}
+          {loadError && (
+            <div className="alert-warn flex flex-wrap items-center justify-between gap-3">
+              <p>{loadError}</p>
+              <button type="button" className="btn-secondary" onClick={() => void load()}>
+                Tekrar dene
+              </button>
+            </div>
+          )}
+          {usage && <UsagePanel orgId={orgId} usage={usage} showDetailLink={false} />}
 
           <section className="card grid gap-5 lg:grid-cols-2">
             <div>
