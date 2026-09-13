@@ -1,0 +1,15 @@
+{
+  "id": "busenuryurdakul/amazon-baby-qwen3-0-6b-qlora-finetune",
+  "title": "Amazon Baby Qwen3 0 6B QLoRA Finetune",
+  "code_file": "qwen3_amazon_baby_finetune.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": ["roopalik/amazon-baby-dataset"],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

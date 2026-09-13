@@ -198,6 +198,16 @@ func (r *LLMRoutingPolicyRepository) Insert(ctx context.Context, policy *domain.
 	return nil
 }
 
+func (r *LLMRoutingPolicyRepository) UpdateRules(ctx context.Context, id primitive.ObjectID, rules []domain.LLMRoutingRule) error {
+	_, err := r.col.UpdateOne(ctx, bson.M{"_id": id}, bson.M{
+		"$set": bson.M{
+			"rules":     rules,
+			"updatedAt": time.Now().UTC(),
+		},
+	})
+	return err
+}
+
 func (r *LLMRoutingPolicyRepository) FindPublished(ctx context.Context, orgID *primitive.ObjectID, version string) (*domain.LLMRoutingPolicy, error) {
 	filter := bson.M{"version": version, "status": domain.LLMConfigPublished}
 	if orgID != nil {
