@@ -20,6 +20,7 @@ import (
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrEmailNotVerified   = errors.New("email not verified")
+	ErrMailUnavailable    = errors.New("mail unavailable")
 	ErrMFARequired        = errors.New("mfa setup required")
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrInvalidCode        = errors.New("invalid code")
@@ -147,7 +148,7 @@ func (s *Service) Register(ctx context.Context, email, password string) (*Regist
 	}
 
 	if err := s.sendEmailVerification(ctx, user.ID, email); err != nil {
-		return nil, err
+		return nil, ErrMailUnavailable
 	}
 
 	return &RegisterResult{Message: registerAckMessage}, nil
