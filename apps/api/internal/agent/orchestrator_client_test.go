@@ -11,9 +11,20 @@ import (
 	"time"
 )
 
+func orchTestServer(t *testing.T, handler http.HandlerFunc) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ready" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		handler(w, r)
+	}))
+}
+
 func TestOrchestratorClientStartAnalysisRun(t *testing.T) {
 	var got StartAnalysisRunRequest
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := orchTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/internal/v1/runs/start" {
 			t.Fatalf("unexpected path: %s", r.URL.Path)
 		}
@@ -24,7 +35,7 @@ func TestOrchestratorClientStartAnalysisRun(t *testing.T) {
 			t.Fatal(err)
 		}
 		w.WriteHeader(http.StatusOK)
-	}))
+	})
 	defer srv.Close()
 
 	client := NewOrchestratorClient(srv.URL, "secret", 0)
@@ -45,7 +56,9 @@ func TestOrchestratorClientStartAnalysisRun(t *testing.T) {
 
 func TestOrchestratorClientUnavailable(t *testing.T) {
 	client := NewOrchestratorClient("http://127.0.0.1:1", "secret", time.Millisecond)
-	err := client.StartAnalysisRun(context.Background(), StartAnalysisRunRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+	err := client.StartAnalysisRun(ctx, StartAnalysisRunRequest{
 		OrganizationID: "org",
 		AnalysisRunID:  "run",
 		TraceID:        "trace",
@@ -53,13 +66,17 @@ func TestOrchestratorClientUnavailable(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !errors.Is(err, ErrOrchestratorUnavailable) {
+	if !errors.Is(err, ErrOrchestratorUnavailable) && !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("expected orchestrator unavailable, got %v", err)
 	}
 }
 
 func TestOrchestratorClientSanitizesHTMLBody(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ready" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		w.WriteHeader(http.StatusBadGateway)
 		_, _ = w.Write([]byte("<!DOCTYPE html><html><body>Bad Gateway</body></html>"))
 	}))
@@ -82,16 +99,40 @@ func TestOrchestratorClientSanitizesHTMLBody(t *testing.T) {
 	}
 }
 
-func TestOrchestratorClientRetries502(t *testing.T) {
+func TestOrchestratorClientEnsureReadyWaitsForWake(t *testing.T) {
 	attempts := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/ready" {
+			t.Fatalf("unexpected path: %s", r.URL.Path)
+		}
+		attempts++
+		if attempts < 3 {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	client := NewOrchestratorClient(srv.URL, "secret", time.Second)
+	if err := client.EnsureReady(context.Background()); err != nil {
+		t.Fatalf("expected ready after warmup, got %v", err)
+	}
+	if attempts < 3 {
+		t.Fatalf("expected warmup polling, attempts=%d", attempts)
+	}
+}
+
+func TestOrchestratorClientRetries502(t *testing.T) {
+	attempts := 0
+	srv := orchTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		attempts++
 		if attempts < 2 {
 			w.WriteHeader(http.StatusBadGateway)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-	}))
+	})
 	defer srv.Close()
 
 	client := NewOrchestratorClient(srv.URL, "secret", time.Second)

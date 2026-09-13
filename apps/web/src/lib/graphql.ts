@@ -50,6 +50,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "İstek geçersiz. Form alanları API şemasıyla uyuşmuyor olabilir; sayfayı yenileyip tekrar deneyin.",
   LLM_MODEL_DISABLED:
     "Kullanılabilir LLM modeli yok. Sağlık durumunu kontrol edin; production ortamında API anahtarlarının tanımlı olduğundan emin olun.",
+  ORCHESTRATOR_UNAVAILABLE:
+    "Analiz servisi uyanıyor olabilir; lütfen 1–2 dakika bekleyip tekrar deneyin. Sorun sürerse birkaç dakika sonra yeniden deneyin.",
 };
 
 function isNetworkFailure(err: unknown): boolean {

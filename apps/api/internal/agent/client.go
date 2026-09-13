@@ -6,16 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 )
 
 const (
-	internalTokenHeader       = "X-Miyuna-Internal-Token"
-	defaultIPCTimeout         = 60 * time.Second
-	orchestratorRetryAttempts = 3
-	orchestratorRetryDelay    = 4 * time.Second
+	internalTokenHeader          = "X-Miyuna-Internal-Token"
+	defaultIPCTimeout            = 60 * time.Second
+	orchestratorRetryAttempts    = 3
+	orchestratorRetryDelay       = 4 * time.Second
+	orchestratorWarmupAttempts   = 20
+	orchestratorWarmupDelay      = 5 * time.Second
+	orchestratorWarmupReqTimeout = 20 * time.Second
 )
 
 // OrchestratorClient calls the Python Agent Orchestrator (internal only).
@@ -54,6 +58,9 @@ type CancelRunRequest struct {
 }
 
 func (c *OrchestratorClient) StartAnalysisRun(ctx context.Context, req StartAnalysisRunRequest) error {
+	if err := c.EnsureReady(ctx); err != nil {
+		return err
+	}
 	return c.post(ctx, "/internal/v1/runs/start", req, nil)
 }
 
@@ -62,22 +69,62 @@ func (c *OrchestratorClient) CancelRun(ctx context.Context, req CancelRunRequest
 }
 
 func (c *OrchestratorClient) Ready(ctx context.Context) error {
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+"/ready", nil)
-	if err != nil {
-		return err
+	return c.ensureReady(ctx, 1, 0)
+}
+
+// EnsureReady polls the orchestrator until it responds or the warmup budget is exhausted.
+// Render free-tier services can take 30–60s to wake from hibernation.
+func (c *OrchestratorClient) EnsureReady(ctx context.Context) error {
+	return c.ensureReady(ctx, orchestratorWarmupAttempts, orchestratorWarmupDelay)
+}
+
+func (c *OrchestratorClient) ensureReady(ctx context.Context, attempts int, delay time.Duration) error {
+	if attempts <= 0 {
+		attempts = 1
 	}
-	if c.Token != "" {
-		httpReq.Header.Set(internalTokenHeader, c.Token)
+	warmupClient := &http.Client{Timeout: orchestratorWarmupReqTimeout}
+	var lastErr error
+	for attempt := 0; attempt < attempts; attempt++ {
+		if attempt > 0 {
+			if err := sleepContext(ctx, delay); err != nil {
+				return err
+			}
+		}
+		httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+"/ready", nil)
+		if err != nil {
+			return err
+		}
+		if c.Token != "" {
+			httpReq.Header.Set(internalTokenHeader, c.Token)
+		}
+		resp, err := warmupClient.Do(httpReq)
+		if err != nil {
+			lastErr = fmt.Errorf("%w: %v", ErrOrchestratorUnavailable, err)
+			if attempt == 0 && attempts > 1 {
+				log.Printf("agent orchestrator: warming up (attempt %d/%d): %v", attempt+1, attempts, err)
+			}
+			continue
+		}
+		raw, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			if attempt > 0 {
+				log.Printf("agent orchestrator: ready after %d warmup attempt(s)", attempt+1)
+			}
+			return nil
+		}
+		lastErr = orchestratorHTTPError(resp.StatusCode, raw)
+		if !isRetryableOrchestratorStatus(resp.StatusCode) {
+			return lastErr
+		}
+		if attempt == 0 && attempts > 1 {
+			log.Printf("agent orchestrator: warming up (attempt %d/%d): status %d", attempt+1, attempts, resp.StatusCode)
+		}
 	}
-	resp, err := c.HTTPClient.Do(httpReq)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrOrchestratorUnavailable, err)
+	if lastErr != nil {
+		return lastErr
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return orchestratorHTTPError(resp.StatusCode, nil)
-	}
-	return nil
+	return ErrOrchestratorUnavailable
 }
 
 func (c *OrchestratorClient) post(ctx context.Context, path string, body any, out any) error {

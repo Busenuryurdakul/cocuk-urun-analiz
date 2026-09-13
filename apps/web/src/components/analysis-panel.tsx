@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { ModelRouteStrip } from "@/components/llm/model-route-strip";
 import { RunEventTimeline } from "@/components/llm/run-event-timeline";
-import { graphqlRequest } from "@/lib/graphql";
+import { graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
 import { summarizeRunLlm } from "@/lib/llm-events";
 
 type ReviewInsight = {
@@ -290,7 +290,7 @@ export function AnalysisPanel({
       setRun(data.startAgentRun);
       setView("polling");
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Analiz başlatılamadı");
+      setActionError(graphqlErrorMessage(err, "Analiz başlatılamadı"));
     } finally {
       setStarting(false);
     }
