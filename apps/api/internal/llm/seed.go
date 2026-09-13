@@ -12,10 +12,13 @@ import (
 )
 
 const (
-	ProviderKeyPrimary   = "primary"
-	ProviderKeySecondary = "secondary"
-	ModelKeyCareful      = "careful_analyst"
-	ModelKeyResult       = "result_analyst"
+	ProviderKeyPrimary       = "primary"
+	ProviderKeySecondary     = "secondary"
+	ProviderKeyAmazonBaby    = "amazon_baby_local"
+	ModelKeyCareful          = "careful_analyst"
+	ModelKeyResult           = "result_analyst"
+	ModelKeyAmazonBabyRating = "amazon_baby_rating"
+	TaskTypeRatingPrediction = "rating_prediction"
 )
 
 func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProviderRepository, models *repository.LLMModelRepository, routing *repository.LLMRoutingPolicyRepository, personas *repository.LLMPersonaRepository, actorID primitive.ObjectID) error {
@@ -37,6 +40,16 @@ func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProvider
 		BaseURLRef:  "env:LLM_SECONDARY_BASE_URL",
 	}
 	if err := providers.Upsert(ctx, secondaryProvider); err != nil {
+		return err
+	}
+	amazonBabyProvider := &domain.LLMProvider{
+		ProviderKey: ProviderKeyAmazonBaby,
+		DisplayName: "Amazon Baby Local Inference",
+		Status:      domain.LLMProviderActive,
+		SecretRef:   "env:LLM_AMAZON_BABY_API_KEY",
+		BaseURLRef:  "env:LLM_AMAZON_BABY_BASE_URL",
+	}
+	if err := providers.Upsert(ctx, amazonBabyProvider); err != nil {
 		return err
 	}
 
@@ -78,6 +91,31 @@ func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProvider
 		return err
 	}
 
+	amazonBaby := &domain.LLMModel{
+		ProviderID:          amazonBabyProvider.ID,
+		ModelKey:            ModelKeyAmazonBabyRating,
+		DisplayName:         "Amazon Baby Rating (Qwen3 fine-tuned)",
+		Status:              domain.LLMModelActive,
+		ProviderModelName:   envOrDefault("LLM_AMAZON_BABY_MODEL_NAME", "miyuna-amazon-baby-qwen3"),
+		ContextWindowTokens: 32768,
+		HealthStatus:        domain.LLMHealthUnknown,
+		Capabilities: domain.LLMModelCapabilities{
+			Chat:               true,
+			JSON:               false,
+			SupportedTaskTypes: []string{TaskTypeRatingPrediction},
+		},
+		FineTune: &domain.LLMFineTuneMetadata{
+			BaseModelID:      "Qwen/Qwen3-0.6B",
+			DatasetVersionID: "KAGGLE_AMAZON_BABY_ROOPALIK",
+			TrainingRunID:    "kaggle-v17",
+			ApprovalStatus:   "PENDING",
+			DeploymentStatus: "LOCAL_WEIGHTS",
+		},
+	}
+	if err := models.Upsert(ctx, amazonBaby); err != nil {
+		return err
+	}
+
 	if _, err := routing.FindPublished(ctx, nil, domain.LLMPlatformDefaultRoutingVersion); err != nil {
 		if err != repository.ErrNotFound {
 			return err
@@ -92,6 +130,7 @@ func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProvider
 				{TaskType: "analysis", PreferredModels: []string{ModelKeyCareful, ModelKeyResult}},
 				{TaskType: "review", PreferredModels: []string{ModelKeyResult, ModelKeyCareful}},
 				{TaskType: "deep_analysis", PreferredModels: []string{ModelKeyResult, ModelKeyCareful}},
+				{TaskType: TaskTypeRatingPrediction, PreferredModels: []string{ModelKeyAmazonBabyRating}},
 			},
 			Reason:      "platform bootstrap routing policy",
 			CreatedBy:   actorID,
@@ -100,6 +139,10 @@ func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProvider
 		if err := routing.Insert(ctx, policy); err != nil {
 			return err
 		}
+	}
+
+	if err := ensureAmazonBabyRouting(ctx, routing); err != nil {
+		return err
 	}
 
 	for _, spec := range []struct {
@@ -129,6 +172,35 @@ func SeedPlatformDefaults(ctx context.Context, providers *repository.LLMProvider
 		}
 	}
 	return nil
+}
+
+func ensureAmazonBabyRouting(ctx context.Context, routing *repository.LLMRoutingPolicyRepository) error {
+	policy, err := routing.FindPublished(ctx, nil, domain.LLMPlatformDefaultRoutingVersion)
+	if err != nil {
+		if err == repository.ErrNotFound {
+			return nil
+		}
+		return err
+	}
+	updated := false
+	for i, rule := range policy.Rules {
+		if rule.TaskType != TaskTypeRatingPrediction {
+			continue
+		}
+		if len(rule.PreferredModels) == 1 && rule.PreferredModels[0] == ModelKeyAmazonBabyRating {
+			return nil
+		}
+		policy.Rules[i].PreferredModels = []string{ModelKeyAmazonBabyRating}
+		updated = true
+		break
+	}
+	if !updated {
+		policy.Rules = append(policy.Rules, domain.LLMRoutingRule{
+			TaskType:        TaskTypeRatingPrediction,
+			PreferredModels: []string{ModelKeyAmazonBabyRating},
+		})
+	}
+	return routing.UpdateRules(ctx, policy.ID, policy.Rules)
 }
 
 func envOrDefault(key, fallback string) string {

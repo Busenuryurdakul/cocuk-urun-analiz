@@ -10,7 +10,7 @@ const (
 // ShouldEscalateQuality decides whether a fast-model answer should be retried on the heavy model.
 func ShouldEscalateQuality(taskType, userPrompt, content string) bool {
 	taskType = strings.TrimSpace(strings.ToLower(taskType))
-	if taskType == "deep_analysis" || taskType == "review" {
+	if taskType == "deep_analysis" || taskType == "review" || taskType == TaskTypeRatingPrediction {
 		return false
 	}
 

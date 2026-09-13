@@ -308,10 +308,14 @@ func (g *Gateway) invokeModel(ctx context.Context, provider Provider, model *dom
 }
 
 func providerKeyForModel(modelKey string) string {
-	if modelKey == ModelKeyResult {
+	switch modelKey {
+	case ModelKeyResult:
 		return ProviderKeySecondary
+	case ModelKeyAmazonBabyRating:
+		return ProviderKeyAmazonBaby
+	default:
+		return ProviderKeyPrimary
 	}
-	return ProviderKeyPrimary
 }
 
 func (g *Gateway) selectProvider() Provider {

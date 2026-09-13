@@ -3,6 +3,7 @@
   "runtime": {
     "primaryBaseUrl": "http://127.0.0.1:11434/v1",
     "secondaryBaseUrl": "http://127.0.0.1:11434/v1",
+    "amazonBabyBaseUrl": "http://127.0.0.1:8765/v1",
     "apiKeyEnv": "LOCAL_LLM_API_KEY"
   },
   "localWeights": [
@@ -10,6 +11,11 @@
       "path": "models/Qwen3-0.6B",
       "displayName": "Qwen3-0.6B",
       "preferredRoles": ["primary", "worker", "careful_analyst"]
+    },
+    {
+      "path": "models/amazon-baby-qwen3-finetuned/weights",
+      "displayName": "Amazon Baby Qwen3 Fine-tuned",
+      "preferredRoles": ["rating_prediction", "amazon_baby_rating"]
     }
   ],
   "bindings": {
@@ -26,6 +32,12 @@
         "TEMPLATE \"\"\"{{ .System }}\\n{{ .Prompt }}\"\"\"",
         "PARAMETER temperature 0.2"
       ]
+    },
+    {
+      "weightsPath": "models/amazon-baby-qwen3-finetuned/weights",
+      "suggestedName": "miyuna-amazon-baby-qwen3",
+      "notes": "Ollama does not support Qwen3ForCausalLM. Use scripts/amazon_baby/local_inference_server.py instead.",
+      "setupScript": "scripts/amazon_baby/setup_local_model.ps1"
     }
   ]
 }

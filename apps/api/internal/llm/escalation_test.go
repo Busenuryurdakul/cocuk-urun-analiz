@@ -21,6 +21,13 @@ func TestShouldEscalateQualitySkipsReviewTask(t *testing.T) {
 	}
 }
 
+func TestShouldEscalateQualitySkipsRatingPrediction(t *testing.T) {
+	prompt := stringsRepeat("x", 400)
+	if ShouldEscalateQuality(TaskTypeRatingPrediction, prompt, "5") {
+		t.Fatal("rating_prediction should not quality-escalate short numeric outputs")
+	}
+}
+
 func stringsRepeat(s string, n int) string {
 	out := ""
 	for i := 0; i < n; i++ {
