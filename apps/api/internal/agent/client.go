@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
 const (
-	internalTokenHeader = "X-Miyuna-Internal-Token"
-	defaultIPCTimeout   = 15 * time.Second
+	internalTokenHeader       = "X-Miyuna-Internal-Token"
+	defaultIPCTimeout         = 60 * time.Second
+	orchestratorRetryAttempts = 3
+	orchestratorRetryDelay    = 4 * time.Second
 )
 
 // OrchestratorClient calls the Python Agent Orchestrator (internal only).
@@ -72,7 +75,7 @@ func (c *OrchestratorClient) Ready(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: status %d", ErrOrchestratorUnavailable, resp.StatusCode)
+		return orchestratorHTTPError(resp.StatusCode, nil)
 	}
 	return nil
 }
@@ -82,27 +85,110 @@ func (c *OrchestratorClient) post(ctx context.Context, path string, body any, ou
 	if err != nil {
 		return err
 	}
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+path, bytes.NewReader(payload))
-	if err != nil {
-		return err
-	}
-	httpReq.Header.Set("Content-Type", "application/json")
-	if c.Token != "" {
-		httpReq.Header.Set(internalTokenHeader, c.Token)
-	}
-	resp, err := c.HTTPClient.Do(httpReq)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrOrchestratorUnavailable, err)
-	}
-	defer resp.Body.Close()
-	raw, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("%w: status %d body %s", ErrOrchestratorUnavailable, resp.StatusCode, string(raw))
-	}
-	if out != nil && len(raw) > 0 {
-		if err := json.Unmarshal(raw, out); err != nil {
+
+	var lastErr error
+	for attempt := 0; attempt < orchestratorRetryAttempts; attempt++ {
+		if attempt > 0 {
+			if err := sleepContext(ctx, orchestratorRetryDelay); err != nil {
+				return err
+			}
+		}
+
+		httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+path, bytes.NewReader(payload))
+		if err != nil {
 			return err
 		}
+		httpReq.Header.Set("Content-Type", "application/json")
+		if c.Token != "" {
+			httpReq.Header.Set(internalTokenHeader, c.Token)
+		}
+
+		resp, err := c.HTTPClient.Do(httpReq)
+		if err != nil {
+			lastErr = fmt.Errorf("%w: %v", ErrOrchestratorUnavailable, err)
+			if attempt+1 < orchestratorRetryAttempts {
+				continue
+			}
+			return lastErr
+		}
+
+		raw, readErr := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if readErr != nil {
+			lastErr = fmt.Errorf("%w: %v", ErrOrchestratorUnavailable, readErr)
+			if attempt+1 < orchestratorRetryAttempts {
+				continue
+			}
+			return lastErr
+		}
+
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			if out != nil && len(raw) > 0 {
+				if err := json.Unmarshal(raw, out); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		lastErr = orchestratorHTTPError(resp.StatusCode, raw)
+		if isRetryableOrchestratorStatus(resp.StatusCode) && attempt+1 < orchestratorRetryAttempts {
+			continue
+		}
+		return lastErr
 	}
-	return nil
+	if lastErr != nil {
+		return lastErr
+	}
+	return ErrOrchestratorUnavailable
+}
+
+func orchestratorHTTPError(status int, raw []byte) error {
+	detail := sanitizeOrchestratorBody(raw)
+	if detail == "" {
+		return fmt.Errorf("%w: status %d", ErrOrchestratorUnavailable, status)
+	}
+	return fmt.Errorf("%w: status %d (%s)", ErrOrchestratorUnavailable, status, detail)
+}
+
+func isRetryableOrchestratorStatus(status int) bool {
+	return status == http.StatusBadGateway || status == http.StatusServiceUnavailable || status == http.StatusGatewayTimeout
+}
+
+func sanitizeOrchestratorBody(raw []byte) string {
+	body := strings.TrimSpace(string(raw))
+	if body == "" {
+		return ""
+	}
+	lower := strings.ToLower(body)
+	if strings.HasPrefix(lower, "<!doctype") || strings.HasPrefix(lower, "<html") {
+		return "upstream gateway error page"
+	}
+	if strings.Contains(body, "@font-face") || strings.Contains(body, "text/html") {
+		return "upstream gateway error page"
+	}
+	body = strings.Join(strings.Fields(body), " ")
+	if len(body) > 120 {
+		body = body[:120] + "…"
+	}
+	return body
+}
+
+// OrchestratorFailureReason returns a short, user-safe terminal error string.
+func OrchestratorFailureReason(err error) string {
+	if err == nil {
+		return ""
+	}
+	return ErrOrchestratorUnavailable.Error()
+}
+
+func sleepContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }

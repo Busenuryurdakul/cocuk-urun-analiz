@@ -25,7 +25,7 @@ go_client = GoAgentClient(
 llm_client = GoLLMClient(
     base_url=settings.go_api_url,
     token=settings.internal_token,
-    timeout_seconds=settings.ipc_timeout_seconds,
+    timeout_seconds=settings.llm_timeout_seconds,
 )
 run_manager = RunManager(go_client=go_client, llm_client=llm_client)
 

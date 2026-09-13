@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -32,6 +33,7 @@ type Config struct {
 	WebBaseURL             string
 	MFAIssuer              string
 	CookieSecure           bool
+	AuthLocalRelaxed       bool
 	JWTSecret              string
 	AccessTokenTTL         time.Duration
 	RefreshTokenTTL        time.Duration
@@ -57,7 +59,7 @@ func Load() Config {
 		RedisURL:               getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		AgentOrchestratorURL:   getEnv("AGENT_ORCHESTRATOR_URL", "http://127.0.0.1:8090"),
 		AgentInternalToken:     getEnv("AGENT_INTERNAL_TOKEN", "dev-internal-token-change-me"),
-		AgentIPCTimeout:        durationEnv("AGENT_IPC_TIMEOUT", 15*time.Second),
+		AgentIPCTimeout:        durationEnv("AGENT_IPC_TIMEOUT", 60*time.Second),
 		GoInternalAPIURL:       getEnv("GO_INTERNAL_API_URL", "http://127.0.0.1:8080"),
 		AllowGraphQLPlayground: getEnv("ALLOW_GRAPHQL_PLAYGROUND", "true") == "true",
 		MailSMTPHost:           getEnv("MAIL_SMTP_HOST", "localhost"),
@@ -75,6 +77,7 @@ func Load() Config {
 		WebBaseURL:             getEnv("WEB_BASE_URL", "http://localhost:3000"),
 		MFAIssuer:              getEnv("MFA_ISSUER", "Miyuna"),
 		CookieSecure:           getEnv("COOKIE_SECURE", "false") == "true",
+		AuthLocalRelaxed:       localRelaxedAuth(),
 		JWTSecret:              getEnv("JWT_SECRET", "change-me-jwt-dev-secret-32chars"),
 		AccessTokenTTL:         durationEnv("ACCESS_TOKEN_TTL", 15*time.Minute),
 		RefreshTokenTTL:        durationEnv("REFRESH_TOKEN_TTL", 7*24*time.Hour),
@@ -90,6 +93,18 @@ func Load() Config {
 		LLMRequestTimeout:      durationEnv("LLM_REQUEST_TIMEOUT", 30*time.Second),
 		LLMMaxRetries:          intEnv("LLM_MAX_RETRIES", 1),
 	}
+}
+
+func localRelaxedAuth() bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("AUTH_LOCAL_RELAXED"))) {
+	case "true", "1", "yes":
+		return true
+	case "false", "0", "no":
+		return false
+	}
+	// Stock local defaults only. Production sets COOKIE_SECURE and a real JWT secret.
+	return getEnv("COOKIE_SECURE", "false") != "true" &&
+		getEnv("JWT_SECRET", "change-me-jwt-dev-secret-32chars") == "change-me-jwt-dev-secret-32chars"
 }
 
 func getEnv(key, fallback string) string {

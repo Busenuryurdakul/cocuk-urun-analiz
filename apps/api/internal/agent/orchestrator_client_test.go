@@ -6,7 +6,9 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestOrchestratorClientStartAnalysisRun(t *testing.T) {
@@ -42,7 +44,7 @@ func TestOrchestratorClientStartAnalysisRun(t *testing.T) {
 }
 
 func TestOrchestratorClientUnavailable(t *testing.T) {
-	client := NewOrchestratorClient("http://127.0.0.1:1", "secret", 0)
+	client := NewOrchestratorClient("http://127.0.0.1:1", "secret", time.Millisecond)
 	err := client.StartAnalysisRun(context.Background(), StartAnalysisRunRequest{
 		OrganizationID: "org",
 		AnalysisRunID:  "run",
@@ -53,5 +55,54 @@ func TestOrchestratorClientUnavailable(t *testing.T) {
 	}
 	if !errors.Is(err, ErrOrchestratorUnavailable) {
 		t.Fatalf("expected orchestrator unavailable, got %v", err)
+	}
+}
+
+func TestOrchestratorClientSanitizesHTMLBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+		_, _ = w.Write([]byte("<!DOCTYPE html><html><body>Bad Gateway</body></html>"))
+	}))
+	defer srv.Close()
+
+	client := NewOrchestratorClient(srv.URL, "secret", time.Second)
+	err := client.StartAnalysisRun(context.Background(), StartAnalysisRunRequest{
+		OrganizationID: "org",
+		AnalysisRunID:  "run",
+		TraceID:        "trace",
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if strings.Contains(err.Error(), "<!DOCTYPE") || strings.Contains(err.Error(), "<html") {
+		t.Fatalf("expected sanitized error, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "502") {
+		t.Fatalf("expected status in error, got %v", err)
+	}
+}
+
+func TestOrchestratorClientRetries502(t *testing.T) {
+	attempts := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts < 2 {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	client := NewOrchestratorClient(srv.URL, "secret", time.Second)
+	if err := client.StartAnalysisRun(context.Background(), StartAnalysisRunRequest{
+		OrganizationID: "org",
+		AnalysisRunID:  "run",
+		TraceID:        "trace",
+	}); err != nil {
+		t.Fatalf("expected success after retry, got %v", err)
+	}
+	if attempts < 2 {
+		t.Fatalf("expected retry, attempts=%d", attempts)
 	}
 }

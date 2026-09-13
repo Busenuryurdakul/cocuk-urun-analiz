@@ -96,6 +96,7 @@ $apiVars = @{
     JWT_SECRET = $jwtSecret
     AGENT_INTERNAL_TOKEN = $internalToken
     AGENT_ORCHESTRATOR_URL = $agentBaseUrl
+    AGENT_IPC_TIMEOUT = '90s'
     GO_INTERNAL_API_URL = $apiBaseUrl
     CREDENTIALS_ENCRYPTION_KEY = $credKey
     MAIL_SMTP_HOST = if ($env:MAIL_SMTP_HOST) { $env:MAIL_SMTP_HOST } else { 'localhost' }
@@ -125,6 +126,7 @@ if ($env:MAIL_SMTP_PASS) { $apiVars['MAIL_SMTP_PASS'] = $env:MAIL_SMTP_PASS }
 $agentVars = @{
     GO_API_URL = $apiBaseUrl
     INTERNAL_TOKEN = $internalToken
+    LLM_TIMEOUT_SECONDS = '120'
 }
 
 Write-Host 'Setting miyuna-api environment variables...'

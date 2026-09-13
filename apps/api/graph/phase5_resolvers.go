@@ -25,6 +25,8 @@ func mapPhase5Error(err error) error {
 		return gqlError("COMPLIANCE_REJECTED", err)
 	case errors.Is(err, agent.ErrRunNotCancellable):
 		return gqlError("RUN_NOT_CANCELLABLE", err)
+	case errors.Is(err, agent.ErrOrchestratorUnavailable):
+		return gqlErrorMessage("ORCHESTRATOR_UNAVAILABLE", "Analysis orchestrator is unavailable. Please retry in a moment.")
 	default:
 		return mapPhase4Error(err)
 	}

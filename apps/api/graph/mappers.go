@@ -53,12 +53,23 @@ func gqlError(code string, err error) error {
 	}
 }
 
+func gqlErrorMessage(code, message string) error {
+	return &gqlerror.Error{
+		Message: message,
+		Extensions: map[string]any{
+			"code": code,
+		},
+	}
+}
+
 func mapAuthError(err error) error {
 	switch {
 	case errors.Is(err, auth.ErrInvalidCredentials):
 		return gqlError("INVALID_CREDENTIALS", err)
 	case errors.Is(err, auth.ErrEmailNotVerified):
 		return gqlError("EMAIL_NOT_VERIFIED", err)
+	case errors.Is(err, auth.ErrMailUnavailable):
+		return gqlError("MAIL_UNAVAILABLE", err)
 	case errors.Is(err, auth.ErrInvalidToken), errors.Is(err, auth.ErrInvalidCode):
 		return gqlError("INVALID_TOKEN", err)
 	case errors.Is(err, auth.ErrChallengeLocked), errors.Is(err, auth.ErrAccountLocked):
