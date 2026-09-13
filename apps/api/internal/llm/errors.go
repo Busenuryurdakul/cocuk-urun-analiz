@@ -3,6 +3,7 @@ package llm
 import "errors"
 
 var (
+	ErrCredentialsNotConfigured = errors.New("llm provider credentials not configured")
 	ErrForbidden            = errors.New("llm access forbidden")
 	ErrInvalidInput         = errors.New("invalid llm input")
 	ErrModelDisabled        = errors.New("llm model disabled")
