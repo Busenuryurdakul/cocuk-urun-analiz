@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/account"
@@ -262,6 +263,10 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	agentAuthorizer := &agent.Authorizer{Registry: agentRegistry, Security: security}
 	grantStore := &agent.GrantStore{Redis: redisClient, Security: security, TTL: 5 * time.Minute}
 	leaseStore := &agent.LeaseStore{Redis: redisClient, TTL: 2 * time.Minute}
+	if strings.TrimSpace(cfg.AgentOrchestratorURL) == "" {
+		log.Printf("agent orchestrator: WARNING — AGENT_ORCHESTRATOR_URL is empty; using default localhost")
+	}
+	log.Printf("agent orchestrator: url=%s ipc_timeout=%s", cfg.AgentOrchestratorURL, cfg.AgentIPCTimeout)
 	orchestratorClient := agent.NewOrchestratorClient(cfg.AgentOrchestratorURL, cfg.AgentInternalToken, cfg.AgentIPCTimeout)
 	agentSvc := agent.NewService(agent.ServiceDeps{
 		Runs:         analysisRunsRepo,

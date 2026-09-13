@@ -10,11 +10,28 @@ function Get-RenderApiKey {
     throw 'Render API key missing'
 }
 
-function Set-RenderEnvVars {
-    param([string]$ServiceId, [hashtable]$Vars)
+function Get-RenderEnvMap {
+    param([string]$ServiceId)
+    $apiKey = Get-RenderApiKey
+    $headers = @{ Authorization = "Bearer $apiKey"; Accept = 'application/json' }
+    $items = Invoke-RestMethod -Uri "https://api.render.com/v1/services/$ServiceId/env-vars" -Headers $headers
+    $map = @{}
+    foreach ($item in $items) {
+        if ($null -eq $item.envVar) { continue }
+        $map[$item.envVar.key] = [string]$item.envVar.value
+    }
+    return $map
+}
+
+function Set-RenderEnvMap {
+    param([string]$ServiceId, [hashtable]$Map)
     $apiKey = Get-RenderApiKey
     $headers = @{ Authorization = "Bearer $apiKey"; 'Content-Type' = 'application/json'; Accept = 'application/json' }
-    $body = @($Vars.GetEnumerator() | ForEach-Object { @{ key = $_.Key; value = [string]$_.Value } }) | ConvertTo-Json -Compress
+    $body = @(
+        foreach ($entry in ($Map.GetEnumerator() | Sort-Object Name)) {
+            @{ key = $entry.Key; value = [string]$entry.Value }
+        }
+    ) | ConvertTo-Json -Depth 3 -Compress
     Invoke-RestMethod -Method Put -Uri "https://api.render.com/v1/services/$ServiceId/env-vars" -Headers $headers -Body $body | Out-Null
 }
 
