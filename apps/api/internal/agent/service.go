@@ -203,7 +203,8 @@ func (s *Service) StartRun(ctx context.Context, input StartRunInput) (*domain.An
 		ActorUserID:    input.ActorID.Hex(),
 		Capabilities:   caps,
 	}
-	// Dispatch asynchronously: orchestrator cold-start warm-up can exceed web proxy timeouts.
+	// Kick Render wake early; dispatch async so GraphQL returns before warm-up finishes.
+	s.Orchestrator.KickWake()
 	runCopy := *run
 	go func() {
 		bgCtx := context.Background()

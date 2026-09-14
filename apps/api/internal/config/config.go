@@ -16,6 +16,8 @@ type Config struct {
 	AgentOrchestratorURL   string
 	AgentInternalToken     string
 	AgentIPCTimeout        time.Duration
+	AgentWarmupAttempts    int
+	AgentWarmupDelay       time.Duration
 	GoInternalAPIURL       string
 	AllowGraphQLPlayground bool
 	MailSMTPHost           string
@@ -59,7 +61,9 @@ func Load() Config {
 		RedisURL:               getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		AgentOrchestratorURL:   getEnv("AGENT_ORCHESTRATOR_URL", "http://127.0.0.1:8090"),
 		AgentInternalToken:     getEnv("AGENT_INTERNAL_TOKEN", "dev-internal-token-change-me"),
-		AgentIPCTimeout:        durationEnv("AGENT_IPC_TIMEOUT", 60*time.Second),
+		AgentIPCTimeout:        durationEnv("AGENT_IPC_TIMEOUT", 90*time.Second),
+		AgentWarmupAttempts:    intEnv("AGENT_WARMUP_ATTEMPTS", 45),
+		AgentWarmupDelay:       durationEnv("AGENT_WARMUP_DELAY", 6*time.Second),
 		GoInternalAPIURL:       getEnv("GO_INTERNAL_API_URL", "http://127.0.0.1:8080"),
 		AllowGraphQLPlayground: getEnv("ALLOW_GRAPHQL_PLAYGROUND", "true") == "true",
 		MailSMTPHost:           getEnv("MAIL_SMTP_HOST", "localhost"),

@@ -266,8 +266,16 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	if strings.TrimSpace(cfg.AgentOrchestratorURL) == "" {
 		log.Printf("agent orchestrator: WARNING — AGENT_ORCHESTRATOR_URL is empty; using default localhost")
 	}
-	log.Printf("agent orchestrator: url=%s ipc_timeout=%s", cfg.AgentOrchestratorURL, cfg.AgentIPCTimeout)
+	log.Printf(
+		"agent orchestrator: url=%s ipc_timeout=%s warmup=%dx%s",
+		cfg.AgentOrchestratorURL,
+		cfg.AgentIPCTimeout,
+		cfg.AgentWarmupAttempts,
+		cfg.AgentWarmupDelay,
+	)
 	orchestratorClient := agent.NewOrchestratorClient(cfg.AgentOrchestratorURL, cfg.AgentInternalToken, cfg.AgentIPCTimeout)
+	orchestratorClient.WarmupAttempts = cfg.AgentWarmupAttempts
+	orchestratorClient.WarmupDelay = cfg.AgentWarmupDelay
 	agentSvc := agent.NewService(agent.ServiceDeps{
 		Runs:         analysisRunsRepo,
 		Events:       agentEventsRepo,

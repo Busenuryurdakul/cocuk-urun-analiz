@@ -17,16 +17,18 @@ const (
 	defaultIPCTimeout            = 60 * time.Second
 	orchestratorRetryAttempts    = 3
 	orchestratorRetryDelay       = 4 * time.Second
-	orchestratorWarmupAttempts   = 20
-	orchestratorWarmupDelay      = 5 * time.Second
+	defaultWarmupAttempts        = 45
+	defaultWarmupDelay           = 6 * time.Second
 	orchestratorWarmupReqTimeout = 20 * time.Second
 )
 
 // OrchestratorClient calls the Python Agent Orchestrator (internal only).
 type OrchestratorClient struct {
-	BaseURL    string
-	Token      string
-	HTTPClient *http.Client
+	BaseURL        string
+	Token          string
+	HTTPClient     *http.Client
+	WarmupAttempts int
+	WarmupDelay    time.Duration
 }
 
 func NewOrchestratorClient(baseURL, token string, timeout time.Duration) *OrchestratorClient {
@@ -39,7 +41,51 @@ func NewOrchestratorClient(baseURL, token string, timeout time.Duration) *Orches
 		HTTPClient: &http.Client{
 			Timeout: timeout,
 		},
+		WarmupAttempts: defaultWarmupAttempts,
+		WarmupDelay:    defaultWarmupDelay,
 	}
+}
+
+func (c *OrchestratorClient) warmupAttempts() int {
+	if c == nil || c.WarmupAttempts <= 0 {
+		return defaultWarmupAttempts
+	}
+	return c.WarmupAttempts
+}
+
+func (c *OrchestratorClient) warmupDelay() time.Duration {
+	if c == nil || c.WarmupDelay <= 0 {
+		return defaultWarmupDelay
+	}
+	return c.WarmupDelay
+}
+
+// KickWake triggers a Render cold-start without blocking the caller.
+func (c *OrchestratorClient) KickWake() {
+	if c == nil || strings.TrimSpace(c.BaseURL) == "" {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+		defer cancel()
+		for _, path := range []string{"/health", "/ready"} {
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+path, nil)
+			if err != nil {
+				return
+			}
+			if c.Token != "" {
+				req.Header.Set(internalTokenHeader, c.Token)
+			}
+			resp, err := (&http.Client{Timeout: 8 * time.Second}).Do(req)
+			if resp != nil {
+				_, _ = io.ReadAll(resp.Body)
+				resp.Body.Close()
+			}
+			if err == nil && resp != nil && resp.StatusCode == http.StatusOK {
+				return
+			}
+		}
+	}()
 }
 
 type StartAnalysisRunRequest struct {
@@ -73,9 +119,9 @@ func (c *OrchestratorClient) Ready(ctx context.Context) error {
 }
 
 // EnsureReady polls the orchestrator until it responds or the warmup budget is exhausted.
-// Render free-tier services can take 30–60s to wake from hibernation.
+// Render free-tier services can take 2–3 minutes to wake from hibernation (or redeploy).
 func (c *OrchestratorClient) EnsureReady(ctx context.Context) error {
-	return c.ensureReady(ctx, orchestratorWarmupAttempts, orchestratorWarmupDelay)
+	return c.ensureReady(ctx, c.warmupAttempts(), c.warmupDelay())
 }
 
 func (c *OrchestratorClient) ensureReady(ctx context.Context, attempts int, delay time.Duration) error {
@@ -117,11 +163,12 @@ func (c *OrchestratorClient) ensureReady(ctx context.Context, attempts int, dela
 		if !isRetryableOrchestratorStatus(resp.StatusCode) {
 			return lastErr
 		}
-		if attempt == 0 && attempts > 1 {
+		if attempts > 1 && (attempt == 0 || attempt+1 == attempts || (attempt+1)%10 == 0) {
 			log.Printf("agent orchestrator: warming up (attempt %d/%d): status %d", attempt+1, attempts, resp.StatusCode)
 		}
 	}
 	if lastErr != nil {
+		log.Printf("agent orchestrator: warmup exhausted after %d attempts: %v", attempts, lastErr)
 		return lastErr
 	}
 	return ErrOrchestratorUnavailable
@@ -226,7 +273,14 @@ func OrchestratorFailureReason(err error) string {
 	if err == nil {
 		return ""
 	}
-	return ErrOrchestratorUnavailable.Error()
+	msg := strings.TrimSpace(err.Error())
+	if msg == "" {
+		return ErrOrchestratorUnavailable.Error()
+	}
+	if len(msg) > 180 {
+		msg = msg[:177] + "..."
+	}
+	return msg
 }
 
 func sleepContext(ctx context.Context, d time.Duration) error {
