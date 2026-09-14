@@ -11,6 +11,18 @@ INTERNAL_TOKEN_HEADER = "X-Miyuna-Internal-Token"
 LLM_COMPLETE_PATH = "/internal/llm/v1/complete"
 
 
+def _gateway_error_detail(response: httpx.Response, limit: int = 160) -> str:
+    try:
+        text = (response.text or "").strip()
+    except Exception:
+        return ""
+    if not text:
+        return ""
+    if len(text) > limit:
+        return text[: limit - 3] + "..."
+    return text
+
+
 class LLMGatewayError(Exception):
     """Normalized gateway failure — agent must not retry or call providers directly."""
 
@@ -110,8 +122,12 @@ class GoLLMClient:
                 resp.raise_for_status()
                 return LLMCompletionResult.from_dict(resp.json())
         except httpx.HTTPStatusError as exc:
+            detail = _gateway_error_detail(exc.response)
+            message = f"llm gateway error: {exc.response.status_code}"
+            if detail:
+                message = f"{message} — {detail}"
             raise LLMGatewayError(
-                f"llm gateway error: {exc.response.status_code}",
+                message,
                 status_code=exc.response.status_code,
                 correlation_id=correlation_id,
             ) from exc

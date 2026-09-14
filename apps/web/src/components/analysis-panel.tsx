@@ -1,11 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { ModelRouteStrip } from "@/components/llm/model-route-strip";
 import { RunEventTimeline } from "@/components/llm/run-event-timeline";
-import { graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
-import { summarizeRunLlm } from "@/lib/llm-events";
+import {
+  decisionLabel,
+  findingRationale,
+  findingTypeLabel,
+  insightKindLabel,
+  isQualityFinding,
+  localizePolicyText,
+  riskLabel,
+  statusLabel,
+  supportStatusLabel,
+} from "@/lib/analysis-labels";
+import { graphqlErrorCode, graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
+import { phaseLabel, summarizeRunLlm } from "@/lib/llm-events";
 
 type ReviewInsight = {
   topic: string;
@@ -78,23 +90,21 @@ const RUN_FIELDS = `
   finalResult { schemaVersion summary overallRisk confidence decision recommendation limitations hallucinationFlags createdAt }
 `;
 
-function decisionLabel(decision: string) {
-  switch (decision) {
-    case "ALLOW":
-      return "İzin verildi";
-    case "ALLOW_WITH_WARNING":
-      return "Uyarı ile izin";
-    case "REVIEW_REQUIRED":
-      return "İnceleme gerekli";
-    case "BLOCK":
-      return "Engellendi";
-    default:
-      return decision;
-  }
-}
-
 function isHighSeverity(severity: string) {
   return severity === "CRITICAL" || severity === "HIGH";
+}
+
+function PolicyCopy({ summary, recommendation }: { summary: string; recommendation: string }) {
+  const localizedSummary = localizePolicyText(summary);
+  const localizedRecommendation = localizePolicyText(recommendation);
+  const showRecommendation =
+    Boolean(localizedRecommendation) && !localizedSummary.includes(localizedRecommendation);
+  return (
+    <>
+      <p>{localizedSummary}</p>
+      {showRecommendation ? <p className="text-muted">{localizedRecommendation}</p> : null}
+    </>
+  );
 }
 
 type AgentRunEvent = {
@@ -143,8 +153,16 @@ export function AnalysisPanel({
   const [starting, setStarting] = useState(false);
   const clientRequestRef = useRef<string>("");
   const pollAttempt = useRef(0);
+  const [pollStartedAt, setPollStartedAt] = useState<number | null>(null);
 
   const runSummary = useMemo(() => summarizeRunLlm(events), [events]);
+
+  const awaitingAgentWake = useMemo(() => {
+    if (!run || run.status !== "PENDING" || events.length > 0 || pollStartedAt == null) {
+      return false;
+    }
+    return Date.now() - pollStartedAt > 20_000;
+  }, [events.length, pollStartedAt, run]);
 
   const loadLlmContext = useCallback(async () => {
     try {
@@ -235,8 +253,24 @@ export function AnalysisPanel({
   }, [hydrateLatestRun, loadLlmContext]);
 
   useEffect(() => {
+    if (!run || !TERMINAL.has(run.status)) return;
+    if (run.status === "FAILED" || run.status === "REJECTED") {
+      const detail = run.terminalError?.trim() || run.terminalReason?.trim();
+      setActionError(
+        detail
+          ? `Analiz tamamlanamadı: ${detail}`
+          : graphqlErrorMessage(run.terminalReason ?? "FAILED", "Analiz tamamlanamadı"),
+      );
+      setView("idle");
+      return;
+    }
+    setView("idle");
+  }, [run?.id, run?.status, run?.terminalError, run?.terminalReason]);
+
+  useEffect(() => {
     if (!run || TERMINAL.has(run.status)) return;
     setView("polling");
+    setPollStartedAt(Date.now());
     let cancelled = false;
     const tick = async () => {
       try {
@@ -265,14 +299,27 @@ export function AnalysisPanel({
     };
   }, [run, afterSequence, loadEvents, refreshRun]);
 
+  async function ensureDataProcessingConsent() {
+    try {
+      await graphqlRequest(
+        `mutation($input: GrantConsentInput!) { grantConsent(input: $input) { id } }`,
+        { input: { purpose: "DATA_PROCESSING", organizationId: orgId } },
+      );
+    } catch {
+      // Consent may already exist; startAgentRun validates again.
+    }
+  }
+
   async function startAnalysis() {
     if (!canStart || starting) return;
     setStarting(true);
     setActionError("");
     setEvents([]);
     setAfterSequence(0);
+    setPollStartedAt(null);
     clientRequestRef.current = crypto.randomUUID();
     try {
+      await ensureDataProcessingConsent();
       const data = await graphqlRequest<{ startAgentRun: AnalysisRun }>(
         `mutation($input: StartAgentRunInput!) {
           startAgentRun(input: $input) {
@@ -290,7 +337,9 @@ export function AnalysisPanel({
       setRun(data.startAgentRun);
       setView("polling");
     } catch (err) {
-      setActionError(graphqlErrorMessage(err, "Analiz başlatılamadı"));
+      const code = graphqlErrorCode(err);
+      const message = graphqlErrorMessage(err, "Analiz başlatılamadı");
+      setActionError(code && !message.includes(code) ? `${message} (${code})` : message);
     } finally {
       setStarting(false);
     }
@@ -349,7 +398,23 @@ export function AnalysisPanel({
         )}
       </div>
 
-      {actionError && <p className="alert-error">{actionError}</p>}
+      {actionError && (
+        <div className="alert-error space-y-2">
+          <p>{actionError}</p>
+          {(actionError.includes("onay") || actionError.includes("Uyumluluk")) && (
+            <p className="text-sm">
+              <Link href={`/org/${orgId}/compliance`} className="font-semibold underline">
+                Uyumluluk sayfasına git
+              </Link>
+            </p>
+          )}
+        </div>
+      )}
+      {awaitingAgentWake && (
+        <p className="rounded-2xl bg-cream px-4 py-3 text-sm text-muted">
+          Analiz servisi uyanıyor olabilir; ilk olaylar genelde 1–2 dakika içinde gelir. Sayfayı kapatmayın.
+        </p>
+      )}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
       {view === "error" && (
         <AsyncView
@@ -368,18 +433,18 @@ export function AnalysisPanel({
         <dl className="grid gap-2 rounded-2xl bg-cream p-4 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted">Durum</dt>
-            <dd className="font-semibold">{run.status}</dd>
+            <dd className="font-semibold">{statusLabel(run.status)}</dd>
           </div>
           {run.currentPhase && (
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Faz</dt>
-              <dd>{run.currentPhase}</dd>
+              <dd>{phaseLabel(run.currentPhase)}</dd>
             </div>
           )}
           {run.terminalReason && (
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Sonuç</dt>
-              <dd>{run.terminalReason}</dd>
+              <dd>{statusLabel(run.terminalReason)}</dd>
             </div>
           )}
           {runSummary.escalated && (
@@ -404,7 +469,7 @@ export function AnalysisPanel({
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Genel risk</dt>
               <dd className={isHighSeverity(run.finalResult.overallRisk) ? "font-semibold text-clay" : "font-semibold"}>
-                {run.finalResult.overallRisk}
+                {riskLabel(run.finalResult.overallRisk)}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
@@ -412,28 +477,32 @@ export function AnalysisPanel({
               <dd>{Math.round(run.finalResult.confidence * 100)}%</dd>
             </div>
           </dl>
-          <p>{run.finalResult.summary}</p>
-          {run.finalResult.recommendation && (
-            <p className="text-muted">{run.finalResult.recommendation}</p>
-          )}
+          <PolicyCopy summary={run.finalResult.summary} recommendation={run.finalResult.recommendation} />
         </div>
       )}
 
       {run?.safetyFindings && run.safetyFindings.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-semibold">Güvenlik bulguları</h3>
+          <h3 className="font-semibold">
+            {run.safetyFindings.every((finding) => isQualityFinding(finding.type))
+              ? "Kanıt durumu"
+              : "Güvenlik bulguları"}
+          </h3>
           <ul className="space-y-2 text-sm">
-            {run.safetyFindings.map((finding) => (
-              <li
-                key={finding.id}
-                className={`rounded-2xl bg-cream p-3 ${isHighSeverity(finding.severity) ? "text-clay" : ""}`}
-              >
-                <p className="font-semibold">
-                  {finding.severity} · {finding.type}
-                </p>
-                <p>{finding.rationale}</p>
-              </li>
-            ))}
+            {run.safetyFindings.map((finding) => {
+              const rationale = findingRationale(finding.type, finding.rationale);
+              return (
+                <li
+                  key={finding.id}
+                  className={`rounded-2xl bg-cream p-3 ${isHighSeverity(finding.severity) ? "text-clay" : ""}`}
+                >
+                  <p className="font-semibold">
+                    {riskLabel(finding.severity)} · {findingTypeLabel(finding.type)}
+                  </p>
+                  {rationale ? <p>{rationale}</p> : null}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -454,7 +523,7 @@ export function AnalysisPanel({
         </div>
       )}
 
-      {run?.evidence && (
+      {run?.evidence && run.evidence.length > 0 && (
         <div className="space-y-2">
           <h3 className="font-semibold">Kanıt</h3>
           <p className="text-sm text-muted">{run.evidence.length} kaynak</p>
@@ -463,7 +532,7 @@ export function AnalysisPanel({
               <li key={`${item.source}-${index}`} className="rounded-2xl bg-cream p-3">
                 <p className="font-semibold">{item.source}</p>
                 <p>{item.claim}</p>
-                <p className="text-muted">{item.supportStatus ?? "DURUM YOK"}</p>
+                <p className="text-muted">{item.supportStatus ? supportStatusLabel(item.supportStatus) : "Durum yok"}</p>
                 {item.reference && <p className="text-muted">{item.reference}</p>}
               </li>
             ))}
@@ -478,7 +547,7 @@ export function AnalysisPanel({
             {run.reviewInsights.map((insight, index) => (
               <li key={`${insight.kind}-${insight.topic}-${index}`} className="rounded-2xl bg-cream p-3">
                 <p className="font-semibold">
-                  {insight.kind} · {insight.topic} ({insight.count})
+                  {insightKindLabel(insight.kind)} · {insight.topic} ({insight.count})
                 </p>
                 <p className="text-muted">{insight.summary}</p>
               </li>
@@ -492,7 +561,7 @@ export function AnalysisPanel({
           <h3 className="font-semibold">Sınırlamalar</h3>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
             {run.finalResult.limitations.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item}>{localizePolicyText(item)}</li>
             ))}
           </ul>
         </div>

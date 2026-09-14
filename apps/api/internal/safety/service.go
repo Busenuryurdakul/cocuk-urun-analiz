@@ -271,7 +271,7 @@ func (s *Service) persistFinding(ctx context.Context, input AnalyzeInput, ftype 
 	if (severity == domain.SafetySeverityCritical || severity == domain.SafetySeverityHigh) && len(evidenceIDs) == 0 {
 		ftype = domain.SafetyInsufficientEvidence
 		severity = domain.SafetySeverityLow
-		rationale = "INSUFFICIENT_EVIDENCE"
+		rationale = "Otomatik karar için yeterli doğrulanmış kaynak yok. Bu bir güvenlik tehlikesi değil; inceleme önerilir."
 	}
 	finding := &domain.SafetyFinding{
 		OrganizationID: input.OrganizationID,
@@ -291,7 +291,7 @@ func (s *Service) persistFinding(ctx context.Context, input AnalyzeInput, ftype 
 }
 
 func (s *Service) persistInsufficient(ctx context.Context, input AnalyzeInput) error {
-	_, err := s.persistFinding(ctx, input, domain.SafetyInsufficientEvidence, domain.SafetySeverityLow, 0, nil, "ANALYZER", "INSUFFICIENT_EVIDENCE")
+	_, err := s.persistFinding(ctx, input, domain.SafetyInsufficientEvidence, domain.SafetySeverityLow, 0, nil, "ANALYZER", "Otomatik karar için yeterli doğrulanmış kaynak yok. Bu bir güvenlik tehlikesi değil; inceleme önerilir.")
 	return err
 }
 

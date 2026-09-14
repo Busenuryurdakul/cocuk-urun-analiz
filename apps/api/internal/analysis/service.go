@@ -189,10 +189,10 @@ func (s *Service) ListReviewInsightsForActor(ctx context.Context, actorID, organ
 func buildSummary(dec DecisionResult, guard GuardResult, insight *domain.ReviewInsightRecord) string {
 	parts := []string{dec.Recommendation}
 	if insight != nil && insight.ReviewCount == 0 {
-		parts = append(parts, "No approved reviews were available.")
+		parts = append(parts, "Onaylanmış kullanıcı yorumu bulunamadı.")
 	}
 	if hasFlag(guard.Flags, string(domain.FlagInventedRecall)) {
-		parts = append(parts, "Unverified recall language was removed from the confirmed recall list.")
+		parts = append(parts, "Doğrulanmamış geri çağırma ifadeleri onaylı listeden çıkarıldı.")
 	}
 	return strings.Join(parts, " ")
 }

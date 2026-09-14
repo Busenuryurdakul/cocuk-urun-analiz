@@ -24,24 +24,24 @@ type DecisionResult struct {
 
 func Decide(in DecisionInput) DecisionResult {
 	if confirmedCriticalRecall(in) {
-		return DecisionResult{Decision: domain.DecisionBlock, OverallRisk: "CRITICAL", Recommendation: "Official confirmed recall matched this product. Do not treat it as safe."}
+		return DecisionResult{Decision: domain.DecisionBlock, OverallRisk: "CRITICAL", Recommendation: "Resmi ve doğrulanmış bir geri çağırma bu ürünle eşleşti. Güvenli kabul etmeyin."}
 	}
 	if highSeverityStrongEvidence(in) {
-		return DecisionResult{Decision: domain.DecisionBlock, OverallRisk: "HIGH", Recommendation: "High-severity finding is backed by strong persisted evidence."}
+		return DecisionResult{Decision: domain.DecisionBlock, OverallRisk: "HIGH", Recommendation: "Yüksek şiddetli bir bulgu güçlü kanıtla destekleniyor."}
 	}
 	if hasFlag(in.Flags, string(domain.FlagContradictoryEvidence)) || contradictory(in.Validations) {
-		return DecisionResult{Decision: domain.DecisionReviewRequired, OverallRisk: "MEDIUM", Recommendation: "Sources disagree. A human reviewer should inspect the evidence."}
+		return DecisionResult{Decision: domain.DecisionReviewRequired, OverallRisk: "MEDIUM", Recommendation: "Kaynaklar birbiriyle çelişiyor. Bir incelemenin kanıtı kontrol etmesi gerekir."}
 	}
 	if weakOrUncertainRisk(in) {
-		return DecisionResult{Decision: domain.DecisionReviewRequired, OverallRisk: "MEDIUM", Recommendation: "Risk signals exist but the match or evidence is not strong enough to block automatically."}
+		return DecisionResult{Decision: domain.DecisionReviewRequired, OverallRisk: "MEDIUM", Recommendation: "Risk işaretleri var ancak eşleşme veya kanıt, otomatik engelleme için yeterince güçlü değil."}
 	}
 	if mediumSupportedWarning(in) {
-		return DecisionResult{Decision: domain.DecisionAllowWithWarning, OverallRisk: "MEDIUM", Recommendation: "Supported medium-severity issues were found. Proceed with the listed warnings."}
+		return DecisionResult{Decision: domain.DecisionAllowWithWarning, OverallRisk: "MEDIUM", Recommendation: "Desteklenen orta düzey sorunlar bulundu. Listelenen uyarılara dikkat edin."}
 	}
 	if strings.EqualFold(in.ComplianceMax, "BLOCK") && len(in.Findings) > 0 {
-		return DecisionResult{Decision: domain.DecisionReviewRequired, OverallRisk: "MEDIUM", Recommendation: "Organization policy requires extra review when any safety finding is present."}
+		return DecisionResult{Decision: domain.DecisionReviewRequired, OverallRisk: "MEDIUM", Recommendation: "Kuruluş politikası, herhangi bir güvenlik bulgusu olduğunda ek inceleme istiyor."}
 	}
-	return DecisionResult{Decision: domain.DecisionAllow, OverallRisk: "LOW", Recommendation: "No significant supported safety risk was confirmed."}
+	return DecisionResult{Decision: domain.DecisionAllow, OverallRisk: "LOW", Recommendation: "Desteklenen önemli bir güvenlik riski doğrulanmadı."}
 }
 
 func confirmedCriticalRecall(in DecisionInput) bool {

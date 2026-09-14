@@ -6,6 +6,9 @@ export function MarketingHeader() {
     <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
       <Logo />
       <nav className="flex items-center gap-2">
+        <a href="/#nasil-kullanilir" className="btn-ghost hidden sm:inline-flex">
+          Nasıl kullanılır
+        </a>
         <Link href="/auth/login" className="btn-ghost hidden sm:inline-flex">
           Giriş yap
         </Link>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { HomeHowTo } from "@/components/home-how-to";
 import { HomeProductPreview } from "@/components/home-product-preview";
 import { MarketingFooter, MarketingHeader } from "@/components/layout/marketing-header";
 
@@ -45,7 +46,10 @@ export default function HomePage() {
                 İlk analizini oluştur
                 <span aria-hidden>→</span>
               </Link>
-              <a href="#ornek-rapor" className="btn-secondary">
+              <a href="#nasil-kullanilir" className="btn-secondary">
+                Nasıl kullanılır
+              </a>
+              <a href="#ornek-rapor" className="btn-ghost">
                 Örnek raporu incele
               </a>
             </div>
@@ -70,9 +74,11 @@ export default function HomePage() {
           ))}
         </section>
 
+        <HomeHowTo />
+
         <section className="mt-16 grid gap-10 lg:grid-cols-2">
           <div className="space-y-4">
-            <p className="kicker">Nasıl çalışır</p>
+            <p className="kicker">Analiz süreci</p>
             <h2 className="display text-3xl">Üründen kanıtlı rapora dört adım</h2>
             <ol className="space-y-4 pt-2">
               {[

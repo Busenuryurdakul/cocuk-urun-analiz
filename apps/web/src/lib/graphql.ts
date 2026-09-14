@@ -40,7 +40,12 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   PERSONAL_ORG: "Kişisel çalışma alanına üye davet edilemez. Ekip için önce bir organizasyon oluşturun.",
   ALREADY_MEMBER: "Bu e-posta zaten bu organizasyonun üyesi.",
   INVITATION_PENDING: "Bu e-postaya zaten bekleyen bir davet var.",
-  CONSENT_REQUIRED: "Davet için uyumluluk onayı gerekli. Uyumluluk sayfasından onayları verip tekrar deneyin.",
+  CONSENT_REQUIRED:
+    "Veri işleme onayı gerekli. Uyumluluk sayfasından DATA_PROCESSING onayını verip tekrar deneyin.",
+  COMPLIANCE_REJECTED:
+    "Uyumluluk politikası analizi engelledi. Uyumluluk sayfasındaki onayları kontrol edip tekrar deneyin.",
+  COMPLIANCE_VIOLATION: "Uyumluluk ihlali — işlem reddedildi. Uyumluluk ayarlarını kontrol edin.",
+  COMPLIANCE_BLOCKED: "Uyumluluk engeli — analiz devam edemiyor.",
   UNAUTHORIZED: "Oturum açmanız gerekiyor.",
   FORBIDDEN: "Bu işlem için yetkiniz yok.",
   GRAPHQL_VALIDATION_FAILED:

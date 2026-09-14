@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { HomeHowToCompact } from "@/components/home-how-to";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { TurnstileWidget, turnstileEnabled } from "@/components/turnstile-widget";
 import {
@@ -177,6 +178,8 @@ export default function LoginPage() {
           Kayıt ol
         </Link>
       </p>
+
+      <HomeHowToCompact />
     </AuthShell>
   );
 }
