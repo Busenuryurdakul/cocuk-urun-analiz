@@ -1,7 +1,4 @@
-function resolveApiBaseUrl(): string {
-  const raw = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").trim().replace(/\/+$/, "");
-  return raw.replace(/\/graphql$/i, "");
-}
+import { resolveApiBaseUrl } from "./api-base";
 
 const API_URL = resolveApiBaseUrl();
 
@@ -52,6 +49,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "Kullanılabilir LLM modeli yok. Sağlık durumunu kontrol edin; production ortamında API anahtarlarının tanımlı olduğundan emin olun.",
   ORCHESTRATOR_UNAVAILABLE:
     "Analiz servisi uyanıyor olabilir; lütfen 1–2 dakika bekleyip tekrar deneyin. Sorun sürerse birkaç dakika sonra yeniden deneyin.",
+  UPSTREAM_UNAVAILABLE:
+    "Analiz API'sine ulaşılamadı. Birkaç saniye sonra tekrar deneyin.",
 };
 
 function isNetworkFailure(err: unknown): boolean {
@@ -74,6 +73,9 @@ export function graphqlErrorMessage(err: unknown, fallback = "İşlem başarıs�
   }
   if (isNetworkFailure(err)) {
     return "Sunucuya bağlanılamadı. Lütfen biraz sonra tekrar deneyin.";
+  }
+  if (code) {
+    return `${fallback} (${code})`;
   }
   return fallback;
 }
@@ -104,6 +106,13 @@ declare global {
 
 export function isDesktopClient(): boolean {
   return typeof window !== "undefined" && Boolean(window.miyunaDesktop);
+}
+
+function graphqlUrl(): string {
+  if (typeof window !== "undefined" && !window.miyunaDesktop) {
+    return "/api/graphql";
+  }
+  return `${API_URL}/graphql`;
 }
 
 export function clientPlatform(): "WEB" | "ELECTRON_WIN" | "ELECTRON_MAC" {
@@ -161,7 +170,7 @@ export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<T> {
-  const res = await fetch(`${API_URL}/graphql`, {
+  const res = await fetch(graphqlUrl(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

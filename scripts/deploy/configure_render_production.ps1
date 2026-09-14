@@ -113,8 +113,8 @@ if ($LlmBackend -eq 'render') {
 } else {
     $apiVars['LLM_PRIMARY_BASE_URL'] = 'https://router.huggingface.co/v1'
     $apiVars['LLM_SECONDARY_BASE_URL'] = 'https://router.huggingface.co/v1'
-    $apiVars['LLM_PRIMARY_MODEL_NAME'] = 'Qwen/Qwen2.5-0.5B-Instruct'
-    $apiVars['LLM_SECONDARY_MODEL_NAME'] = 'meta-llama/Llama-3.2-1B-Instruct'
+    $apiVars['LLM_PRIMARY_MODEL_NAME'] = 'Qwen/Qwen3-4B-Instruct-2507'
+    $apiVars['LLM_SECONDARY_MODEL_NAME'] = 'google/gemma-3-4b-it'
     if ($hfToken) {
         $apiVars['LLM_PRIMARY_API_KEY'] = $hfToken
         $apiVars['LLM_SECONDARY_API_KEY'] = $hfToken

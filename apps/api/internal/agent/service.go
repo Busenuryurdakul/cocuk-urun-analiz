@@ -195,17 +195,22 @@ func (s *Service) StartRun(ctx context.Context, input StartRunInput) (*domain.An
 		_ = s.dispatchFailure(ctx, run, OrchestratorFailureReason(ErrOrchestratorUnavailable))
 		return nil, ErrOrchestratorUnavailable
 	}
-	if err := s.Orchestrator.StartAnalysisRun(ctx, StartAnalysisRunRequest{
+	startReq := StartAnalysisRunRequest{
 		OrganizationID: input.OrganizationID.Hex(),
 		AnalysisRunID:  run.ID.Hex(),
 		ProductID:      input.ProductID.Hex(),
 		TraceID:        traceID,
 		ActorUserID:    input.ActorID.Hex(),
 		Capabilities:   caps,
-	}); err != nil {
-		_ = s.dispatchFailure(ctx, run, OrchestratorFailureReason(err))
-		return nil, err
 	}
+	// Dispatch asynchronously: orchestrator cold-start warm-up can exceed web proxy timeouts.
+	runCopy := *run
+	go func() {
+		bgCtx := context.Background()
+		if err := s.Orchestrator.StartAnalysisRun(bgCtx, startReq); err != nil {
+			_ = s.dispatchFailure(bgCtx, &runCopy, OrchestratorFailureReason(err))
+		}
+	}()
 
 	return run, nil
 }

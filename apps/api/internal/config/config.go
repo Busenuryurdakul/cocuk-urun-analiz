@@ -132,3 +132,29 @@ func intEnv(key string, fallback int) int {
 	}
 	return fallback
 }
+
+// CORSAllowedOrigins is WebBaseURL plus extra browser origins that share this API.
+func (c Config) CORSAllowedOrigins() []string {
+	seen := map[string]struct{}{}
+	var origins []string
+	add := func(origin string) {
+		origin = strings.TrimRight(strings.TrimSpace(origin), "/")
+		if origin == "" {
+			return
+		}
+		if _, ok := seen[origin]; ok {
+			return
+		}
+		seen[origin] = struct{}{}
+		origins = append(origins, origin)
+	}
+	add(c.WebBaseURL)
+	for _, extra := range strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",") {
+		add(extra)
+	}
+	add("https://miyuna-web.vercel.app")
+	add("https://miyuna-web-alt.vercel.app")
+	add("http://localhost:3000")
+	add("http://127.0.0.1:3000")
+	return origins
+}

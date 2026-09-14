@@ -122,18 +122,43 @@ func TestGraphQLDuplicateClientRequestIdempotent(t *testing.T) {
 func TestGraphQLOrchestratorUnavailable(t *testing.T) {
 	h := NewPhase5Harness(t, WithUnavailableOrchestrator())
 	token := h.AccessToken(h.AnalystID, h.OrgID)
-	_, errs, _ := h.GraphQL(token, `mutation($input: StartAgentRunInput!) {
-		startAgentRun(input: $input) { id }
+	clientReq := fmt.Sprintf("unavail-%d", time.Now().UnixNano())
+	data, errs, _ := h.GraphQL(token, `mutation($input: StartAgentRunInput!) {
+		startAgentRun(input: $input) { id status }
 	}`, map[string]any{
 		"input": map[string]any{
 			"organizationId":  h.OrgID.Hex(),
 			"productId":       h.ProductID.Hex(),
-			"clientRequestId": fmt.Sprintf("unavail-%d", time.Now().UnixNano()),
+			"clientRequestId": clientReq,
 		},
 	})
-	if len(errs) == 0 {
-		t.Fatal("expected orchestrator unavailable error")
+	if len(errs) > 0 {
+		t.Fatalf("start should return immediately while dispatch runs async: %v", errs)
 	}
+	run := data["startAgentRun"].(map[string]any)
+	runID := run["id"].(string)
+	if run["status"] != "PENDING" {
+		t.Fatalf("expected PENDING, got %v", run["status"])
+	}
+
+	deadline := time.Now().Add(20 * time.Second)
+	for time.Now().Before(deadline) {
+		data, errs, _ := h.GraphQL(token, `query($orgId: ID!, $runId: ID!) {
+			agentRun(organizationId: $orgId, analysisRunId: $runId) { status terminalReason }
+		}`, map[string]any{"orgId": h.OrgID.Hex(), "runId": runID})
+		if len(errs) > 0 {
+			t.Fatalf("poll agentRun: %v", errs)
+		}
+		row := data["agentRun"].(map[string]any)
+		if row["status"] == "FAILED" {
+			if row["terminalReason"] != "ORCHESTRATOR_DISPATCH_FAILED" {
+				t.Fatalf("expected ORCHESTRATOR_DISPATCH_FAILED, got %v", row["terminalReason"])
+			}
+			return
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	t.Fatal("expected run to fail after async orchestrator dispatch error")
 }
 
 func TestGraphQLInvalidRunIDRejected(t *testing.T) {
