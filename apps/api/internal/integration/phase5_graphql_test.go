@@ -141,7 +141,8 @@ func TestGraphQLOrchestratorUnavailable(t *testing.T) {
 		t.Fatalf("expected PENDING, got %v", run["status"])
 	}
 
-	deadline := time.Now().Add(20 * time.Second)
+	// Async dispatch runs EnsureReady (up to ~100s on unreachable orchestrator) before dispatchFailure.
+	deadline := time.Now().Add(110 * time.Second)
 	for time.Now().Before(deadline) {
 		data, errs, _ := h.GraphQL(token, `query($orgId: ID!, $runId: ID!) {
 			agentRun(organizationId: $orgId, analysisRunId: $runId) { status terminalReason }
