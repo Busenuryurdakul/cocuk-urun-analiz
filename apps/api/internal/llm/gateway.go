@@ -294,7 +294,7 @@ func (g *Gateway) invokeModel(ctx context.Context, provider Provider, model *dom
 	baseURL := ResolveBaseURLRef(providerDoc.BaseURLRef)
 	apiKey := ResolveSecretRef(providerDoc.SecretRef)
 	if !g.deps.UseMock && !ProviderCredentialsConfigured(baseURL, apiKey) {
-		return CompletionResult{}, fmt.Errorf("provider credentials not configured for %s", model.ModelKey)
+		return CompletionResult{}, fmt.Errorf("%w for %s", ErrCredentialsNotConfigured, model.ModelKey)
 	}
 	return provider.Complete(ctx, CompletionRequest{
 		ModelKey:          model.ModelKey,

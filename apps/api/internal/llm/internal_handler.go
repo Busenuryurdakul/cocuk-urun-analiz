@@ -2,6 +2,7 @@ package llm
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -126,6 +127,8 @@ func writeJSON(w http.ResponseWriter, v any) {
 
 func writeLLMError(w http.ResponseWriter, err error) {
 	switch {
+	case errors.Is(err, ErrCredentialsNotConfigured):
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	case err == ErrForbidden, err == ErrComplianceBlocked, err == ErrPromptInjection:
 		http.Error(w, err.Error(), http.StatusForbidden)
 	case err == ErrInvalidInput, err == ErrInvalidPolicyVersion, err == ErrPublishValidation, err == ErrDraftNotValidated:

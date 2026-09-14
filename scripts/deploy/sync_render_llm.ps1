@@ -1,0 +1,120 @@
+# Sync Hugging Face LLM credentials on miyuna-api (safe merge — preserves existing env vars).
+# Usage:
+#   $env:HF_TOKEN = 'hf_...'
+#   .\scripts\deploy\sync_render_llm.ps1
+$ErrorActionPreference = 'Stop'
+
+$ApiServiceId = if ($env:RENDER_API_SERVICE_ID) { $env:RENDER_API_SERVICE_ID } else { 'srv-dae8m7dbedkc73ajnipg' }
+$HfRouter = 'https://router.huggingface.co/v1'
+
+function Get-RenderApiKey {
+    if ($env:RENDER_API_KEY) { return $env:RENDER_API_KEY }
+    $cfgPath = Join-Path $env:USERPROFILE '.render\cli.yaml'
+    if (-not (Test-Path $cfgPath)) { throw 'Render API key missing. Run: render login' }
+    foreach ($line in Get-Content $cfgPath) {
+        if ($line -match '^\s*key:\s*(.+)$') { return $Matches[1].Trim() }
+    }
+    throw 'Could not read Render API key from cli.yaml'
+}
+
+function Get-RenderEnvMap {
+    param([string]$ServiceId)
+    $apiKey = Get-RenderApiKey
+    $headers = @{ Authorization = "Bearer $apiKey"; Accept = 'application/json' }
+    $items = Invoke-RestMethod -Uri "https://api.render.com/v1/services/$ServiceId/env-vars" -Headers $headers
+    $map = @{}
+    foreach ($item in $items) {
+        if ($null -eq $item.envVar) { continue }
+        $map[$item.envVar.key] = [string]$item.envVar.value
+    }
+    return $map
+}
+
+function Set-RenderEnvMap {
+    param([string]$ServiceId, [hashtable]$Map)
+    $apiKey = Get-RenderApiKey
+    $headers = @{
+        Authorization = "Bearer $apiKey"
+        'Content-Type' = 'application/json'
+        Accept = 'application/json'
+    }
+    $body = @(
+        foreach ($entry in ($Map.GetEnumerator() | Sort-Object Name)) {
+            @{ key = $entry.Key; value = [string]$entry.Value }
+        }
+    ) | ConvertTo-Json -Depth 3 -Compress
+    Invoke-RestMethod -Method Put -Uri "https://api.render.com/v1/services/$ServiceId/env-vars" -Headers $headers -Body $body | Out-Null
+}
+
+Write-Host 'Reading current miyuna-api env map...'
+$apiEnv = Get-RenderEnvMap -ServiceId $ApiServiceId
+if ($apiEnv.Count -eq 0) {
+    throw 'Refusing to update: API env map is empty (would wipe service config).'
+}
+
+$verifyScript = Join-Path $PSScriptRoot '..\phase6\verify_hf_runtime.ps1'
+if (Test-Path -LiteralPath $verifyScript) {
+    . $verifyScript -Mode Auto
+}
+
+$token = $env:HF_TOKEN
+if ([string]::IsNullOrWhiteSpace($token)) { $token = $env:LLM_PRIMARY_API_KEY }
+if ([string]::IsNullOrWhiteSpace($token)) { $token = $apiEnv['LLM_PRIMARY_API_KEY'] }
+if ([string]::IsNullOrWhiteSpace($token)) { $token = $apiEnv['HF_TOKEN'] }
+if ([string]::IsNullOrWhiteSpace($token) -and (Get-Command Get-HfAccessTokenFromClipboard -ErrorAction SilentlyContinue)) {
+    $token = Get-HfAccessTokenFromClipboard
+}
+if ([string]::IsNullOrWhiteSpace($token)) {
+    throw @'
+HF token required. Set one of:
+  $env:HF_TOKEN = 'hf_...'
+  (copy token to clipboard, then re-run)
+  .\scripts\phase6\set_hf_token.ps1
+Then run: .\scripts\deploy\sync_render_llm.ps1
+'@
+}
+
+$apiEnv['LLM_USE_MOCK'] = 'false'
+$apiEnv['LLM_PRIMARY_BASE_URL'] = $HfRouter
+$apiEnv['LLM_SECONDARY_BASE_URL'] = $HfRouter
+# Defaults verified against HF Inference Providers router (model_not_supported if stale).
+if (-not $apiEnv.ContainsKey('LLM_PRIMARY_MODEL_NAME') -or [string]::IsNullOrWhiteSpace($apiEnv['LLM_PRIMARY_MODEL_NAME'])) {
+    $apiEnv['LLM_PRIMARY_MODEL_NAME'] = 'Qwen/Qwen3-4B-Instruct-2507'
+}
+if (-not $apiEnv.ContainsKey('LLM_SECONDARY_MODEL_NAME') -or [string]::IsNullOrWhiteSpace($apiEnv['LLM_SECONDARY_MODEL_NAME'])) {
+    $apiEnv['LLM_SECONDARY_MODEL_NAME'] = 'google/gemma-3-4b-it'
+}
+# Legacy presets that HF no longer routes for typical tokens.
+$legacyUnsupported = @(
+    'Qwen/Qwen2.5-0.5B-Instruct',
+    'meta-llama/Llama-3.2-1B-Instruct'
+)
+if ($legacyUnsupported -contains $apiEnv['LLM_PRIMARY_MODEL_NAME']) {
+    Write-Host "Upgrading unsupported LLM_PRIMARY_MODEL_NAME -> Qwen/Qwen3-4B-Instruct-2507"
+    $apiEnv['LLM_PRIMARY_MODEL_NAME'] = 'Qwen/Qwen3-4B-Instruct-2507'
+}
+if ($legacyUnsupported -contains $apiEnv['LLM_SECONDARY_MODEL_NAME']) {
+    Write-Host "Upgrading unsupported LLM_SECONDARY_MODEL_NAME -> google/gemma-3-4b-it"
+    $apiEnv['LLM_SECONDARY_MODEL_NAME'] = 'google/gemma-3-4b-it'
+}
+$apiEnv['LLM_PRIMARY_API_KEY'] = $token
+$apiEnv['LLM_SECONDARY_API_KEY'] = $token
+
+Write-Host "Updating miyuna-api LLM env ($($apiEnv.Count) vars)..."
+Set-RenderEnvMap -ServiceId $ApiServiceId -Map $apiEnv
+
+Write-Host 'Triggering API redeploy...'
+render deploys create $ApiServiceId --confirm -o json | Out-Null
+
+Write-Host 'LLM sync complete.'
+Write-Host "  LLM_PRIMARY_BASE_URL   -> $HfRouter"
+Write-Host "  LLM_SECONDARY_BASE_URL -> $HfRouter"
+Write-Host "  LLM_PRIMARY_MODEL_NAME -> $($apiEnv['LLM_PRIMARY_MODEL_NAME'])"
+Write-Host "  LLM_SECONDARY_MODEL_NAME -> $($apiEnv['LLM_SECONDARY_MODEL_NAME'])"
+Write-Host '  API keys set from HF token (value not printed).'
+
+$orchestratorScript = Join-Path $PSScriptRoot 'sync_render_orchestrator.ps1'
+if (Test-Path -LiteralPath $orchestratorScript) {
+    Write-Host 'Re-syncing orchestrator tokens (LLM PUT must not leave agent/API tokens mismatched)...'
+    & $orchestratorScript
+}
