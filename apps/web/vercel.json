@@ -2,11 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": ".next",
-  "crons": [
-    {
-      "path": "/api/cron/keep-warm",
-      "schedule": "*/14 * * * *"
-    }
-  ]
+  "outputDirectory": ".next"
 }

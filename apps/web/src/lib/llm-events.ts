@@ -94,8 +94,13 @@ export function summarizeRunLlm(events: AgentRunEventLike[]): RunLlmSummary {
   };
 }
 
+const MODEL_FALLBACK_LABELS: Record<string, string> = {
+  careful_analyst: "Careful Analyst",
+  result_analyst: "Result Analyst",
+};
+
 export function modelDisplayName(modelKey: string, registry: Record<string, string>): string {
-  return registry[modelKey] ?? modelKey;
+  return registry[modelKey] ?? MODEL_FALLBACK_LABELS[modelKey] ?? modelKey.replace(/_/g, " ");
 }
 
 export function monthStartIsoDate(): string {

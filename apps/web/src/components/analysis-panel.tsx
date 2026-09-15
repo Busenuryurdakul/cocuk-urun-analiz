@@ -153,9 +153,16 @@ export function AnalysisPanel({
   const [starting, setStarting] = useState(false);
   const clientRequestRef = useRef<string>("");
   const pollAttempt = useRef(0);
+  const afterSequenceRef = useRef(0);
   const [pollStartedAt, setPollStartedAt] = useState<number | null>(null);
+  const [eventsRunId, setEventsRunId] = useState<string | null>(null);
 
-  const runSummary = useMemo(() => summarizeRunLlm(events), [events]);
+  const runSummary = useMemo(() => {
+    if (!run || eventsRunId !== run.id || events.length === 0) {
+      return null;
+    }
+    return summarizeRunLlm(events);
+  }, [events, eventsRunId, run]);
 
   const [awaitingAgentWake, setAwaitingAgentWake] = useState(false);
 
@@ -249,8 +256,12 @@ export function AnalysisPanel({
       if (!latest) return;
       const detailed = await refreshRun(latest.id);
       setRun(detailed ?? latest);
+      setEvents([]);
+      setEventsRunId(latest.id);
+      afterSequenceRef.current = 0;
       const next = await loadEvents(latest.id, 0);
       setAfterSequence(next);
+      afterSequenceRef.current = next;
     } catch {
       // Ignore — user can start a fresh run.
     }
@@ -259,6 +270,9 @@ export function AnalysisPanel({
   useEffect(() => {
     void loadLlmContext();
     void hydrateLatestRun();
+    void fetch("/api/cron/keep-warm", { cache: "no-store" }).catch(() => {
+      // Best-effort: wake Render agent/API before the user clicks start.
+    });
   }, [hydrateLatestRun, loadLlmContext]);
 
   useEffect(() => {
@@ -287,15 +301,19 @@ export function AnalysisPanel({
 
   useEffect(() => {
     if (!run || TERMINAL.has(run.status)) return;
+    const runId = run.id;
     setView("polling");
     setPollStartedAt(Date.now());
+    afterSequenceRef.current = afterSequence;
     let cancelled = false;
     const tick = async () => {
       try {
-        const latest = await refreshRun(run.id);
-        const next = await loadEvents(run.id, afterSequence);
-        if (next > afterSequence) {
+        const latest = await refreshRun(runId);
+        const next = await loadEvents(runId, afterSequenceRef.current);
+        if (next > afterSequenceRef.current) {
+          afterSequenceRef.current = next;
           setAfterSequence(next);
+          setEventsRunId(runId);
           pollAttempt.current = 0;
         }
         if (latest && TERMINAL.has(latest.status)) {
@@ -306,16 +324,16 @@ export function AnalysisPanel({
       } catch (err) {
         if (err instanceof Error && (err.message === "UNAUTHORIZED" || err.message === "FORBIDDEN")) {
           setView("unauthorized");
-        } else {
-          setView("error");
+          return;
         }
+        if (!cancelled) setTimeout(tick, backoffMs(pollAttempt.current++));
       }
     };
     void tick();
     return () => {
       cancelled = true;
     };
-  }, [run, afterSequence, loadEvents, refreshRun]);
+  }, [run?.id, run?.status, loadEvents, refreshRun]);
 
   async function ensureDataProcessingConsent() {
     try {
@@ -333,11 +351,17 @@ export function AnalysisPanel({
     setStarting(true);
     setActionError("");
     setEvents([]);
+    setEventsRunId(null);
     setAfterSequence(0);
+    afterSequenceRef.current = 0;
+    pollAttempt.current = 0;
     setPollStartedAt(null);
+    setView("loading");
+    setRun(null);
     clientRequestRef.current = crypto.randomUUID();
     try {
       await ensureDataProcessingConsent();
+      void fetch("/api/cron/keep-warm", { cache: "no-store" }).catch(() => {});
       const data = await graphqlRequest<{ startAgentRun: AnalysisRun }>(
         `mutation($input: StartAgentRunInput!) {
           startAgentRun(input: $input) {
@@ -353,6 +377,7 @@ export function AnalysisPanel({
         },
       );
       setRun(data.startAgentRun);
+      setEventsRunId(data.startAgentRun.id);
       setView("polling");
     } catch (err) {
       const code = graphqlErrorCode(err);
@@ -416,7 +441,7 @@ export function AnalysisPanel({
         )}
       </div>
 
-      {actionError && (
+      {actionError && view !== "polling" && (
         <div className="alert-error space-y-2">
           <p>{actionError}</p>
           {(actionError.includes("onay") || actionError.includes("Uyumluluk")) && (
@@ -429,19 +454,6 @@ export function AnalysisPanel({
         </div>
       )}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
-      {view === "error" && (
-        <AsyncView
-          state="retry"
-          retry={
-            run ? (
-              <button type="button" className="btn-secondary" onClick={() => void refreshRun(run.id)}>
-                Tekrar dene
-              </button>
-            ) : undefined
-          }
-        />
-      )}
-
       {run && (
         <dl className="grid gap-2 rounded-2xl bg-cream p-4 text-sm">
           <div className="flex justify-between gap-4">
@@ -454,10 +466,16 @@ export function AnalysisPanel({
               <dd>{phaseLabel(run.currentPhase)}</dd>
             </div>
           )}
-          {run.terminalReason && (
+          {TERMINAL.has(run.status) && run.terminalReason && (
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Sonuç</dt>
               <dd>{statusLabel(run.terminalReason)}</dd>
+            </div>
+          )}
+          {TERMINAL.has(run.status) && run.terminalError && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Hata</dt>
+              <dd className="text-clay">{run.terminalError}</dd>
             </div>
           )}
           {runSummary.escalated && (
@@ -469,7 +487,7 @@ export function AnalysisPanel({
         </dl>
       )}
 
-      {run?.finalResult && (
+      {run && TERMINAL.has(run.status) && run.finalResult && (
         <div className="space-y-4 rounded-2xl bg-cream p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">Politika sonucu</p>
           <dl className="grid gap-2">
@@ -494,7 +512,7 @@ export function AnalysisPanel({
         </div>
       )}
 
-      {run?.safetyFindings && run.safetyFindings.length > 0 && (
+      {run && TERMINAL.has(run.status) && run.safetyFindings && run.safetyFindings.length > 0 && (
         <div className="space-y-2">
           <h3 className="font-semibold">
             {run.safetyFindings.every((finding) => isQualityFinding(finding.type))
@@ -520,7 +538,7 @@ export function AnalysisPanel({
         </div>
       )}
 
-      {run?.recalls && run.recalls.length > 0 && (
+      {run && TERMINAL.has(run.status) && run.recalls && run.recalls.length > 0 && (
         <div className="space-y-2">
           <h3 className="font-semibold">Geri çağırma eşleşmeleri</h3>
           <ul className="space-y-2 text-sm">
@@ -536,7 +554,7 @@ export function AnalysisPanel({
         </div>
       )}
 
-      {run?.evidence && run.evidence.length > 0 && (
+      {run && TERMINAL.has(run.status) && run.evidence && run.evidence.length > 0 && (
         <div className="space-y-2">
           <h3 className="font-semibold">Kanıt</h3>
           <p className="text-sm text-muted">{run.evidence.length} kaynak</p>
@@ -553,7 +571,7 @@ export function AnalysisPanel({
         </div>
       )}
 
-      {run?.reviewInsights && run.reviewInsights.length > 0 && (
+      {run && TERMINAL.has(run.status) && run.reviewInsights && run.reviewInsights.length > 0 && (
         <div className="space-y-2">
           <h3 className="font-semibold">Yorum içgörüleri</h3>
           <ul className="space-y-2 text-sm">
@@ -569,7 +587,7 @@ export function AnalysisPanel({
         </div>
       )}
 
-      {run?.finalResult?.limitations && run.finalResult.limitations.length > 0 && (
+      {run && TERMINAL.has(run.status) && run.finalResult?.limitations && run.finalResult.limitations.length > 0 && (
         <div className="space-y-2">
           <h3 className="font-semibold">Sınırlamalar</h3>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
@@ -588,7 +606,7 @@ export function AnalysisPanel({
               <div className="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-forest-soft" />
               <p className="text-sm text-muted">
                 {awaitingAgentWake
-                  ? "Analiz servisi uyanıyor; ilk olaylar 1–5 dakika sürebilir. Sayfayı kapatmayın."
+                  ? "Analiz servisi uyanıyor; soğuk başlangıçta 5–10 dakika sürebilir. Sayfayı kapatmayın."
                   : "Analiz başlatılıyor…"}
               </p>
             </div>
@@ -597,9 +615,11 @@ export function AnalysisPanel({
       )}
 
       {events.length === 0 ? (
-        run ? <AsyncView state="empty" empty={<p className="text-sm text-muted">Henüz analiz olayı yok.</p>} /> : null
+        run && view !== "polling" ? (
+          <AsyncView state="empty" empty={<p className="text-sm text-muted">Henüz analiz olayı yok.</p>} />
+        ) : null
       ) : (
-        <RunEventTimeline orgId={orgId} events={events} />
+        eventsRunId === run?.id && <RunEventTimeline orgId={orgId} events={events} />
       )}
     </section>
   );

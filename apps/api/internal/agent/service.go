@@ -23,8 +23,8 @@ const (
 	DefaultMaxToolLoopIterations = 10
 	DefaultTotalRunTimeout       = 10 * time.Minute
 	// Render free tier can exceed a single warm-up window after long hibernation (~10+ min).
-	dispatchRetryCycles = 4
-	dispatchRetryPause  = 60 * time.Second
+	dispatchRetryCycles = 6
+	dispatchRetryPause  = 90 * time.Second
 )
 
 type Service struct {

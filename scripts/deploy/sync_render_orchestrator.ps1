@@ -78,8 +78,8 @@ $apiEnv['GO_INTERNAL_API_URL'] = $ApiBaseUrl
 if (-not $apiEnv.ContainsKey('AGENT_IPC_TIMEOUT') -or [string]::IsNullOrWhiteSpace($apiEnv['AGENT_IPC_TIMEOUT'])) {
     $apiEnv['AGENT_IPC_TIMEOUT'] = '90s'
 }
-$apiEnv['AGENT_WARMUP_ATTEMPTS'] = '45'
-$apiEnv['AGENT_WARMUP_DELAY'] = '6s'
+$apiEnv['AGENT_WARMUP_ATTEMPTS'] = '90'
+$apiEnv['AGENT_WARMUP_DELAY'] = '8s'
 
 $agentEnv['GO_API_URL'] = $ApiBaseUrl
 $agentEnv['INTERNAL_TOKEN'] = $token

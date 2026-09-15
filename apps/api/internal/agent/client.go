@@ -17,9 +17,12 @@ const (
 	defaultIPCTimeout            = 60 * time.Second
 	orchestratorRetryAttempts    = 3
 	orchestratorRetryDelay       = 4 * time.Second
-	defaultWarmupAttempts        = 45
-	defaultWarmupDelay           = 6 * time.Second
-	orchestratorWarmupReqTimeout = 20 * time.Second
+	defaultWarmupAttempts        = 90
+	defaultWarmupDelay           = 8 * time.Second
+	orchestratorWarmupReqTimeout = 45 * time.Second
+	wakeLoopDuration             = 20 * time.Minute
+	wakeLoopInterval             = 12 * time.Second
+	wakeHTTPTimeout              = 60 * time.Second
 )
 
 // OrchestratorClient calls the Python Agent Orchestrator (internal only).
@@ -60,32 +63,40 @@ func (c *OrchestratorClient) warmupDelay() time.Duration {
 	return c.WarmupDelay
 }
 
-// KickWake triggers a Render cold-start without blocking the caller.
+// KickWake keeps pinging Render until the orchestrator responds or the wake budget ends.
 func (c *OrchestratorClient) KickWake() {
 	if c == nil || strings.TrimSpace(c.BaseURL) == "" {
 		return
 	}
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-		defer cancel()
+	go c.runWakeLoop()
+}
+
+func (c *OrchestratorClient) runWakeLoop() {
+	deadline := time.Now().Add(wakeLoopDuration)
+	client := &http.Client{Timeout: wakeHTTPTimeout}
+	for time.Now().Before(deadline) {
 		for _, path := range []string{"/health", "/ready"} {
+			ctx, cancel := context.WithTimeout(context.Background(), wakeHTTPTimeout)
 			req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+path, nil)
 			if err != nil {
+				cancel()
 				return
 			}
 			if c.Token != "" {
 				req.Header.Set(internalTokenHeader, c.Token)
 			}
-			resp, err := (&http.Client{Timeout: 8 * time.Second}).Do(req)
+			resp, err := client.Do(req)
 			if resp != nil {
 				_, _ = io.ReadAll(resp.Body)
 				resp.Body.Close()
 			}
+			cancel()
 			if err == nil && resp != nil && resp.StatusCode == http.StatusOK {
 				return
 			}
 		}
-	}()
+		time.Sleep(wakeLoopInterval)
+	}
 }
 
 type StartAnalysisRunRequest struct {
