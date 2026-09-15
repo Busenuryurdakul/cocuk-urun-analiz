@@ -478,7 +478,7 @@ export function AnalysisPanel({
               <dd className="text-clay">{run.terminalError}</dd>
             </div>
           )}
-          {runSummary.escalated && (
+          {runSummary?.escalated && (
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Model yükseltme</dt>
               <dd className="font-semibold text-clay">Ağır modele geçildi</dd>
