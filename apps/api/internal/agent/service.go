@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -21,6 +22,9 @@ import (
 const (
 	DefaultMaxToolLoopIterations = 10
 	DefaultTotalRunTimeout       = 10 * time.Minute
+	// Render free tier can exceed a single warm-up window after long hibernation (~10+ min).
+	dispatchRetryCycles = 4
+	dispatchRetryPause  = 60 * time.Second
 )
 
 type Service struct {
@@ -206,14 +210,36 @@ func (s *Service) StartRun(ctx context.Context, input StartRunInput) (*domain.An
 	// Kick Render wake early; dispatch async so GraphQL returns before warm-up finishes.
 	s.Orchestrator.KickWake()
 	runCopy := *run
-	go func() {
-		bgCtx := context.Background()
-		if err := s.Orchestrator.StartAnalysisRun(bgCtx, startReq); err != nil {
-			_ = s.dispatchFailure(bgCtx, &runCopy, OrchestratorFailureReason(err))
-		}
-	}()
+	go s.dispatchAnalysisRunAsync(runCopy, startReq)
 
 	return run, nil
+}
+
+func (s *Service) dispatchAnalysisRunAsync(run domain.AnalysisRun, startReq StartAnalysisRunRequest) {
+	bgCtx := context.Background()
+	var lastErr error
+	for cycle := 0; cycle < dispatchRetryCycles; cycle++ {
+		if cycle > 0 {
+			log.Printf("agent dispatch: retry cycle %d/%d for run %s after %v", cycle+1, dispatchRetryCycles, run.ID.Hex(), dispatchRetryPause)
+			s.Orchestrator.KickWake()
+			time.Sleep(dispatchRetryPause)
+		}
+		if err := s.Orchestrator.StartAnalysisRun(bgCtx, startReq); err != nil {
+			lastErr = err
+			if errors.Is(err, ErrOrchestratorUnavailable) && cycle+1 < dispatchRetryCycles {
+				continue
+			}
+			_ = s.dispatchFailure(bgCtx, &run, OrchestratorFailureReason(err))
+			return
+		}
+		if cycle > 0 {
+			log.Printf("agent dispatch: succeeded on retry cycle %d/%d for run %s", cycle+1, dispatchRetryCycles, run.ID.Hex())
+		}
+		return
+	}
+	if lastErr != nil {
+		_ = s.dispatchFailure(bgCtx, &run, OrchestratorFailureReason(lastErr))
+	}
 }
 
 func (s *Service) CancelRun(ctx context.Context, actorID, organizationID, runID primitive.ObjectID) (*domain.AnalysisRun, error) {

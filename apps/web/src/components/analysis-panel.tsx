@@ -157,12 +157,21 @@ export function AnalysisPanel({
 
   const runSummary = useMemo(() => summarizeRunLlm(events), [events]);
 
-  const awaitingAgentWake = useMemo(() => {
+  const [awaitingAgentWake, setAwaitingAgentWake] = useState(false);
+
+  useEffect(() => {
     if (!run || run.status !== "PENDING" || events.length > 0 || pollStartedAt == null) {
-      return false;
+      setAwaitingAgentWake(false);
+      return;
     }
-    return Date.now() - pollStartedAt > 20_000;
-  }, [events.length, pollStartedAt, run]);
+    const elapsed = Date.now() - pollStartedAt;
+    if (elapsed >= 20_000) {
+      setAwaitingAgentWake(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setAwaitingAgentWake(true), 20_000 - elapsed);
+    return () => window.clearTimeout(timer);
+  }, [events.length, pollStartedAt, run?.id, run?.status]);
 
   const loadLlmContext = useCallback(async () => {
     try {
@@ -255,12 +264,21 @@ export function AnalysisPanel({
   useEffect(() => {
     if (!run || !TERMINAL.has(run.status)) return;
     if (run.status === "FAILED" || run.status === "REJECTED") {
-      const detail = run.terminalError?.trim() || run.terminalReason?.trim();
-      setActionError(
-        detail
-          ? `Analiz tamamlanamadı: ${detail}`
-          : graphqlErrorMessage(run.terminalReason ?? "FAILED", "Analiz tamamlanamadı"),
-      );
+      if (run.terminalReason === "ORCHESTRATOR_DISPATCH_FAILED") {
+        const detail = run.terminalError?.trim();
+        setActionError(
+          detail
+            ? `Analiz servisi uyanamadı (${detail}). 1–2 dakika bekleyip tekrar deneyin.`
+            : "Analiz servisi henüz uyanmadı. 1–2 dakika bekleyip tekrar deneyin.",
+        );
+      } else {
+        const detail = run.terminalError?.trim() || run.terminalReason?.trim();
+        setActionError(
+          detail
+            ? `Analiz tamamlanamadı: ${detail}`
+            : graphqlErrorMessage(run.terminalReason ?? "FAILED", "Analiz tamamlanamadı"),
+        );
+      }
       setView("idle");
       return;
     }
@@ -409,11 +427,6 @@ export function AnalysisPanel({
             </p>
           )}
         </div>
-      )}
-      {awaitingAgentWake && (
-        <p className="rounded-2xl bg-cream px-4 py-3 text-sm text-muted">
-          Analiz servisi uyanıyor olabilir; ilk olaylar genelde 1–2 dakika içinde gelir. Sayfayı kapatmayın.
-        </p>
       )}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
       {view === "error" && (
@@ -567,7 +580,21 @@ export function AnalysisPanel({
         </div>
       )}
 
-      {view === "polling" && run && !TERMINAL.has(run.status) && <AsyncView state="loading" />}
+      {view === "polling" && run && !TERMINAL.has(run.status) && (
+        <AsyncView
+          state="loading"
+          loading={
+            <div role="status" className="card text-center">
+              <div className="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-forest-soft" />
+              <p className="text-sm text-muted">
+                {awaitingAgentWake
+                  ? "Analiz servisi uyanıyor; ilk olaylar 1–5 dakika sürebilir. Sayfayı kapatmayın."
+                  : "Analiz başlatılıyor…"}
+              </p>
+            </div>
+          }
+        />
+      )}
 
       {events.length === 0 ? (
         run ? <AsyncView state="empty" empty={<p className="text-sm text-muted">Henüz analiz olayı yok.</p>} /> : null
