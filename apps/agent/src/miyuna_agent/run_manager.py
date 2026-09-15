@@ -33,6 +33,8 @@ PHASE_RUN_CANCELLED = "RUN_CANCELLED"
 
 DEFAULT_RUN_TIMEOUT_SECONDS = 600
 MAX_TOOL_ATTEMPTS = 3
+MAX_LLM_ATTEMPTS = 6
+LLM_RETRY_BACKOFF_SECONDS = (2.0, 4.0, 8.0, 16.0, 32.0, 45.0)
 PERSONA_WORKER = "careful_analyst"
 PERSONA_REVIEWER = "result_analyst"
 ROTATION_RUN_A = "RUN_A"
@@ -417,6 +419,16 @@ class RunManager:
         return PERSONA_WORKER, PERSONA_REVIEWER
 
     @staticmethod
+    def _is_retryable_llm_error(exc: LLMGatewayError) -> bool:
+        if exc.status_code in {429, 502, 503}:
+            return True
+        message = str(exc).lower()
+        return any(
+            token in message
+            for token in ("429", "503", "engine_overloaded", "model busy", "retry later", "rate limited")
+        )
+
+    @staticmethod
     def _escalation_persona(worker_persona: str) -> str:
         if worker_persona == PERSONA_WORKER:
             return PERSONA_REVIEWER
@@ -498,37 +510,56 @@ class RunManager:
             "RUNNING",
             metadata=request_meta,
         )
-        try:
-            result = self.llm_client.complete(
-                organization_id=org_id,
-                user_prompt=user_prompt,
-                correlation_id=correlation_id,
-                task_type=task_type,
-                persona_key=persona_key,
-                analysis_run_id=run_id,
-                user_id=ctx.actor_user_id,
-                idempotency_key=idempotency_key,
-                config_snapshot_id=ctx.config_snapshot_id,
-                require_evidence=ctx.require_evidence,
-                routing_policy_version=ctx.llm_routing_policy_version,
-            )
-        except LLMGatewayError as exc:
-            fail_meta = {
-                "correlationId": exc.correlation_id or correlation_id,
-                "personaKey": persona_key,
-                "taskType": task_type,
-                "error": str(exc),
-            }
-            if exc.status_code:
-                fail_meta["statusCode"] = str(exc.status_code)
-            self._emit(
-                org_id,
-                run_id,
-                trace_id,
-                PHASE_LLM_FAILED,
-                "FAILED",
-                metadata=fail_meta,
-            )
+        last_exc: LLMGatewayError | None = None
+        for attempt in range(1, MAX_LLM_ATTEMPTS + 1):
+            try:
+                result = self.llm_client.complete(
+                    organization_id=org_id,
+                    user_prompt=user_prompt,
+                    correlation_id=correlation_id,
+                    task_type=task_type,
+                    persona_key=persona_key,
+                    analysis_run_id=run_id,
+                    user_id=ctx.actor_user_id,
+                    idempotency_key=idempotency_key,
+                    config_snapshot_id=ctx.config_snapshot_id,
+                    require_evidence=ctx.require_evidence,
+                    routing_policy_version=ctx.llm_routing_policy_version,
+                )
+                break
+            except LLMGatewayError as exc:
+                last_exc = exc
+                if not self._is_retryable_llm_error(exc) or attempt >= MAX_LLM_ATTEMPTS:
+                    fail_meta = {
+                        "correlationId": exc.correlation_id or correlation_id,
+                        "personaKey": persona_key,
+                        "taskType": task_type,
+                        "error": str(exc),
+                    }
+                    if exc.status_code:
+                        fail_meta["statusCode"] = str(exc.status_code)
+                    self._emit(
+                        org_id,
+                        run_id,
+                        trace_id,
+                        PHASE_LLM_FAILED,
+                        "FAILED",
+                        metadata=fail_meta,
+                    )
+                    raise RuntimeError(f"llm gateway failed for {step_key}: {exc}") from exc
+                delay = LLM_RETRY_BACKOFF_SECONDS[min(attempt - 1, len(LLM_RETRY_BACKOFF_SECONDS) - 1)]
+                logger.warning(
+                    "llm gateway retryable error run_id=%s step=%s attempt=%d/%d delay=%ss error=%s",
+                    run_id,
+                    step_key,
+                    attempt,
+                    MAX_LLM_ATTEMPTS,
+                    delay,
+                    exc,
+                )
+                time.sleep(delay)
+        else:
+            exc = last_exc or LLMGatewayError("llm gateway failed")
             raise RuntimeError(f"llm gateway failed for {step_key}: {exc}") from exc
 
         completion_meta = self._llm_result_metadata(result, task_type=task_type)

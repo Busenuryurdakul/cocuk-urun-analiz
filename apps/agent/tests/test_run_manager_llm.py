@@ -175,6 +175,36 @@ def test_gateway_success_emits_llm_events_and_completes_run() -> None:
     assert completed["status"] == "COMPLETED"
 
 
+def test_gateway_rate_limit_retries_before_fail() -> None:
+    go_client = MagicMock()
+    go_client.fetch_run_context.return_value = _run_context()
+    go_client.cancellation_requested.return_value = False
+    go_client.authorize_tool.return_value = MagicMock(
+        allowed=True, grant_nonce="nonce", tool_execution_id="exec"
+    )
+    go_client.execute_tool.return_value = MagicMock(status="OK", payload={})
+
+    llm_client = MagicMock()
+    llm_client.complete.side_effect = [
+        _llm_result(),
+        LLMGatewayError(
+            "llm gateway error: 429 — engine_overloaded",
+            status_code=429,
+            correlation_id="corr-1",
+        ),
+        _llm_result(call_id="call-2", content="review", persona_key=PERSONA_REVIEWER),
+    ]
+
+    _start_manager(go_client, llm_client)
+    threading.Event().wait(0.5)
+
+    assert llm_client.complete.call_count == 3
+    phases = [call.kwargs["phase"] for call in go_client.record_event.call_args_list]
+    assert PHASE_LLM_COMPLETED in phases
+    assert PHASE_RUN_COMPLETED in phases
+    assert PHASE_RUN_FAILED not in phases
+
+
 def test_gateway_error_fails_run_without_completed_status() -> None:
     go_client = MagicMock()
     go_client.fetch_run_context.return_value = _run_context()
@@ -186,8 +216,8 @@ def test_gateway_error_fails_run_without_completed_status() -> None:
 
     llm_client = MagicMock()
     llm_client.complete.side_effect = LLMGatewayError(
-        "llm gateway error: 503",
-        status_code=503,
+        "llm gateway error: 403 — forbidden",
+        status_code=403,
         correlation_id="corr-1",
     )
 

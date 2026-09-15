@@ -127,6 +127,8 @@ func writeJSON(w http.ResponseWriter, v any) {
 
 func writeLLMError(w http.ResponseWriter, err error) {
 	switch {
+	case errors.Is(err, ErrProviderRateLimited), errors.Is(err, ErrProviderOverloaded):
+		http.Error(w, err.Error(), http.StatusTooManyRequests)
 	case errors.Is(err, ErrCredentialsNotConfigured):
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	case err == ErrForbidden, err == ErrComplianceBlocked, err == ErrPromptInjection:

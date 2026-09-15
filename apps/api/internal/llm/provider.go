@@ -34,12 +34,17 @@ type Provider interface {
 }
 
 type MockProvider struct {
-	Responses map[string]string
-	FailKeys  map[string]bool
+	Responses           map[string]string
+	FailKeys            map[string]bool
+	RateLimitRemaining  map[string]int
 }
 
 func (p *MockProvider) Complete(ctx context.Context, req CompletionRequest) (CompletionResult, error) {
 	start := time.Now()
+	if p.RateLimitRemaining != nil && p.RateLimitRemaining[req.ModelKey] > 0 {
+		p.RateLimitRemaining[req.ModelKey]--
+		return CompletionResult{}, fmt.Errorf("%w: engine_overloaded", ErrProviderRateLimited)
+	}
 	if p.FailKeys != nil && p.FailKeys[req.ModelKey] {
 		return CompletionResult{}, fmt.Errorf("mock provider failure for %s", req.ModelKey)
 	}
@@ -117,7 +122,15 @@ func (p *HTTPProvider) Complete(ctx context.Context, req CompletionRequest) (Com
 		return CompletionResult{}, err
 	}
 	if resp.StatusCode >= 400 {
-		return CompletionResult{}, fmt.Errorf("provider http %d: %s", resp.StatusCode, truncate(string(raw), 200))
+		detail := truncate(string(raw), 200)
+		switch resp.StatusCode {
+		case http.StatusTooManyRequests:
+			return CompletionResult{}, fmt.Errorf("%w: %s", ErrProviderRateLimited, detail)
+		case http.StatusServiceUnavailable, http.StatusBadGateway, http.StatusGatewayTimeout:
+			return CompletionResult{}, fmt.Errorf("%w: %s", ErrProviderOverloaded, detail)
+		default:
+			return CompletionResult{}, fmt.Errorf("provider http %d: %s", resp.StatusCode, detail)
+		}
 	}
 	var parsed struct {
 		Choices []struct {

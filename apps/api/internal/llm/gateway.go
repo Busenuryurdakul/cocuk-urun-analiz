@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -244,18 +245,23 @@ func (g *Gateway) Complete(ctx context.Context, req GatewayRequest) (GatewayResp
 	}, nil
 }
 
+const providerRateLimitAttempts = 6
+
 func (g *Gateway) invokeWithFallback(ctx context.Context, provider Provider, primary, fallback *domain.LLMModel, systemInstruction, userPrompt string) (CompletionResult, bool, int, error) {
 	var lastErr error
 	retries := 0
 	for attempt := 0; attempt <= g.deps.MaxRetries; attempt++ {
-		res, err := g.invokeModel(ctx, provider, primary, systemInstruction, userPrompt)
+		res, err := g.invokeModelResilient(ctx, provider, primary, systemInstruction, userPrompt)
 		if err == nil {
 			return res, false, retries, nil
 		}
 		lastErr = err
 		retries++
+		if !providerRetryable(err) {
+			break
+		}
 	}
-	res, err := g.invokeModel(ctx, provider, fallback, systemInstruction, userPrompt)
+	res, err := g.invokeModelResilient(ctx, provider, fallback, systemInstruction, userPrompt)
 	if err == nil {
 		return res, true, retries, nil
 	}
@@ -263,6 +269,60 @@ func (g *Gateway) invokeWithFallback(ctx context.Context, provider Provider, pri
 		return CompletionResult{}, true, retries, lastErr
 	}
 	return CompletionResult{}, true, retries, err
+}
+
+func providerRetryable(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, ErrProviderRateLimited) || errors.Is(err, ErrProviderOverloaded) {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "http 429") ||
+		strings.Contains(msg, "http 503") ||
+		strings.Contains(msg, "engine_overloaded") ||
+		strings.Contains(msg, "model busy")
+}
+
+func providerRateLimitBackoff(attempt int) time.Duration {
+	backoff := 2 * time.Second
+	for i := 0; i < attempt; i++ {
+		backoff *= 2
+		if backoff >= 45*time.Second {
+			return 45 * time.Second
+		}
+	}
+	return backoff
+}
+
+func (g *Gateway) invokeModelResilient(ctx context.Context, provider Provider, model *domain.LLMModel, systemInstruction, userPrompt string) (CompletionResult, error) {
+	var lastErr error
+	for attempt := 0; attempt < providerRateLimitAttempts; attempt++ {
+		res, err := g.invokeModel(ctx, provider, model, systemInstruction, userPrompt)
+		if err == nil {
+			return res, nil
+		}
+		lastErr = err
+		if !providerRetryable(err) || attempt+1 >= providerRateLimitAttempts {
+			return CompletionResult{}, err
+		}
+		if err := sleepGateway(ctx, providerRateLimitBackoff(attempt)); err != nil {
+			return CompletionResult{}, err
+		}
+	}
+	return CompletionResult{}, lastErr
+}
+
+func sleepGateway(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 func (g *Gateway) invokeWithQualityEscalation(
@@ -279,7 +339,7 @@ func (g *Gateway) invokeWithQualityEscalation(
 		return result, usedFallback, false, retries, nil
 	}
 
-	escalated, escErr := g.invokeModel(ctx, provider, fallback, systemInstruction, userPrompt)
+	escalated, escErr := g.invokeModelResilient(ctx, provider, fallback, systemInstruction, userPrompt)
 	if escErr != nil {
 		return result, false, false, retries, nil
 	}

@@ -3,6 +3,8 @@ package llm
 import "errors"
 
 var (
+	ErrProviderRateLimited      = errors.New("llm provider rate limited")
+	ErrProviderOverloaded       = errors.New("llm provider overloaded")
 	ErrCredentialsNotConfigured = errors.New("llm provider credentials not configured")
 	ErrForbidden                = errors.New("llm access forbidden")
 	ErrInvalidInput             = errors.New("invalid llm input")
