@@ -157,17 +157,20 @@ export function AnalysisPanel({
   const [pollStartedAt, setPollStartedAt] = useState<number | null>(null);
   const [eventsRunId, setEventsRunId] = useState<string | null>(null);
 
-  const runSummary = useMemo(() => {
-    if (!run || eventsRunId !== run.id || events.length === 0) {
-      return null;
-    }
-    return summarizeRunLlm(events);
+  const activeEvents = useMemo(() => {
+    if (!run || eventsRunId !== run.id) return [];
+    return events;
   }, [events, eventsRunId, run]);
+
+  const runSummary = useMemo(() => {
+    if (activeEvents.length === 0) return null;
+    return summarizeRunLlm(activeEvents);
+  }, [activeEvents]);
 
   const [awaitingAgentWake, setAwaitingAgentWake] = useState(false);
 
   useEffect(() => {
-    if (!run || run.status !== "PENDING" || events.length > 0 || pollStartedAt == null) {
+    if (!run || run.status !== "PENDING" || activeEvents.length > 0 || pollStartedAt == null) {
       setAwaitingAgentWake(false);
       return;
     }
@@ -178,7 +181,7 @@ export function AnalysisPanel({
     }
     const timer = window.setTimeout(() => setAwaitingAgentWake(true), 20_000 - elapsed);
     return () => window.clearTimeout(timer);
-  }, [events.length, pollStartedAt, run?.id, run?.status]);
+  }, [activeEvents.length, pollStartedAt, run?.id, run?.status]);
 
   const loadLlmContext = useCallback(async () => {
     try {
@@ -194,8 +197,8 @@ export function AnalysisPanel({
       );
       const names = Object.fromEntries(data.llmModels.map((model) => [model.modelKey, model.displayName]));
       setLlmContext({
-        defaultModelKey: data.llmOrgSettings?.defaultModelKey ?? "careful_analyst",
-        fallbackModelKey: data.llmOrgSettings?.fallbackModelKey ?? "result_analyst",
+        defaultModelKey: data.llmOrgSettings?.defaultModelKey?.trim() || "careful_analyst",
+        fallbackModelKey: data.llmOrgSettings?.fallbackModelKey?.trim() || "result_analyst",
         modelNames: names,
       });
     } catch {
@@ -276,7 +279,14 @@ export function AnalysisPanel({
   }, [hydrateLatestRun, loadLlmContext]);
 
   useEffect(() => {
-    if (!run || !TERMINAL.has(run.status)) return;
+    if (!run) {
+      setActionError("");
+      return;
+    }
+    if (!TERMINAL.has(run.status)) {
+      setActionError("");
+      return;
+    }
     if (run.status === "FAILED" || run.status === "REJECTED") {
       if (run.terminalReason === "ORCHESTRATOR_DISPATCH_FAILED") {
         const detail = run.terminalError?.trim();
@@ -441,7 +451,7 @@ export function AnalysisPanel({
         )}
       </div>
 
-      {actionError && view !== "polling" && (
+      {actionError && run && TERMINAL.has(run.status) && (
         <div className="alert-error space-y-2">
           <p>{actionError}</p>
           {(actionError.includes("onay") || actionError.includes("Uyumluluk")) && (
@@ -614,12 +624,12 @@ export function AnalysisPanel({
         />
       )}
 
-      {events.length === 0 ? (
-        run && view !== "polling" ? (
+      {activeEvents.length === 0 ? (
+        run && view !== "polling" && view !== "loading" ? (
           <AsyncView state="empty" empty={<p className="text-sm text-muted">Henüz analiz olayı yok.</p>} />
         ) : null
       ) : (
-        eventsRunId === run?.id && <RunEventTimeline orgId={orgId} events={events} />
+        <RunEventTimeline orgId={orgId} events={activeEvents} />
       )}
     </section>
   );

@@ -18,8 +18,10 @@ export function ModelRouteStrip({
   modelNames,
   runSummary,
 }: ModelRouteStripProps) {
-  const fast = modelDisplayName(defaultModelKey, modelNames);
-  const heavy = modelDisplayName(fallbackModelKey, modelNames);
+  const fastKey = defaultModelKey.trim() || "careful_analyst";
+  const heavyKey = fallbackModelKey.trim() || "result_analyst";
+  const fast = modelDisplayName(fastKey, modelNames);
+  const heavy = modelDisplayName(heavyKey, modelNames);
 
   return (
     <div className="rounded-2xl border border-sand bg-cream/70 p-4">
