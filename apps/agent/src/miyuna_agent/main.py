@@ -21,6 +21,7 @@ go_client = GoAgentClient(
     base_url=settings.go_api_url,
     token=settings.internal_token,
     timeout_seconds=settings.ipc_timeout_seconds,
+    tool_execute_timeout_seconds=settings.tool_execute_timeout_seconds,
 )
 llm_client = GoLLMClient(
     base_url=settings.go_api_url,

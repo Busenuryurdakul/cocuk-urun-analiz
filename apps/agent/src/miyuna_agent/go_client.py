@@ -104,10 +104,17 @@ class ExecuteResult:
 
 
 class GoAgentClient:
-    def __init__(self, base_url: str, token: str, timeout_seconds: float = 15.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        token: str,
+        timeout_seconds: float = 15.0,
+        tool_execute_timeout_seconds: float = 45.0,
+    ) -> None:
         self._base_url = base_url.rstrip("/")
         self._token = token
         self._timeout = timeout_seconds
+        self._tool_execute_timeout = tool_execute_timeout_seconds
 
     def _headers(self) -> dict[str, str]:
         return {INTERNAL_TOKEN_HEADER: self._token}
@@ -296,7 +303,7 @@ class GoAgentClient:
             "toolExecutionId": tool_execution_id,
             "stepIndex": step_index,
         }
-        with httpx.Client(timeout=self._timeout) as client:
+        with httpx.Client(timeout=self._tool_execute_timeout) as client:
             resp = client.post(
                 f"{self._base_url}/internal/agent/v1/tools/execute",
                 json=payload,
@@ -328,7 +335,7 @@ class GoAgentClient:
             "worker": worker,
             "reviewer": reviewer,
         }
-        with httpx.Client(timeout=self._timeout) as client:
+        with httpx.Client(timeout=self._tool_execute_timeout) as client:
             resp = client.post(
                 f"{self._base_url}/internal/agent/v1/runs/finalize",
                 json=payload,

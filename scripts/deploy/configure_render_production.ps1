@@ -126,6 +126,7 @@ if ($env:MAIL_SMTP_PASS) { $apiVars['MAIL_SMTP_PASS'] = $env:MAIL_SMTP_PASS }
 $agentVars = @{
     GO_API_URL = $apiBaseUrl
     INTERNAL_TOKEN = $internalToken
+    TOOL_EXECUTE_TIMEOUT_SECONDS = '45'
     LLM_TIMEOUT_SECONDS = '120'
 }
 

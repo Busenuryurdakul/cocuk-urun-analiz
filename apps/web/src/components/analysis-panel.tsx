@@ -17,7 +17,13 @@ import {
   statusLabel,
   supportStatusLabel,
 } from "@/lib/analysis-labels";
-import { graphqlErrorCode, graphqlErrorMessage, graphqlRequest, isComplianceErrorCode } from "@/lib/graphql";
+import {
+  graphqlErrorCode,
+  graphqlErrorMessage,
+  graphqlRequest,
+  isAuthError,
+  isComplianceErrorCode,
+} from "@/lib/graphql";
 import type { Locale } from "@/lib/i18n/locale-config";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { phaseLabel, summarizeRunLlm } from "@/lib/llm-events";
@@ -165,6 +171,7 @@ export function AnalysisPanel({
   const [actionErrorCode, setActionErrorCode] = useState("");
   const [starting, setStarting] = useState(false);
   const clientRequestRef = useRef<string>("");
+  const previousRunRef = useRef<AnalysisRun | null>(null);
   const pollAttempt = useRef(0);
   const afterSequenceRef = useRef(0);
   const [pollStartedAt, setPollStartedAt] = useState<number | null>(null);
@@ -293,8 +300,6 @@ export function AnalysisPanel({
 
   useEffect(() => {
     if (!run) {
-      setActionError("");
-      setActionErrorCode("");
       return;
     }
     if (!TERMINAL.has(run.status)) {
@@ -349,7 +354,7 @@ export function AnalysisPanel({
         }
         if (!cancelled) setTimeout(tick, backoffMs(pollAttempt.current++));
       } catch (err) {
-        if (err instanceof Error && (err.message === "UNAUTHORIZED" || err.message === "FORBIDDEN")) {
+        if (isAuthError(err)) {
           setView("unauthorized");
           return;
         }
@@ -385,6 +390,7 @@ export function AnalysisPanel({
     pollAttempt.current = 0;
     setPollStartedAt(null);
     setView("loading");
+    previousRunRef.current = run;
     setRun(null);
     clientRequestRef.current = crypto.randomUUID();
     try {
@@ -408,11 +414,18 @@ export function AnalysisPanel({
       setEventsRunId(data.startAgentRun.id);
       setView("polling");
     } catch (err) {
-      const code = graphqlErrorCode(err);
-      const message = graphqlErrorMessage(err, t("analysis.startFailed"), locale);
-      setActionError(code && !message.includes(code) ? `${message} (${code})` : message);
-      setActionErrorCode(code ?? "");
-      setView("idle");
+      if (isAuthError(err)) {
+        setRun(previousRunRef.current);
+        setView("unauthorized");
+        setActionError("");
+        setActionErrorCode("");
+      } else {
+        const code = graphqlErrorCode(err);
+        const message = graphqlErrorMessage(err, t("analysis.startFailed"), locale);
+        setActionError(code && !message.includes(code) ? `${message} (${code})` : message);
+        setActionErrorCode(code ?? "");
+        setView("idle");
+      }
     } finally {
       setStarting(false);
     }
