@@ -28,24 +28,41 @@ const (
 )
 
 type Service struct {
-	Runs          *repository.AnalysisRunRepository
-	Events        *repository.AgentRunEventRepository
-	Executions    *repository.ToolExecutionRepository
-	Snapshots     *repository.ConfigSnapshotRepository
-	Orgs          *repository.OrganizationRepository
-	Resolver      *InputResolver
-	Executor      *Executor
-	Authorizer    *Authorizer
-	Compliance    *compliance.Engine
-	Registry      *Registry
-	Orchestrator  *OrchestratorClient
-	Grants        *GrantStore
-	Leases        *LeaseStore
-	Security      *repository.SecurityEventRepository
-	Tenant        *tenant.Guard
-	Analysis      *analysis.Service
-	grantMu       sync.Mutex
-	resolvedCache map[string]ResolvedInput
+	Runs         *repository.AnalysisRunRepository
+	Events       *repository.AgentRunEventRepository
+	Executions   *repository.ToolExecutionRepository
+	Snapshots    *repository.ConfigSnapshotRepository
+	Orgs         *repository.OrganizationRepository
+	Resolver     *InputResolver
+	Executor     *Executor
+	Authorizer   *Authorizer
+	Compliance   *compliance.Engine
+	Registry     *Registry
+	Orchestrator *OrchestratorClient
+	Grants       *GrantStore
+	Leases       *LeaseStore
+	Security     *repository.SecurityEventRepository
+	Tenant       *tenant.Guard
+	Analysis     *analysis.Service
+	// Optional test overrides; zero values fall back to dispatchRetryCycles/Pause.
+	DispatchRetryCycles int
+	DispatchRetryPause  time.Duration
+	grantMu             sync.Mutex
+	resolvedCache       map[string]ResolvedInput
+}
+
+func (s *Service) dispatchRetryBudget() (cycles int, pause time.Duration) {
+	cycles = dispatchRetryCycles
+	pause = dispatchRetryPause
+	if s != nil {
+		if s.DispatchRetryCycles > 0 {
+			cycles = s.DispatchRetryCycles
+		}
+		if s.DispatchRetryPause > 0 {
+			pause = s.DispatchRetryPause
+		}
+	}
+	return cycles, pause
 }
 
 type StartRunInput struct {
@@ -217,23 +234,24 @@ func (s *Service) StartRun(ctx context.Context, input StartRunInput) (*domain.An
 
 func (s *Service) dispatchAnalysisRunAsync(run domain.AnalysisRun, startReq StartAnalysisRunRequest) {
 	bgCtx := context.Background()
+	retryCycles, retryPause := s.dispatchRetryBudget()
 	var lastErr error
-	for cycle := 0; cycle < dispatchRetryCycles; cycle++ {
+	for cycle := 0; cycle < retryCycles; cycle++ {
 		if cycle > 0 {
-			log.Printf("agent dispatch: retry cycle %d/%d for run %s after %v", cycle+1, dispatchRetryCycles, run.ID.Hex(), dispatchRetryPause)
+			log.Printf("agent dispatch: retry cycle %d/%d for run %s after %v", cycle+1, retryCycles, run.ID.Hex(), retryPause)
 			s.Orchestrator.KickWake()
-			time.Sleep(dispatchRetryPause)
+			time.Sleep(retryPause)
 		}
 		if err := s.Orchestrator.StartAnalysisRun(bgCtx, startReq); err != nil {
 			lastErr = err
-			if errors.Is(err, ErrOrchestratorUnavailable) && cycle+1 < dispatchRetryCycles {
+			if errors.Is(err, ErrOrchestratorUnavailable) && cycle+1 < retryCycles {
 				continue
 			}
 			_ = s.dispatchFailure(bgCtx, &run, OrchestratorFailureReason(err))
 			return
 		}
 		if cycle > 0 {
-			log.Printf("agent dispatch: succeeded on retry cycle %d/%d for run %s", cycle+1, dispatchRetryCycles, run.ID.Hex())
+			log.Printf("agent dispatch: succeeded on retry cycle %d/%d for run %s", cycle+1, retryCycles, run.ID.Hex())
 		}
 		return
 	}
