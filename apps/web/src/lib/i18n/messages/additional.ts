@@ -66,6 +66,9 @@ export const de: MessageCatalog = {
   "analysis.wakeFailedDetail": "Der Analysedienst konnte nicht starten ({detail}). Bitte 1–2 Minuten warten und erneut versuchen.",
   "analysis.incomplete": "Analyse nicht abgeschlossen",
   "analysis.incompleteDetail": "Analyse nicht abgeschlossen: {detail}",
+  "analysis.complianceBlockedRun":
+    "Modellausgabe verstößt gegen Compliance-Regeln. Verbotene Sicherheitsbehauptungen wurden im Review-Schritt erkannt.",
+  "analysis.complianceBlockedDetail": "Compliance-Block: {detail}",
   "analysis.startFailed": "Analyse konnte nicht gestartet werden",
   "modelRoute.kicker": "Modellroute",
   "modelRoute.intro":
@@ -146,6 +149,9 @@ export const fr: MessageCatalog = {
   "analysis.wakeFailedDetail": "Le service d'analyse n'a pas pu démarrer ({detail}). Attendez 1–2 minutes et réessayez.",
   "analysis.incomplete": "Analyse inachevée",
   "analysis.incompleteDetail": "Analyse inachevée : {detail}",
+  "analysis.complianceBlockedRun":
+    "La sortie du modèle viole les règles de conformité. Des allégations de sécurité interdites ont été détectées à l'étape de revue.",
+  "analysis.complianceBlockedDetail": "Blocage conformité : {detail}",
   "analysis.startFailed": "Impossible de démarrer l'analyse",
   "modelRoute.kicker": "Route modèle",
   "modelRoute.intro":
@@ -226,6 +232,9 @@ export const es: MessageCatalog = {
   "analysis.wakeFailedDetail": "El servicio de análisis no pudo iniciarse ({detail}). Espere 1–2 minutos e inténtelo de nuevo.",
   "analysis.incomplete": "El análisis no se completó",
   "analysis.incompleteDetail": "El análisis no se completó: {detail}",
+  "analysis.complianceBlockedRun":
+    "La salida del modelo incumple las reglas de cumplimiento. Se detectaron afirmaciones de seguridad prohibidas en la revisión.",
+  "analysis.complianceBlockedDetail": "Bloqueo de cumplimiento: {detail}",
   "analysis.startFailed": "No se pudo iniciar el análisis",
   "modelRoute.kicker": "Ruta de modelo",
   "modelRoute.intro":
@@ -303,6 +312,9 @@ export const ar: MessageCatalog = {
   "analysis.wakeFailedDetail": "تعذر إيقاظ خدمة التحليل ({detail}). انتظر 1-2 دقيقة ثم أعد المحاولة.",
   "analysis.incomplete": "لم يكتمل التحليل",
   "analysis.incompleteDetail": "لم يكتمل التحليل: {detail}",
+  "analysis.complianceBlockedRun":
+    "خرج النموذج عن قواعد الامتثال. تم رصد ادعاءات أمان محظورة في خطوة المراجعة.",
+  "analysis.complianceBlockedDetail": "حظر امتثال: {detail}",
   "analysis.startFailed": "تعذر بدء التحليل",
   "modelRoute.kicker": "مسار النموذج",
   "modelRoute.intro": "تبدأ التحليلات بـ {fast}. الخطوات الطويلة أو المعقدة تتصاعد تلقائياً إلى {heavy}.",
@@ -379,6 +391,8 @@ export const zh: MessageCatalog = {
   "analysis.wakeFailedDetail": "分析服务无法启动（{detail}）。请等待 1–2 分钟后重试。",
   "analysis.incomplete": "分析未完成",
   "analysis.incompleteDetail": "分析未完成：{detail}",
+  "analysis.complianceBlockedRun": "模型输出违反合规规则。审查步骤中检测到禁止的安全声明。",
+  "analysis.complianceBlockedDetail": "合规阻止：{detail}",
   "analysis.startFailed": "无法开始分析",
   "modelRoute.kicker": "模型路由",
   "modelRoute.intro": "分析从 {fast} 开始。长或复杂步骤会自动升级到 {heavy}。",
@@ -455,6 +469,8 @@ export const ja: MessageCatalog = {
   "analysis.wakeFailedDetail": "分析サービスを起動できませんでした（{detail}）。1〜2分待って再試行してください。",
   "analysis.incomplete": "分析が完了しませんでした",
   "analysis.incompleteDetail": "分析が完了しませんでした: {detail}",
+  "analysis.complianceBlockedRun": "モデル出力がコンプライアンス規則に違反しました。レビュー段階で禁止された安全表明が検出されました。",
+  "analysis.complianceBlockedDetail": "コンプライアンスブロック: {detail}",
   "analysis.startFailed": "分析を開始できませんでした",
   "modelRoute.kicker": "モデルルート",
   "modelRoute.intro": "分析は {fast} から開始。長い/複雑なステップは自動的に {heavy} に昇格します。",
@@ -531,6 +547,9 @@ export const ru: MessageCatalog = {
   "analysis.wakeFailedDetail": "Служба анализа не смогла запуститься ({detail}). Подождите 1–2 минуты и повторите попытку.",
   "analysis.incomplete": "Анализ не завершён",
   "analysis.incompleteDetail": "Анализ не завершён: {detail}",
+  "analysis.complianceBlockedRun":
+    "Вывод модели нарушает правила соответствия. На этапе проверки обнаружены запрещённые утверждения о безопасности.",
+  "analysis.complianceBlockedDetail": "Блок соответствия: {detail}",
   "analysis.startFailed": "Не удалось запустить анализ",
   "modelRoute.kicker": "Маршрут модели",
   "modelRoute.intro": "Анализ начинается с {fast}. Длинные или сложные шаги автоматически эскалируют к {heavy}.",
@@ -609,6 +628,9 @@ export const pt: MessageCatalog = {
   "analysis.wakeFailedDetail": "O serviço de análise não pôde iniciar ({detail}). Aguarde 1–2 minutos e tente novamente.",
   "analysis.incomplete": "A análise não foi concluída",
   "analysis.incompleteDetail": "A análise não foi concluída: {detail}",
+  "analysis.complianceBlockedRun":
+    "A saída do modelo violou as regras de conformidade. Foram detectadas alegações de segurança proibidas na revisão.",
+  "analysis.complianceBlockedDetail": "Bloqueio de conformidade: {detail}",
   "analysis.startFailed": "Não foi possível iniciar a análise",
   "modelRoute.kicker": "Rota do modelo",
   "modelRoute.intro":

@@ -48,10 +48,34 @@ func TestEnforcerPostCallBlocksForbiddenClaims(t *testing.T) {
 		ReflexVersion:     compliance.ComplianceReflexVersion(),
 		ForbiddenPatterns: []string{"certified safe"},
 	}
-	_, err := enforcer.PostCall(context.Background(), org, primitive.NilObjectID,
-		"This product is certified safe for all children.", complianceCtx)
+	_, _, err := enforcer.PostCall(context.Background(), org, primitive.NilObjectID,
+		"This product is certified safe for all children.", complianceCtx, "analysis")
 	if err == nil {
 		t.Fatal("expected output validation block")
+	}
+}
+
+func TestEnforcerPostCallSanitizesReviewOutput(t *testing.T) {
+	enforcer := &Enforcer{}
+	org := &domain.Organization{
+		ID:                      primitive.NewObjectID(),
+		ComplianceProfile:       string(domain.ProfileGDPR),
+		CompliancePolicyVersion: compliance.PlatformDefaultPolicyVersion,
+	}
+	complianceCtx := ComplianceContext{
+		Profile:           domain.ProfileGDPR,
+		ForbiddenPatterns: []string{"certified safe"},
+	}
+	result, sanitized, err := enforcer.PostCall(context.Background(), org, primitive.NilObjectID,
+		"Worker incorrectly claimed certified safe; evidence does not support that.", complianceCtx, "review")
+	if err != nil {
+		t.Fatalf("review postcall: %v", err)
+	}
+	if result.SafetyResult != "output_sanitized" {
+		t.Fatalf("expected sanitized result, got %+v", result)
+	}
+	if strings.Contains(sanitized, "certified safe") {
+		t.Fatalf("expected forbidden phrase removed, got %q", sanitized)
 	}
 }
 
@@ -66,8 +90,8 @@ func TestEnforcerPostCallAllowsCleanOutput(t *testing.T) {
 		Profile:           domain.ProfileBoth,
 		ForbiddenPatterns: []string{"certified safe"},
 	}
-	result, err := enforcer.PostCall(context.Background(), org, primitive.NilObjectID,
-		"Evidence suggests moderate risk; further verification recommended.", complianceCtx)
+	result, _, err := enforcer.PostCall(context.Background(), org, primitive.NilObjectID,
+		"Evidence suggests moderate risk; further verification recommended.", complianceCtx, "analysis")
 	if err != nil {
 		t.Fatalf("postcall: %v", err)
 	}

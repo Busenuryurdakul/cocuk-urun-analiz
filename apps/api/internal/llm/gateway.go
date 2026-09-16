@@ -198,14 +198,18 @@ func (g *Gateway) Complete(ctx context.Context, req GatewayRequest) (GatewayResp
 		return GatewayResponse{}, invokeErr
 	}
 
-	postResult, postErr := g.deps.Enforcer.PostCall(ctx, org, userID, result.Content, enforced.Compliance)
+	postResult, sanitizedContent, postErr := g.deps.Enforcer.PostCall(ctx, org, userID, result.Content, enforced.Compliance, req.TaskType)
 	if postErr != nil {
 		call := g.buildCall(req, persona, policy.Version, decision, primaryModel.ModelKey, usedFallback, retryCount, result.InputTokens, result.OutputTokens, latency, domain.LLMCallBlocked, enforced, postErr.Error())
 		call.OutputHash = HashContent(result.Content)
 		call.SafetyResult = postResult.SafetyResult
+		if len(postResult.Violations) > 0 {
+			call.ErrorCode = strings.Join(postResult.Violations, "; ")
+		}
 		_ = g.persistCall(ctx, call)
 		return GatewayResponse{}, postErr
 	}
+	result.Content = sanitizedContent
 
 	selectedKey := primaryModel.ModelKey
 	if usedFallback {

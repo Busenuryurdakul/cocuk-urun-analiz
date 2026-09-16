@@ -6,11 +6,13 @@ const status = {
   tr: {
     PENDING: "Bekliyor", RUNNING: "Çalışıyor", COMPLETED: "Tamamlandı", FAILED: "Başarısız",
     REJECTED: "Reddedildi", CANCELLED: "İptal edildi", ORCHESTRATOR_DISPATCH_FAILED: "Analiz servisine ulaşılamadı",
+    ORCHESTRATOR_ERROR: "Orchestrator hatası", COMPLIANCE_BLOCKED: "Uyumluluk engeli",
     MAX_RECOVERY_ATTEMPTS: "Kurtarma denemesi aşıldı", STALE_LEASE: "Analiz zaman aşımına uğradı",
   },
   en: {
     PENDING: "Pending", RUNNING: "Running", COMPLETED: "Completed", FAILED: "Failed",
     REJECTED: "Rejected", CANCELLED: "Cancelled", ORCHESTRATOR_DISPATCH_FAILED: "Could not reach analysis service",
+    ORCHESTRATOR_ERROR: "Orchestrator error", COMPLIANCE_BLOCKED: "Compliance block",
     MAX_RECOVERY_ATTEMPTS: "Recovery attempts exceeded", STALE_LEASE: "Analysis timed out",
   },
   de: {

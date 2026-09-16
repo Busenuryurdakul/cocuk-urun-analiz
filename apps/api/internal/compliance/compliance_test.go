@@ -45,6 +45,16 @@ func TestOutputValidationBlocksForbiddenClaims(t *testing.T) {
 	}
 }
 
+func TestSanitizeForbiddenClaims(t *testing.T) {
+	sanitized, violations := compliance.SanitizeForbiddenClaims("This product is certified safe", nil)
+	if len(violations) == 0 {
+		t.Fatal("expected violations")
+	}
+	if sanitized == "This product is certified safe" {
+		t.Fatalf("expected sanitized output, got %q", sanitized)
+	}
+}
+
 func TestPIIRedaction(t *testing.T) {
 	redacted := compliance.RedactPII("contact me at user@example.com")
 	if redacted == "contact me at user@example.com" {

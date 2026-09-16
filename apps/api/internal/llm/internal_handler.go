@@ -131,7 +131,7 @@ func writeLLMError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusTooManyRequests)
 	case errors.Is(err, ErrCredentialsNotConfigured):
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-	case err == ErrForbidden, err == ErrComplianceBlocked, err == ErrPromptInjection:
+	case errors.Is(err, ErrForbidden), errors.Is(err, ErrComplianceBlocked), errors.Is(err, ErrPromptInjection):
 		http.Error(w, err.Error(), http.StatusForbidden)
 	case err == ErrInvalidInput, err == ErrInvalidPolicyVersion, err == ErrPublishValidation, err == ErrDraftNotValidated:
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -282,16 +282,26 @@ class RunManager:
                     task_type=TASK_DEEP_ANALYSIS,
                     user_prompt=worker_prompt,
                 )
-            reviewer_result = self._run_llm_step(
-                org_id=org_id,
-                run_id=run_id,
-                trace_id=trace_id,
-                ctx=ctx,
-                step_key="reviewer",
-                persona_key=reviewer_persona,
-                task_type=TASK_REVIEW,
-                user_prompt=self._reviewer_prompt(ctx, analysis_result.content),
-            )
+            try:
+                reviewer_result = self._run_llm_step(
+                    org_id=org_id,
+                    run_id=run_id,
+                    trace_id=trace_id,
+                    ctx=ctx,
+                    step_key="reviewer",
+                    persona_key=reviewer_persona,
+                    task_type=TASK_REVIEW,
+                    user_prompt=self._reviewer_prompt(ctx, analysis_result.content),
+                )
+            except RuntimeError as exc:
+                if not self._is_compliance_llm_failure(exc):
+                    raise
+                logger.warning(
+                    "reviewer llm blocked by compliance; using worker fallback run_id=%s error=%s",
+                    run_id,
+                    exc,
+                )
+                reviewer_result = self._reviewer_fallback_result(analysis_result)
             self.go_client.finalize_analysis(
                 organization_id=org_id,
                 analysis_run_id=run_id,
@@ -319,14 +329,15 @@ class RunManager:
             logger.exception("analysis run failed run_id=%s trace_id=%s", run_id, trace_id)
             self._mark_terminal(run_id)
             self._emit(org_id, run_id, trace_id, PHASE_RUN_FAILED, "FAILED", metadata={"error": str(exc)})
+            terminal_reason, terminal_error = self._terminal_failure(exc)
             self.go_client.update_run_status(
                 organization_id=org_id,
                 analysis_run_id=run_id,
                 trace_id=trace_id,
                 status="FAILED",
                 current_phase=PHASE_RUN_FAILED,
-                terminal_error=str(exc),
-                terminal_reason="ORCHESTRATOR_ERROR",
+                terminal_error=terminal_error,
+                terminal_reason=terminal_reason,
             )
 
     def _execute_with_retry(self, *, org_id, run_id, trace_id, step, input_hash, auth, step_index):
@@ -411,6 +422,42 @@ class RunManager:
             status=status,
             tool_name=tool_name,
             metadata=meta,
+        )
+
+    @staticmethod
+    def _is_compliance_llm_failure(exc: RuntimeError) -> bool:
+        message = str(exc).lower()
+        return "blocked by compliance" in message or (
+            "403" in message and "compliance" in message and "llm gateway" in message
+        )
+
+    @staticmethod
+    def _terminal_failure(exc: Exception) -> tuple[str, str]:
+        message = str(exc)
+        lower = message.lower()
+        if "blocked by compliance" in lower or ("403" in lower and "compliance" in lower):
+            return "COMPLIANCE_BLOCKED", message
+        return "ORCHESTRATOR_ERROR", message
+
+    @staticmethod
+    def _reviewer_fallback_result(worker: LLMCompletionResult) -> LLMCompletionResult:
+        return LLMCompletionResult(
+            call_id=f"{worker.call_id}:review-fallback",
+            content=(
+                "Reviewer step used worker-only fallback after compliance blocked model output. "
+                "Worker synthesis follows.\n\n"
+                f"{worker.content}"
+            ),
+            model_key=worker.model_key,
+            provider_key=worker.provider_key,
+            fallback_used=True,
+            escalation_used=False,
+            routing_reason="reviewer_compliance_fallback",
+            persona_key=worker.persona_key,
+            persona_version=worker.persona_version,
+            correlation_id=worker.correlation_id,
+            input_tokens=worker.input_tokens,
+            output_tokens=worker.output_tokens,
         )
 
     def _rotation_personas(self, ctx: RunContext) -> tuple[str, str]:

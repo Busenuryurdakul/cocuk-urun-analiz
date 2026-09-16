@@ -316,6 +316,17 @@ export function AnalysisPanel({
             : t("analysis.wakeFailed"),
         );
         setActionErrorCode(run.terminalReason);
+      } else if (
+        run.terminalReason === "COMPLIANCE_BLOCKED" ||
+        run.terminalError?.toLowerCase().includes("compliance")
+      ) {
+        const detail = run.terminalError?.trim();
+        setActionError(
+          detail
+            ? `${t("analysis.complianceBlockedRun")} ${t("analysis.complianceBlockedDetail", { detail })}`
+            : t("analysis.complianceBlockedRun"),
+        );
+        setActionErrorCode("COMPLIANCE_BLOCKED");
       } else {
         const detail = run.terminalError?.trim() || run.terminalReason?.trim();
         setActionError(

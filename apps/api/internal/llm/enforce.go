@@ -132,10 +132,10 @@ func (e *Enforcer) PreCall(ctx context.Context, org *domain.Organization, in Enf
 	return out, nil
 }
 
-func (e *Enforcer) PostCall(ctx context.Context, org *domain.Organization, userID primitive.ObjectID, outputText string, complianceCtx ComplianceContext) (PostCallResult, error) {
+func (e *Enforcer) PostCall(ctx context.Context, org *domain.Organization, userID primitive.ObjectID, outputText string, complianceCtx ComplianceContext, taskType string) (PostCallResult, string, error) {
 	result := PostCallResult{Allowed: true, SafetyResult: "PASS"}
 	if strings.TrimSpace(outputText) == "" {
-		return result, nil
+		return result, outputText, nil
 	}
 
 	patterns := complianceCtx.ForbiddenPatterns
@@ -144,29 +144,43 @@ func (e *Enforcer) PostCall(ctx context.Context, org *domain.Organization, userI
 	}
 	violations := compliance.ValidateOutputText(outputText, patterns)
 	if len(violations) > 0 {
+		if isReviewTask(taskType) {
+			sanitized, _ := compliance.SanitizeForbiddenClaims(outputText, patterns)
+			result.Violations = violations
+			result.SafetyResult = "output_sanitized"
+			e.auditLLMOutput(ctx, org, userID, sanitized)
+			return result, sanitized, nil
+		}
 		result.Allowed = false
 		result.Violations = violations
 		result.SafetyResult = "output_validation_fail"
-		if e.Compliance != nil && org != nil {
-			_, _ = e.Compliance.Evaluate(ctx, compliance.EvaluateRequest{
-				Operation:      "llm_complete_output",
-				OrganizationID: org.ID,
-				UserID:         userID,
-				OutputText:     outputText,
-			})
-		}
-		return result, ErrComplianceBlocked
+		e.auditLLMOutput(ctx, org, userID, outputText)
+		return result, outputText, ErrComplianceBlocked
 	}
 
-	if e.Compliance != nil && org != nil {
-		_, _ = e.Compliance.Evaluate(ctx, compliance.EvaluateRequest{
-			Operation:      "llm_complete_output",
-			OrganizationID: org.ID,
-			UserID:         userID,
-			OutputText:     outputText,
-		})
+	e.auditLLMOutput(ctx, org, userID, outputText)
+	return result, outputText, nil
+}
+
+func isReviewTask(taskType string) bool {
+	switch strings.ToLower(strings.TrimSpace(taskType)) {
+	case "review", "reviewer":
+		return true
+	default:
+		return false
 	}
-	return result, nil
+}
+
+func (e *Enforcer) auditLLMOutput(ctx context.Context, org *domain.Organization, userID primitive.ObjectID, outputText string) {
+	if e.Compliance == nil || org == nil {
+		return
+	}
+	_, _ = e.Compliance.Evaluate(ctx, compliance.EvaluateRequest{
+		Operation:      "llm_complete_output",
+		OrganizationID: org.ID,
+		UserID:         userID,
+		OutputText:     outputText,
+	})
 }
 
 func BuildSystemInstruction(personaInstruction, reflexInstruction string) string {

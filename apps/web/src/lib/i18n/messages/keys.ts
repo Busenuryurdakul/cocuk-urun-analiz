@@ -63,6 +63,9 @@ export const tr = {
   "analysis.wakeFailedDetail": "Analiz servisi uyanamadı ({detail}). 1–2 dakika bekleyip tekrar deneyin.",
   "analysis.incomplete": "Analiz tamamlanamadı",
   "analysis.incompleteDetail": "Analiz tamamlanamadı: {detail}",
+  "analysis.complianceBlockedRun":
+    "Model çıktısı platform uyumluluk kurallarına uymadı. İnceleme adımında yasaklı güvenlik iddiaları (ör. «certified safe») tespit edildi.",
+  "analysis.complianceBlockedDetail": "Uyumluluk engeli: {detail}",
   "analysis.startFailed": "Analiz başlatılamadı",
   "modelRoute.kicker": "Model rotası",
   "modelRoute.intro":

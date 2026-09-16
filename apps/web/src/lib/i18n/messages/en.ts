@@ -66,6 +66,9 @@ export const en: MessageCatalog = {
   "analysis.wakeFailedDetail": "The analysis service could not wake up ({detail}). Wait 1–2 minutes and try again.",
   "analysis.incomplete": "Analysis did not complete",
   "analysis.incompleteDetail": "Analysis did not complete: {detail}",
+  "analysis.complianceBlockedRun":
+    "Model output violated platform compliance rules. Forbidden safety claims (e.g. “certified safe”) were detected in the review step.",
+  "analysis.complianceBlockedDetail": "Compliance block: {detail}",
   "analysis.startFailed": "Could not start analysis",
   "modelRoute.kicker": "Model route",
   "modelRoute.intro":
