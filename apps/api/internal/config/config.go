@@ -50,6 +50,15 @@ type Config struct {
 	LLMUseMock             bool
 	LLMRequestTimeout      time.Duration
 	LLMMaxRetries          int
+	SyncCooldown           time.Duration
+	MarketplaceFetchTimeout time.Duration
+	TrendyolAPIBaseURL     string
+	TrendyolAPIKey         string
+	TrendyolAPISecret      string
+	TrendyolSupplierID     string
+	HepsiburadaAPIBaseURL  string
+	HepsiburadaAPIKey      string
+	HepsiburadaAPISecret   string
 }
 
 // Load reads configuration from environment with dev defaults.
@@ -93,9 +102,18 @@ func Load() Config {
 		S3SecretKey:            getEnv("S3_SECRET_KEY", ""),
 		S3Bucket:               getEnv("S3_BUCKET", ""),
 		S3ForcePathStyle:       getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
-		LLMUseMock:             getEnv("LLM_USE_MOCK", "true") == "true",
-		LLMRequestTimeout:      durationEnv("LLM_REQUEST_TIMEOUT", 30*time.Second),
-		LLMMaxRetries:          intEnv("LLM_MAX_RETRIES", 1),
+		LLMUseMock:              getEnv("LLM_USE_MOCK", "true") == "true",
+		LLMRequestTimeout:       durationEnv("LLM_REQUEST_TIMEOUT", 60*time.Second),
+		LLMMaxRetries:           intEnv("LLM_MAX_RETRIES", 1),
+		SyncCooldown:            durationEnv("SYNC_COOLDOWN", time.Hour),
+		MarketplaceFetchTimeout: durationEnv("MARKETPLACE_FETCH_TIMEOUT", 10*time.Second),
+		TrendyolAPIBaseURL:      getEnv("TRENDYOL_API_BASE_URL", ""),
+		TrendyolAPIKey:          getEnv("TRENDYOL_API_KEY", ""),
+		TrendyolAPISecret:       getEnv("TRENDYOL_API_SECRET", ""),
+		TrendyolSupplierID:      getEnv("TRENDYOL_SUPPLIER_ID", ""),
+		HepsiburadaAPIBaseURL:   getEnv("HEPSIBURADA_API_BASE_URL", ""),
+		HepsiburadaAPIKey:       getEnv("HEPSIBURADA_API_KEY", ""),
+		HepsiburadaAPISecret:    getEnv("HEPSIBURADA_API_SECRET", ""),
 	}
 }
 

@@ -97,6 +97,7 @@ $apiVars = @{
     AGENT_INTERNAL_TOKEN = $internalToken
     AGENT_ORCHESTRATOR_URL = $agentBaseUrl
     AGENT_IPC_TIMEOUT = '90s'
+    LLM_REQUEST_TIMEOUT = '60s'
     GO_INTERNAL_API_URL = $apiBaseUrl
     CREDENTIALS_ENCRYPTION_KEY = $credKey
     MAIL_SMTP_HOST = if ($env:MAIL_SMTP_HOST) { $env:MAIL_SMTP_HOST } else { 'localhost' }

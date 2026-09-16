@@ -294,14 +294,12 @@ class RunManager:
                     user_prompt=self._reviewer_prompt(ctx, analysis_result.content),
                 )
             except RuntimeError as exc:
-                if not self._is_compliance_llm_failure(exc):
-                    raise
                 logger.warning(
-                    "reviewer llm blocked by compliance; using worker fallback run_id=%s error=%s",
+                    "reviewer llm failed; using worker fallback run_id=%s error=%s",
                     run_id,
                     exc,
                 )
-                reviewer_result = self._reviewer_fallback_result(analysis_result)
+                reviewer_result = self._reviewer_fallback_result(analysis_result, str(exc))
             self.go_client.finalize_analysis(
                 organization_id=org_id,
                 analysis_run_id=run_id,
@@ -425,13 +423,6 @@ class RunManager:
         )
 
     @staticmethod
-    def _is_compliance_llm_failure(exc: RuntimeError) -> bool:
-        message = str(exc).lower()
-        return "blocked by compliance" in message or (
-            "403" in message and "compliance" in message and "llm gateway" in message
-        )
-
-    @staticmethod
     def _terminal_failure(exc: Exception) -> tuple[str, str]:
         message = str(exc)
         lower = message.lower()
@@ -440,12 +431,13 @@ class RunManager:
         return "ORCHESTRATOR_ERROR", message
 
     @staticmethod
-    def _reviewer_fallback_result(worker: LLMCompletionResult) -> LLMCompletionResult:
+    def _reviewer_fallback_result(worker: LLMCompletionResult, reason: str = "") -> LLMCompletionResult:
+        note = reason.strip() or "reviewer unavailable"
         return LLMCompletionResult(
             call_id=f"{worker.call_id}:review-fallback",
             content=(
-                "Reviewer step used worker-only fallback after compliance blocked model output. "
-                "Worker synthesis follows.\n\n"
+                "Reviewer step skipped; worker synthesis used as fallback. "
+                f"Reason: {note}\n\n"
                 f"{worker.content}"
             ),
             model_key=worker.model_key,
@@ -467,12 +459,23 @@ class RunManager:
 
     @staticmethod
     def _is_retryable_llm_error(exc: LLMGatewayError) -> bool:
-        if exc.status_code in {429, 502, 503}:
+        if exc.status_code in {429, 500, 502, 503}:
             return True
         message = str(exc).lower()
         return any(
             token in message
-            for token in ("429", "503", "engine_overloaded", "model busy", "retry later", "rate limited")
+            for token in (
+                "429",
+                "500",
+                "503",
+                "engine_overloaded",
+                "model busy",
+                "retry later",
+                "rate limited",
+                "deadline exceeded",
+                "timed out",
+                "timeout exceeded",
+            )
         )
 
     @staticmethod

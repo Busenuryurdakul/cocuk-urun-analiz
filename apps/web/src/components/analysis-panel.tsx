@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { ModelRouteStrip } from "@/components/llm/model-route-strip";
 import { RunEventTimeline } from "@/components/llm/run-event-timeline";
+import { TechnicalDetails } from "@/components/technical-details";
 import {
   decisionLabel,
   findingRationale,
@@ -27,6 +28,7 @@ import {
 import type { Locale } from "@/lib/i18n/locale-config";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { phaseLabel, summarizeRunLlm } from "@/lib/llm-events";
+import { humanizeAnalysisError } from "@/lib/ui-labels";
 
 type ReviewInsight = {
   topic: string;
@@ -168,6 +170,7 @@ export function AnalysisPanel({
   });
   const [view, setView] = useState<"idle" | "loading" | "polling" | "error" | "unauthorized">("idle");
   const [actionError, setActionError] = useState("");
+  const [actionErrorTechnical, setActionErrorTechnical] = useState("");
   const [actionErrorCode, setActionErrorCode] = useState("");
   const [starting, setStarting] = useState(false);
   const clientRequestRef = useRef<string>("");
@@ -304,36 +307,29 @@ export function AnalysisPanel({
     }
     if (!TERMINAL.has(run.status)) {
       setActionError("");
+      setActionErrorTechnical("");
       setActionErrorCode("");
       return;
     }
     if (run.status === "FAILED" || run.status === "REJECTED") {
       if (run.terminalReason === "ORCHESTRATOR_DISPATCH_FAILED") {
-        const detail = run.terminalError?.trim();
-        setActionError(
-          detail
-            ? t("analysis.wakeFailedDetail", { detail })
-            : t("analysis.wakeFailed"),
-        );
+        setActionError(t("analysis.wakeFailed"));
+        setActionErrorTechnical(run.terminalError?.trim() ?? "");
         setActionErrorCode(run.terminalReason);
       } else if (
         run.terminalReason === "COMPLIANCE_BLOCKED" ||
-        run.terminalError?.toLowerCase().includes("compliance")
+        run.terminalError?.toLowerCase().includes("blocked by compliance")
       ) {
-        const detail = run.terminalError?.trim();
-        setActionError(
-          detail
-            ? `${t("analysis.complianceBlockedRun")} ${t("analysis.complianceBlockedDetail", { detail })}`
-            : t("analysis.complianceBlockedRun"),
-        );
+        setActionError(t("analysis.complianceBlockedRun"));
+        setActionErrorTechnical(run.terminalError?.trim() ?? "");
         setActionErrorCode("COMPLIANCE_BLOCKED");
       } else {
-        const detail = run.terminalError?.trim() || run.terminalReason?.trim();
-        setActionError(
-          detail
-            ? t("analysis.incompleteDetail", { detail })
-            : graphqlErrorMessage(run.terminalReason ?? "FAILED", t("analysis.incomplete"), locale),
+        const humanized = humanizeAnalysisError(
+          run.terminalError?.trim() || run.terminalReason?.trim(),
+          locale,
         );
+        setActionError(humanized.message || t("analysis.incomplete"));
+        setActionErrorTechnical(humanized.technical ?? run.terminalError?.trim() ?? "");
         setActionErrorCode(run.terminalReason ?? "");
       }
       setView("idle");
@@ -393,6 +389,7 @@ export function AnalysisPanel({
     if (!canStart || starting) return;
     setStarting(true);
     setActionError("");
+    setActionErrorTechnical("");
     setActionErrorCode("");
     setEvents([]);
     setEventsRunId(null);
@@ -429,11 +426,13 @@ export function AnalysisPanel({
         setRun(previousRunRef.current);
         setView("unauthorized");
         setActionError("");
+        setActionErrorTechnical("");
         setActionErrorCode("");
       } else {
         const code = graphqlErrorCode(err);
         const message = graphqlErrorMessage(err, t("analysis.startFailed"), locale);
-        setActionError(code && !message.includes(code) ? `${message} (${code})` : message);
+        setActionError(message);
+        setActionErrorTechnical(code && !message.includes(code) ? code : "");
         setActionErrorCode(code ?? "");
         setView("idle");
       }
@@ -445,6 +444,7 @@ export function AnalysisPanel({
   async function cancelAnalysis() {
     if (!run || !canCancel) return;
     setActionError("");
+    setActionErrorTechnical("");
     setActionErrorCode("");
     try {
       const data = await graphqlRequest<{ cancelAgentRun: AnalysisRun }>(
@@ -462,7 +462,7 @@ export function AnalysisPanel({
   }
 
   return (
-    <section className="card space-y-5">
+    <section className="card min-w-0 space-y-5 overflow-hidden">
       <div>
         <p className="kicker">{t("analysis.kicker")}</p>
         <h2 className="mt-1 font-display text-2xl">{t("analysis.title")}</h2>
@@ -498,6 +498,9 @@ export function AnalysisPanel({
       {actionError && (!run || TERMINAL.has(run.status)) && (
         <div className="alert-error space-y-2">
           <p>{actionError}</p>
+          {actionErrorTechnical && (
+            <TechnicalDetails label={t("analysis.technicalDetails")} value={actionErrorTechnical} />
+          )}
           {(isComplianceErrorCode(actionErrorCode) ||
             actionError.toLowerCase().includes("consent") ||
             actionError.toLowerCase().includes("compliance") ||
@@ -531,9 +534,12 @@ export function AnalysisPanel({
             </div>
           )}
           {TERMINAL.has(run.status) && run.terminalError && (
-            <div className="flex justify-between gap-4">
+            <div className="col-span-full space-y-1">
               <dt className="text-muted">{t("analysis.error")}</dt>
-              <dd className="text-clay">{run.terminalError}</dd>
+              <dd className="text-clay">
+                {humanizeAnalysisError(run.terminalError, locale).message}
+              </dd>
+              <TechnicalDetails label={t("analysis.technicalDetails")} value={run.terminalError} />
             </div>
           )}
           {runSummary?.escalated && (
