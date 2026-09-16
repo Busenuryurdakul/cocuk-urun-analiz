@@ -580,6 +580,29 @@ func (r *mutationResolver) ExportMyData(ctx context.Context) (*model.UserDataExp
 	}, nil
 }
 
+// UpdateUserPreferences is the resolver for the updateUserPreferences field.
+func (r *mutationResolver) UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.User, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", errUnauthorized)
+	}
+	var locale *domain.Locale
+	if input.PreferredLocale != nil {
+		value := localeFromModel(*input.PreferredLocale)
+		locale = &value
+	}
+	var colorScheme *domain.ColorScheme
+	if input.PreferredColorScheme != nil {
+		value := colorSchemeFromModel(*input.PreferredColorScheme)
+		colorScheme = &value
+	}
+	user, err := r.Account.UpdatePreferences(ctx, actorID, locale, colorScheme)
+	if err != nil {
+		return nil, mapAuthError(err)
+	}
+	return toModelUser(user), nil
+}
+
 // CreateProduct is the resolver for the createProduct field.
 func (r *mutationResolver) CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.CreateProductPayload, error) {
 	actorID, err := requireActor(ctx)
@@ -1622,7 +1645,7 @@ func (r *queryResolver) LlmUsageSummary(ctx context.Context, organizationID stri
 	if err != nil {
 		return nil, gqlError("INVALID_INPUT", err)
 	}
-	callCount, inputTokens, outputTokens, cost, err := r.LLMService.UsageSummary(ctx, actorID, orgID, fromDate)
+	callCount, inputTokens, outputTokens, cost, fallbackCount, err := r.LLMService.UsageSummary(ctx, actorID, orgID, fromDate)
 	if err != nil {
 		return nil, mapPhase6Error(err)
 	}
@@ -1632,7 +1655,7 @@ func (r *queryResolver) LlmUsageSummary(ctx context.Context, organizationID stri
 		OutputTokens:     outputTokens,
 		TotalTokens:      inputTokens + outputTokens,
 		EstimatedCostUsd: cost,
-		FallbackCount:    0,
+		FallbackCount:    fallbackCount,
 	}, nil
 }
 

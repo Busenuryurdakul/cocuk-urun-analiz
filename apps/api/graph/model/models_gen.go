@@ -619,12 +619,19 @@ type UpdateUserExperienceInput struct {
 	Narrative         string            `json:"narrative"`
 }
 
+type UpdateUserPreferencesInput struct {
+	PreferredLocale      *Locale      `json:"preferredLocale,omitempty"`
+	PreferredColorScheme *ColorScheme `json:"preferredColorScheme,omitempty"`
+}
+
 type User struct {
-	ID            string `json:"id"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"emailVerified"`
-	MfaEnabled    bool   `json:"mfaEnabled"`
-	PersonalOrgID string `json:"personalOrgId"`
+	ID                   string      `json:"id"`
+	Email                string      `json:"email"`
+	EmailVerified        bool        `json:"emailVerified"`
+	MfaEnabled           bool        `json:"mfaEnabled"`
+	PersonalOrgID        string      `json:"personalOrgId"`
+	PreferredLocale      Locale      `json:"preferredLocale"`
+	PreferredColorScheme ColorScheme `json:"preferredColorScheme"`
 }
 
 type UserDataExport struct {
@@ -929,6 +936,63 @@ func (e ClientPlatform) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+type ColorScheme string
+
+const (
+	ColorSchemeLight  ColorScheme = "LIGHT"
+	ColorSchemeDark   ColorScheme = "DARK"
+	ColorSchemeSystem ColorScheme = "SYSTEM"
+)
+
+var AllColorScheme = []ColorScheme{
+	ColorSchemeLight,
+	ColorSchemeDark,
+	ColorSchemeSystem,
+}
+
+func (e ColorScheme) IsValid() bool {
+	switch e {
+	case ColorSchemeLight, ColorSchemeDark, ColorSchemeSystem:
+		return true
+	}
+	return false
+}
+
+func (e ColorScheme) String() string {
+	return string(e)
+}
+
+func (e *ColorScheme) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ColorScheme(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ColorScheme", str)
+	}
+	return nil
+}
+
+func (e ColorScheme) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ColorScheme) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ColorScheme) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
 type ComplianceProfile string
 
 const (
@@ -1223,6 +1287,77 @@ func (e *IssueType) UnmarshalJSON(b []byte) error {
 }
 
 func (e IssueType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type Locale string
+
+const (
+	LocaleTr Locale = "TR"
+	LocaleEn Locale = "EN"
+	LocaleDe Locale = "DE"
+	LocaleFr Locale = "FR"
+	LocaleEs Locale = "ES"
+	LocaleAr Locale = "AR"
+	LocaleZh Locale = "ZH"
+	LocaleJa Locale = "JA"
+	LocaleRu Locale = "RU"
+	LocalePt Locale = "PT"
+)
+
+var AllLocale = []Locale{
+	LocaleTr,
+	LocaleEn,
+	LocaleDe,
+	LocaleFr,
+	LocaleEs,
+	LocaleAr,
+	LocaleZh,
+	LocaleJa,
+	LocaleRu,
+	LocalePt,
+}
+
+func (e Locale) IsValid() bool {
+	switch e {
+	case LocaleTr, LocaleEn, LocaleDe, LocaleFr, LocaleEs, LocaleAr, LocaleZh, LocaleJa, LocaleRu, LocalePt:
+		return true
+	}
+	return false
+}
+
+func (e Locale) String() string {
+	return string(e)
+}
+
+func (e *Locale) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Locale(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Locale", str)
+	}
+	return nil
+}
+
+func (e Locale) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *Locale) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e Locale) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

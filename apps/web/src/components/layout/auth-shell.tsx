@@ -10,7 +10,7 @@ type AuthShellProps = {
 export function AuthShell({ title, subtitle, children }: AuthShellProps) {
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      <aside className="relative hidden overflow-hidden bg-forest-deep px-12 py-12 text-paper lg:flex lg:flex-col">
+      <aside className="relative hidden overflow-hidden bg-forest-deep px-12 py-12 text-on-brand lg:flex lg:flex-col">
         <div
           className="pointer-events-none absolute -left-20 top-16 h-72 w-72 rounded-full bg-forest-mid/30 blur-3xl"
           aria-hidden
@@ -21,12 +21,12 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
         />
         <Logo href="/" tone="paper" />
         <div className="relative mt-auto max-w-md space-y-5 pb-8">
-          <p className="font-display text-4xl leading-tight text-paper">
+          <p className="font-display text-4xl leading-tight text-on-brand">
             Sadece skoru değil,
             <br />
             arkasındaki kanıtı gör.
           </p>
-          <p className="text-sm leading-relaxed text-paper/85">
+          <p className="text-sm leading-relaxed text-on-brand/85">
             Çocuk ürünlerinde her iddia bir kaynağa bağlanır. Eksik alan uydurulmaz; resmi
             sertifikasyon iddiası yoktur.
           </p>

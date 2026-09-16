@@ -143,9 +143,14 @@ func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 		t.Fatalf("app init: %v", err)
 	}
 	h.App = application
-	if cfg.unavailable && h.App.Agent.Orchestrator != nil {
-		h.App.Agent.Orchestrator.WarmupAttempts = 3
-		h.App.Agent.Orchestrator.WarmupDelay = 50 * time.Millisecond
+	if cfg.unavailable && h.App.Agent != nil {
+		if h.App.Agent.Orchestrator != nil {
+			h.App.Agent.Orchestrator.WarmupAttempts = 3
+			h.App.Agent.Orchestrator.WarmupDelay = 50 * time.Millisecond
+		}
+		// Production uses long Render wake retries; keep this test fast.
+		h.App.Agent.DispatchRetryCycles = 2
+		h.App.Agent.DispatchRetryPause = 50 * time.Millisecond
 	}
 	// Integration tests must not depend on a live MailHog/SMTP listener.
 	h.App.Auth.Mail = harnessImmediateMail{}

@@ -356,12 +356,14 @@ func (s *Service) buildExport(ctx context.Context, user *domain.User) (*ExportDo
 		SchemaVersion: ExportSchemaVersion,
 		ExportedAt:    time.Now().UTC().Format(time.RFC3339),
 		User: ExportUserProfile{
-			ID:            user.ID.Hex(),
-			Email:         user.Email,
-			EmailVerified: user.EmailVerified,
-			MFAEnabled:    user.MFAEnabled,
-			PersonalOrgID: user.PersonalOrgID.Hex(),
-			CreatedAt:     user.CreatedAt.UTC().Format(time.RFC3339),
+			ID:                   user.ID.Hex(),
+			Email:                user.Email,
+			EmailVerified:        user.EmailVerified,
+			MFAEnabled:           user.MFAEnabled,
+			PersonalOrgID:        user.PersonalOrgID.Hex(),
+			PreferredLocale:      string(domain.NormalizeLocale(string(user.PreferredLocale))),
+			PreferredColorScheme: string(domain.NormalizeColorScheme(string(user.PreferredColorScheme))),
+			CreatedAt:            user.CreatedAt.UTC().Format(time.RFC3339),
 		},
 		Consents:         exportConsents,
 		Memberships:      exportMemberships,
@@ -369,4 +371,24 @@ func (s *Service) buildExport(ctx context.Context, user *domain.User) (*ExportDo
 		AnalysisActivity: exportRuns,
 		ActivityLog:      exportActivity,
 	}, nil
+}
+
+func (s *Service) UpdatePreferences(ctx context.Context, userID primitive.ObjectID, locale *domain.Locale, colorScheme *domain.ColorScheme) (*domain.User, error) {
+	user, err := s.Users.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user.IsDeleted() {
+		return nil, ErrAccountDeleted
+	}
+	if locale != nil {
+		user.PreferredLocale = domain.NormalizeLocale(string(*locale))
+	}
+	if colorScheme != nil {
+		user.PreferredColorScheme = domain.NormalizeColorScheme(string(*colorScheme))
+	}
+	if err := s.Users.Update(ctx, user); err != nil {
+		return nil, err
+	}
+	return user, nil
 }

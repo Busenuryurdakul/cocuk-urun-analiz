@@ -5,8 +5,8 @@ import { useParams, useSearchParams } from "next/navigation";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
 import { UsagePanel, type UsageDashboardData } from "@/components/llm/usage-panel";
-import { authErrorMessage, graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
-import { monthStartIsoDate } from "@/lib/llm-events";
+import { authErrorMessage, graphqlErrorMessage, graphqlRequest, isAuthError } from "@/lib/graphql";
+import { modelDisplayName, monthStartIsoDate } from "@/lib/llm-events";
 
 type Model = {
   modelKey: string;
@@ -151,7 +151,7 @@ function OrgLLMPageContent() {
       setUsage(usageResult?.llmUsageDashboard ?? null);
       setView("success");
     } catch (err) {
-      if (err instanceof Error && (err.message === "UNAUTHORIZED" || err.message === "FORBIDDEN")) {
+      if (isAuthError(err)) {
         setView("unauthorized");
         return;
       }
@@ -359,7 +359,29 @@ function OrgLLMPageContent() {
     }
   }
 
-  const modelName = (key: string) => models.find((model) => model.modelKey === key)?.displayName ?? key;
+  const modelName = (key: string) => {
+    if (!key) return "";
+    const registry = Object.fromEntries(models.map((model) => [model.modelKey, model.displayName]));
+    return modelDisplayName(key, registry);
+  };
+  function healthLabel(status: string) {
+    switch (status) {
+      case "HEALTHY":
+        return "SAĞLIKLI";
+      case "UNHEALTHY":
+        return "SAĞLIKSIZ";
+      case "UNKNOWN":
+        return "BİLİNMİYOR";
+      default:
+        return status;
+    }
+  }
+  const healthByKey = Object.fromEntries(health.map((item) => [item.modelKey, item.healthStatus]));
+  const modelHealth = (model: Model) => healthByKey[model.modelKey] ?? model.healthStatus;
+  const preferredDefaultKey =
+    orgSettings?.defaultModelKey || config?.defaultModelKey || defaultModelKey;
+  const preferredFallbackKey =
+    orgSettings?.fallbackModelKey || config?.fallbackModelKey || fallbackModelKey;
 
   const draftPreview = {
     personaKey,
@@ -440,7 +462,7 @@ function OrgLLMPageContent() {
                       <p className="text-xs text-muted">{item.providerKey}</p>
                     </div>
                     <span className={item.healthStatus === "HEALTHY" ? "badge-forest" : "badge-muted"}>
-                      {item.healthStatus}
+                      {healthLabel(item.healthStatus)}
                     </span>
                   </li>
                 ))}
@@ -467,7 +489,11 @@ function OrgLLMPageContent() {
                       <td className="py-3 pr-4 font-mono text-xs">{model.modelKey}</td>
                       <td className="py-3 pr-4">{model.displayName}</td>
                       <td className="py-3 pr-4">{model.status}</td>
-                      <td className="py-3 pr-4">{model.healthStatus}</td>
+                      <td className="py-3 pr-4">
+                        <span className={modelHealth(model) === "HEALTHY" ? "badge-forest" : "badge-muted"}>
+                          {healthLabel(modelHealth(model))}
+                        </span>
+                      </td>
                       <td className="py-3 pr-4">
                         {model.defaultForPlatform && <span className="badge-forest mr-1">Hızlı</span>}
                         {model.fallbackForPlatform && <span className="badge-clay">Ağır</span>}
@@ -481,7 +507,7 @@ function OrgLLMPageContent() {
 
           <section className="card space-y-5">
             <div>
-              <p className="kicker">Manual control</p>
+              <p className="kicker">Manuel kontrol</p>
               <h2 className="font-display text-xl">Yapılandırma yönetimi</h2>
               <p className="mt-1 text-sm text-muted">
                 Taslak oluştur → doğrula → yayınla. Otomatik job routing policy üzerinden çalışır; bu panel snapshot
@@ -491,7 +517,7 @@ function OrgLLMPageContent() {
 
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-sand bg-cream/40 p-4">
-                <p className="text-xs uppercase tracking-wide text-muted">OLD (aktif snapshot)</p>
+                <p className="text-xs uppercase tracking-wide text-muted">ESKİ (aktif snapshot)</p>
                 {config ? (
                   <ul className="mt-3 space-y-1 text-sm">
                     <li>Persona: {config.personaKey}</li>
@@ -503,8 +529,8 @@ function OrgLLMPageContent() {
                   <p className="mt-3 text-sm text-muted">Aktif snapshot yok.</p>
                 )}
               </div>
-              <div className="rounded-2xl border border-forest/30 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-muted">NEW (taslak önizleme)</p>
+              <div className="rounded-2xl border border-forest/30 bg-paper p-4">
+                <p className="text-xs uppercase tracking-wide text-muted">YENİ (taslak önizleme)</p>
                 <ul className="mt-3 space-y-1 text-sm">
                   <li>Persona: {draftPreview.personaKey}</li>
                   <li>Model: {modelName(draftPreview.defaultModelKey)}</li>
@@ -707,11 +733,11 @@ function OrgLLMPageContent() {
             </section>
           )}
 
-          {orgSettings && (
+          {preferredDefaultKey && preferredFallbackKey ? (
             <p className="text-center text-xs text-muted">
-              Aktif org tercihi: {modelName(orgSettings.defaultModelKey)} → {modelName(orgSettings.fallbackModelKey)}
+              Aktif org tercihi: {modelName(preferredDefaultKey)} → {modelName(preferredFallbackKey)}
             </p>
-          )}
+          ) : null}
         </div>
       )}
     </AppShell>

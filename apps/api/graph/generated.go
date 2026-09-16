@@ -406,6 +406,7 @@ type ComplexityRoot struct {
 		UpdateMemberRole                    func(childComplexity int, input model.UpdateMemberRoleInput) int
 		UpdateOrganizationComplianceProfile func(childComplexity int, input model.UpdateComplianceProfileInput) int
 		UpdateUserExperience                func(childComplexity int, input model.UpdateUserExperienceInput) int
+		UpdateUserPreferences               func(childComplexity int, input model.UpdateUserPreferencesInput) int
 		ValidateLLMConfiguration            func(childComplexity int, input model.ValidateLLMConfigurationInput) int
 		VerifyDevice                        func(childComplexity int, input model.VerifyDeviceInput) int
 		VerifyEmail                         func(childComplexity int, token string) int
@@ -542,11 +543,13 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Email         func(childComplexity int) int
-		EmailVerified func(childComplexity int) int
-		ID            func(childComplexity int) int
-		MfaEnabled    func(childComplexity int) int
-		PersonalOrgID func(childComplexity int) int
+		Email                func(childComplexity int) int
+		EmailVerified        func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		MfaEnabled           func(childComplexity int) int
+		PersonalOrgID        func(childComplexity int) int
+		PreferredColorScheme func(childComplexity int) int
+		PreferredLocale      func(childComplexity int) int
 	}
 
 	UserDataExport struct {
@@ -613,6 +616,7 @@ type MutationResolver interface {
 	RequestAccountDeletion(ctx context.Context) (*model.AccountDeletionRequestResult, error)
 	ConfirmAccountDeletion(ctx context.Context, code string) (bool, error)
 	ExportMyData(ctx context.Context) (*model.UserDataExport, error)
+	UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.User, error)
 	CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.CreateProductPayload, error)
 	CreateUserExperience(ctx context.Context, input model.CreateUserExperienceInput) (*model.UserExperience, error)
 	UpdateUserExperience(ctx context.Context, input model.UpdateUserExperienceInput) (*model.UserExperience, error)
@@ -2479,6 +2483,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateUserExperience(childComplexity, args["input"].(model.UpdateUserExperienceInput)), true
+	case "Mutation.updateUserPreferences":
+		if e.complexity.Mutation.UpdateUserPreferences == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserPreferences_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserPreferences(childComplexity, args["input"].(model.UpdateUserPreferencesInput)), true
 	case "Mutation.validateLLMConfiguration":
 		if e.complexity.Mutation.ValidateLLMConfiguration == nil {
 			break
@@ -3313,6 +3328,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.PersonalOrgID(childComplexity), true
+	case "User.preferredColorScheme":
+		if e.complexity.User.PreferredColorScheme == nil {
+			break
+		}
+
+		return e.complexity.User.PreferredColorScheme(childComplexity), true
+	case "User.preferredLocale":
+		if e.complexity.User.PreferredLocale == nil {
+			break
+		}
+
+		return e.complexity.User.PreferredLocale(childComplexity), true
 
 	case "UserDataExport.exportedAt":
 		if e.complexity.UserDataExport.ExportedAt == nil {
@@ -3479,6 +3506,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateComplianceProfileInput,
 		ec.unmarshalInputUpdateMemberRoleInput,
 		ec.unmarshalInputUpdateUserExperienceInput,
+		ec.unmarshalInputUpdateUserPreferencesInput,
 		ec.unmarshalInputValidateLLMConfigurationInput,
 		ec.unmarshalInputVerifyDeviceInput,
 		ec.unmarshalInputVerifyLoginEmailOTPInput,
@@ -3978,6 +4006,17 @@ func (ec *executionContext) field_Mutation_updateUserExperience_args(ctx context
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserExperienceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateUserExperienceInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserPreferences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateUserPreferencesInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateUserPreferencesInput)
 	if err != nil {
 		return nil, err
 	}
@@ -10636,6 +10675,10 @@ func (ec *executionContext) fieldContext_LoginPayload_user(_ context.Context, fi
 				return ec.fieldContext_User_mfaEnabled(ctx, field)
 			case "personalOrgId":
 				return ec.fieldContext_User_personalOrgId(ctx, field)
+			case "preferredLocale":
+				return ec.fieldContext_User_preferredLocale(ctx, field)
+			case "preferredColorScheme":
+				return ec.fieldContext_User_preferredColorScheme(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -12578,6 +12621,63 @@ func (ec *executionContext) fieldContext_Mutation_exportMyData(_ context.Context
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserDataExport", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateUserPreferences,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateUserPreferences(ctx, fc.Args["input"].(model.UpdateUserPreferencesInput))
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserPreferences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "emailVerified":
+				return ec.fieldContext_User_emailVerified(ctx, field)
+			case "mfaEnabled":
+				return ec.fieldContext_User_mfaEnabled(ctx, field)
+			case "personalOrgId":
+				return ec.fieldContext_User_personalOrgId(ctx, field)
+			case "preferredLocale":
+				return ec.fieldContext_User_preferredLocale(ctx, field)
+			case "preferredColorScheme":
+				return ec.fieldContext_User_preferredColorScheme(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserPreferences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -15110,6 +15210,10 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 				return ec.fieldContext_User_mfaEnabled(ctx, field)
 			case "personalOrgId":
 				return ec.fieldContext_User_personalOrgId(ctx, field)
+			case "preferredLocale":
+				return ec.fieldContext_User_preferredLocale(ctx, field)
+			case "preferredColorScheme":
+				return ec.fieldContext_User_preferredColorScheme(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -18070,6 +18174,64 @@ func (ec *executionContext) fieldContext_User_personalOrgId(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_preferredLocale(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_preferredLocale,
+		func(ctx context.Context) (any, error) {
+			return obj.PreferredLocale, nil
+		},
+		nil,
+		ec.marshalNLocale2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLocale,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_preferredLocale(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Locale does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_preferredColorScheme(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_preferredColorScheme,
+		func(ctx context.Context) (any, error) {
+			return obj.PreferredColorScheme, nil
+		},
+		nil,
+		ec.marshalNColorScheme2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐColorScheme,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_preferredColorScheme(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ColorScheme does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21457,6 +21619,40 @@ func (ec *executionContext) unmarshalInputUpdateUserExperienceInput(ctx context.
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateUserPreferencesInput(ctx context.Context, obj any) (model.UpdateUserPreferencesInput, error) {
+	var it model.UpdateUserPreferencesInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"preferredLocale", "preferredColorScheme"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "preferredLocale":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("preferredLocale"))
+			data, err := ec.unmarshalOLocale2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLocale(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PreferredLocale = data
+		case "preferredColorScheme":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("preferredColorScheme"))
+			data, err := ec.unmarshalOColorScheme2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐColorScheme(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PreferredColorScheme = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputValidateLLMConfigurationInput(ctx context.Context, obj any) (model.ValidateLLMConfigurationInput, error) {
 	var it model.ValidateLLMConfigurationInput
 	asMap := map[string]any{}
@@ -24095,6 +24291,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updateUserPreferences":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserPreferences(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createProduct":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createProduct(ctx, field)
@@ -25678,6 +25881,16 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "preferredLocale":
+			out.Values[i] = ec._User_preferredLocale(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "preferredColorScheme":
+			out.Values[i] = ec._User_preferredColorScheme(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -26480,6 +26693,16 @@ func (ec *executionContext) unmarshalNClientPlatform2githubᚗcomᚋBusenuryurda
 }
 
 func (ec *executionContext) marshalNClientPlatform2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐClientPlatform(ctx context.Context, sel ast.SelectionSet, v model.ClientPlatform) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNColorScheme2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐColorScheme(ctx context.Context, v any) (model.ColorScheme, error) {
+	var res model.ColorScheme
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNColorScheme2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐColorScheme(ctx context.Context, sel ast.SelectionSet, v model.ColorScheme) graphql.Marshaler {
 	return v
 }
 
@@ -27565,6 +27788,16 @@ func (ec *executionContext) marshalNLLMUsageSummary2ᚖgithubᚗcomᚋBusenuryur
 	return ec._LLMUsageSummary(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNLocale2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLocale(ctx context.Context, v any) (model.Locale, error) {
+	var res model.Locale
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLocale2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLocale(ctx context.Context, sel ast.SelectionSet, v model.Locale) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
 	res, err := ec.unmarshalInputLoginInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -28288,6 +28521,11 @@ func (ec *executionContext) unmarshalNUpdateUserExperienceInput2githubᚗcomᚋB
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateUserPreferencesInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUpdateUserPreferencesInput(ctx context.Context, v any) (model.UpdateUserPreferencesInput, error) {
+	res, err := ec.unmarshalInputUpdateUserPreferencesInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus(ctx context.Context, v any) (model.UsageStatus, error) {
 	var res model.UsageStatus
 	err := res.UnmarshalGQL(v)
@@ -28296,6 +28534,20 @@ func (ec *executionContext) unmarshalNUsageStatus2githubᚗcomᚋBusenuryurdakul
 
 func (ec *executionContext) marshalNUsageStatus2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUsageStatus(ctx context.Context, sel ast.SelectionSet, v model.UsageStatus) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNUser2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserDataExport2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐUserDataExport(ctx context.Context, sel ast.SelectionSet, v model.UserDataExport) graphql.Marshaler {
@@ -28771,6 +29023,22 @@ func (ec *executionContext) marshalOClientPlatform2ᚖgithubᚗcomᚋBusenuryurd
 	return v
 }
 
+func (ec *executionContext) unmarshalOColorScheme2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐColorScheme(ctx context.Context, v any) (*model.ColorScheme, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ColorScheme)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOColorScheme2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐColorScheme(ctx context.Context, sel ast.SelectionSet, v *model.ColorScheme) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalOCompliancePolicy2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐCompliancePolicy(ctx context.Context, sel ast.SelectionSet, v *model.CompliancePolicy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -28889,6 +29157,22 @@ func (ec *executionContext) marshalOLLMOrgSettings2ᚖgithubᚗcomᚋBusenuryurd
 		return graphql.Null
 	}
 	return ec._LLMOrgSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOLocale2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLocale(ctx context.Context, v any) (*model.Locale, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Locale)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOLocale2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐLocale(ctx context.Context, sel ast.SelectionSet, v *model.Locale) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOMFASetupPayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐMFASetupPayload(ctx context.Context, sel ast.SelectionSet, v *model.MFASetupPayload) graphql.Marshaler {

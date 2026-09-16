@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import { DesktopBridge } from "@/components/layout/desktop-bridge";
 import { DesktopTitlebar } from "@/components/layout/desktop-titlebar";
+import { Providers } from "@/components/providers";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -27,11 +29,16 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="tr" className={`${sans.variable} ${display.variable}`}>
+    <html lang="tr" suppressHydrationWarning className={`${sans.variable} ${display.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="font-sans">
-        <DesktopBridge />
-        <DesktopTitlebar />
-        {children}
+        <Providers>
+          <DesktopBridge />
+          <DesktopTitlebar />
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { formatDateTime } from "@/lib/i18n/locale";
+import { useLocale } from "@/lib/i18n/locale-provider";
 import {
   isLlmPhase,
   metadataMap,
@@ -21,14 +23,8 @@ function phaseBadgeClass(phase: string): string {
   return "badge-muted";
 }
 
-function formatTime(timestamp: string): string {
-  const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return timestamp;
-  return date.toLocaleString("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+function formatTime(timestamp: string, locale: import("@/lib/i18n/locale-config").Locale): string {
+  return formatDateTime(timestamp, locale);
 }
 
 function EventDetails({ phase, meta, orgId }: { phase: string; meta: Record<string, string>; orgId: string }) {
@@ -88,6 +84,8 @@ function EventDetails({ phase, meta, orgId }: { phase: string; meta: Record<stri
 }
 
 export function RunEventTimeline({ orgId, events }: RunEventTimelineProps) {
+  const { locale } = useLocale();
+
   if (events.length === 0) {
     return null;
   }
@@ -100,13 +98,13 @@ export function RunEventTimeline({ orgId, events }: RunEventTimelineProps) {
           <li key={`${ev.sequence}-${ev.phase}`} className="rounded-2xl border border-sand/80 bg-cream/60 px-4 py-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="badge-forest">#{ev.sequence}</span>
-              <span className={`${phaseBadgeClass(ev.phase)} !text-[10px]`}>{phaseLabel(ev.phase)}</span>
+              <span className={`${phaseBadgeClass(ev.phase)} !text-[10px]`}>{phaseLabel(ev.phase, locale)}</span>
               <span className="text-xs text-muted">{ev.status}</span>
               {ev.toolName && <span className="badge-muted !text-[10px]">{ev.toolName}</span>}
               {meta.escalationUsed === "true" && <span className="badge-clay !text-[10px]">Yükseltme</span>}
               {meta.fallbackUsed === "true" && <span className="badge-muted !text-[10px]">Fallback</span>}
             </div>
-            <time className="mt-1 block text-[11px] text-muted">{formatTime(ev.timestamp)}</time>
+            <time className="mt-1 block text-[11px] text-muted">{formatTime(ev.timestamp, locale)}</time>
             <EventDetails phase={ev.phase} meta={meta} orgId={orgId} />
           </li>
         );

@@ -64,6 +64,8 @@ func gqlErrorMessage(code, message string) error {
 
 func mapAuthError(err error) error {
 	switch {
+	case errors.Is(err, errUnauthorized):
+		return gqlError("UNAUTHORIZED", err)
 	case errors.Is(err, auth.ErrInvalidCredentials):
 		return gqlError("INVALID_CREDENTIALS", err)
 	case errors.Is(err, auth.ErrEmailNotVerified):
@@ -133,11 +135,85 @@ func requireSession(ctx context.Context) (httpx.SessionContext, error) {
 
 func toModelUser(u *domain.User) *model.User {
 	return &model.User{
-		ID:            u.ID.Hex(),
-		Email:         u.Email,
-		EmailVerified: u.EmailVerified,
-		MfaEnabled:    u.MFAEnabled,
-		PersonalOrgID: u.PersonalOrgID.Hex(),
+		ID:                   u.ID.Hex(),
+		Email:                u.Email,
+		EmailVerified:        u.EmailVerified,
+		MfaEnabled:           u.MFAEnabled,
+		PersonalOrgID:        u.PersonalOrgID.Hex(),
+		PreferredLocale:      toModelLocale(u.PreferredLocale),
+		PreferredColorScheme: toModelColorScheme(u.PreferredColorScheme),
+	}
+}
+
+func toModelLocale(locale domain.Locale) model.Locale {
+	switch domain.NormalizeLocale(string(locale)) {
+	case domain.LocaleEN:
+		return model.LocaleEn
+	case domain.LocaleDE:
+		return model.LocaleDe
+	case domain.LocaleFR:
+		return model.LocaleFr
+	case domain.LocaleES:
+		return model.LocaleEs
+	case domain.LocaleAR:
+		return model.LocaleAr
+	case domain.LocaleZH:
+		return model.LocaleZh
+	case domain.LocaleJA:
+		return model.LocaleJa
+	case domain.LocaleRU:
+		return model.LocaleRu
+	case domain.LocalePT:
+		return model.LocalePt
+	default:
+		return model.LocaleTr
+	}
+}
+
+func localeFromModel(locale model.Locale) domain.Locale {
+	switch locale {
+	case model.LocaleEn:
+		return domain.LocaleEN
+	case model.LocaleDe:
+		return domain.LocaleDE
+	case model.LocaleFr:
+		return domain.LocaleFR
+	case model.LocaleEs:
+		return domain.LocaleES
+	case model.LocaleAr:
+		return domain.LocaleAR
+	case model.LocaleZh:
+		return domain.LocaleZH
+	case model.LocaleJa:
+		return domain.LocaleJA
+	case model.LocaleRu:
+		return domain.LocaleRU
+	case model.LocalePt:
+		return domain.LocalePT
+	default:
+		return domain.LocaleTR
+	}
+}
+
+func toModelColorScheme(scheme domain.ColorScheme) model.ColorScheme {
+	switch domain.NormalizeColorScheme(string(scheme)) {
+	case domain.ColorSchemeDark:
+		return model.ColorSchemeDark
+	case domain.ColorSchemeSystem:
+		return model.ColorSchemeSystem
+	default:
+		return model.ColorSchemeLight
+	}
+}
+
+func colorSchemeFromModel(scheme model.ColorScheme) domain.ColorScheme {
+	switch scheme {
+	case model.ColorSchemeDark:
+		return domain.ColorSchemeDark
+	case model.ColorSchemeSystem:
+		return domain.ColorSchemeSystem
+	default:
+		return domain.ColorSchemeLight
 	}
 }
 
@@ -343,7 +419,7 @@ func toModelConsent(c *domain.Consent) *model.Consent {
 func requireActor(ctx context.Context) (primitive.ObjectID, error) {
 	session, err := requireSession(ctx)
 	if err != nil {
-		return primitive.NilObjectID, err
+		return primitive.NilObjectID, gqlError("UNAUTHORIZED", err)
 	}
 	return parseObjectID(session.UserID)
 }

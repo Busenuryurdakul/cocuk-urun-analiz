@@ -1,3 +1,7 @@
+import { resolveLocaleMap } from "@/lib/i18n/helpers";
+import type { Locale } from "@/lib/i18n/locale-config";
+import { PHASE_LABELS } from "@/lib/llm-phase-labels";
+
 export type EventMetadataEntry = { key: string; value: string };
 
 export type AgentRunEventLike = {
@@ -17,33 +21,16 @@ export function metadataMap(metadata: EventMetadataEntry[]): Record<string, stri
   return out;
 }
 
-export const PHASE_LABELS: Record<string, string> = {
-  LLM_REQUESTED: "Model isteği",
-  LLM_COMPLETED: "Model yanıtı",
-  LLM_FAILED: "Model hatası",
-  LLM_FALLBACK_USED: "Yedek modele geçildi",
-  LLM_ESCALATED: "Ağır modele yükseltildi",
-  RUN_STARTED: "Analiz başladı",
-  RUN_COMPLETED: "Analiz tamamlandı",
-  RUN_FAILED: "Analiz başarısız",
-  RUN_CANCELLED: "Analiz iptal edildi",
-  COMPLIANCE_PRECHECK: "Uyumluluk kontrolü",
-  TOOL_SELECTED: "Araç seçildi",
-  TOOL_EXECUTION_STARTED: "Araç çalışıyor",
-  TOOL_EXECUTION_COMPLETED: "Araç tamamlandı",
-  TOOL_REQUESTED: "Araç isteği",
-  TOOL_COMPLETED: "Araç tamamlandı",
-  TOOL_FAILED: "Araç hatası",
-  OBSERVATION_CREATED: "Gözlem kaydı",
-  PLAN_CREATED: "Plan oluşturuldu",
-};
-
-export function phaseLabel(phase: string): string {
-  return PHASE_LABELS[phase] ?? phase.replaceAll("_", " ").toLowerCase();
+export function phaseLabel(phase: string, locale: Locale = "tr"): string {
+  return resolveLocaleMap(locale, PHASE_LABELS)[phase] ?? phase.replaceAll("_", " ").toLowerCase();
 }
 
 export function isLlmPhase(phase: string): boolean {
   return phase.startsWith("LLM_");
+}
+
+export function isQualityEscalationReason(reason?: string | null): boolean {
+  return (reason ?? "").toLowerCase().includes("quality_escalation=true");
 }
 
 export type RunLlmSummary = {

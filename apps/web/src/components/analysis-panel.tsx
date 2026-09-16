@@ -10,13 +10,16 @@ import {
   findingRationale,
   findingTypeLabel,
   insightKindLabel,
+  insightTopicLabel,
   isQualityFinding,
   localizePolicyText,
   riskLabel,
   statusLabel,
   supportStatusLabel,
 } from "@/lib/analysis-labels";
-import { graphqlErrorCode, graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
+import { graphqlErrorCode, graphqlErrorMessage, graphqlRequest, isComplianceErrorCode } from "@/lib/graphql";
+import type { Locale } from "@/lib/i18n/locale-config";
+import { useLocale } from "@/lib/i18n/locale-provider";
 import { phaseLabel, summarizeRunLlm } from "@/lib/llm-events";
 
 type ReviewInsight = {
@@ -94,9 +97,17 @@ function isHighSeverity(severity: string) {
   return severity === "CRITICAL" || severity === "HIGH";
 }
 
-function PolicyCopy({ summary, recommendation }: { summary: string; recommendation: string }) {
-  const localizedSummary = localizePolicyText(summary);
-  const localizedRecommendation = localizePolicyText(recommendation);
+function PolicyCopy({
+  summary,
+  recommendation,
+  locale,
+}: {
+  summary: string;
+  recommendation: string;
+  locale: Locale;
+}) {
+  const localizedSummary = localizePolicyText(summary, locale);
+  const localizedRecommendation = localizePolicyText(recommendation, locale);
   const showRecommendation =
     Boolean(localizedRecommendation) && !localizedSummary.includes(localizedRecommendation);
   return (
@@ -140,6 +151,7 @@ export function AnalysisPanel({
   canStart: boolean;
   canCancel: boolean;
 }) {
+  const { locale, t } = useLocale();
   const [run, setRun] = useState<AnalysisRun | null>(null);
   const [events, setEvents] = useState<AgentRunEvent[]>([]);
   const [afterSequence, setAfterSequence] = useState(0);
@@ -150,6 +162,7 @@ export function AnalysisPanel({
   });
   const [view, setView] = useState<"idle" | "loading" | "polling" | "error" | "unauthorized">("idle");
   const [actionError, setActionError] = useState("");
+  const [actionErrorCode, setActionErrorCode] = useState("");
   const [starting, setStarting] = useState(false);
   const clientRequestRef = useRef<string>("");
   const pollAttempt = useRef(0);
@@ -281,10 +294,12 @@ export function AnalysisPanel({
   useEffect(() => {
     if (!run) {
       setActionError("");
+      setActionErrorCode("");
       return;
     }
     if (!TERMINAL.has(run.status)) {
       setActionError("");
+      setActionErrorCode("");
       return;
     }
     if (run.status === "FAILED" || run.status === "REJECTED") {
@@ -292,22 +307,24 @@ export function AnalysisPanel({
         const detail = run.terminalError?.trim();
         setActionError(
           detail
-            ? `Analiz servisi uyanamadı (${detail}). 1–2 dakika bekleyip tekrar deneyin.`
-            : "Analiz servisi henüz uyanmadı. 1–2 dakika bekleyip tekrar deneyin.",
+            ? t("analysis.wakeFailedDetail", { detail })
+            : t("analysis.wakeFailed"),
         );
+        setActionErrorCode(run.terminalReason);
       } else {
         const detail = run.terminalError?.trim() || run.terminalReason?.trim();
         setActionError(
           detail
-            ? `Analiz tamamlanamadı: ${detail}`
-            : graphqlErrorMessage(run.terminalReason ?? "FAILED", "Analiz tamamlanamadı"),
+            ? t("analysis.incompleteDetail", { detail })
+            : graphqlErrorMessage(run.terminalReason ?? "FAILED", t("analysis.incomplete"), locale),
         );
+        setActionErrorCode(run.terminalReason ?? "");
       }
       setView("idle");
       return;
     }
     setView("idle");
-  }, [run?.id, run?.status, run?.terminalError, run?.terminalReason]);
+  }, [locale, run?.id, run?.status, run?.terminalError, run?.terminalReason, t]);
 
   useEffect(() => {
     if (!run || TERMINAL.has(run.status)) return;
@@ -360,6 +377,7 @@ export function AnalysisPanel({
     if (!canStart || starting) return;
     setStarting(true);
     setActionError("");
+    setActionErrorCode("");
     setEvents([]);
     setEventsRunId(null);
     setAfterSequence(0);
@@ -391,8 +409,10 @@ export function AnalysisPanel({
       setView("polling");
     } catch (err) {
       const code = graphqlErrorCode(err);
-      const message = graphqlErrorMessage(err, "Analiz başlatılamadı");
+      const message = graphqlErrorMessage(err, t("analysis.startFailed"), locale);
       setActionError(code && !message.includes(code) ? `${message} (${code})` : message);
+      setActionErrorCode(code ?? "");
+      setView("idle");
     } finally {
       setStarting(false);
     }
@@ -401,6 +421,7 @@ export function AnalysisPanel({
   async function cancelAnalysis() {
     if (!run || !canCancel) return;
     setActionError("");
+    setActionErrorCode("");
     try {
       const data = await graphqlRequest<{ cancelAgentRun: AnalysisRun }>(
         `mutation($input: CancelAgentRunInput!) {
@@ -410,19 +431,18 @@ export function AnalysisPanel({
       );
       setRun(data.cancelAgentRun);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "İptal başarısız");
+      const code = graphqlErrorCode(err);
+      setActionError(graphqlErrorMessage(err, t("analysis.cancelFailed"), locale));
+      setActionErrorCode(code ?? "");
     }
   }
 
   return (
     <section className="card space-y-5">
       <div>
-        <p className="kicker">Agent analizi</p>
-        <h2 className="mt-1 font-display text-2xl">Ürün analizi</h2>
-        <p className="mt-1 text-sm text-muted">
-          Import durumundan ayrıdır — bu bölüm canonical ürün üzerindeki Agent koşusunu, model yükseltmelerini ve
-          token kullanımını gösterir.
-        </p>
+        <p className="kicker">{t("analysis.kicker")}</p>
+        <h2 className="mt-1 font-display text-2xl">{t("analysis.title")}</h2>
+        <p className="mt-1 text-sm text-muted">{t("analysis.intro")}</p>
       </div>
 
       <ModelRouteStrip
@@ -441,23 +461,27 @@ export function AnalysisPanel({
             disabled={starting || (run != null && !TERMINAL.has(run.status))}
             onClick={() => void startAnalysis()}
           >
-            {starting ? "Başlatılıyor…" : "Analizi Başlat"}
+            {starting ? t("analysis.starting") : t("analysis.start")}
           </button>
         )}
         {run && canCancel && !TERMINAL.has(run.status) && (
           <button type="button" className="btn-secondary" onClick={() => void cancelAnalysis()}>
-            Analizi İptal Et
+            {t("analysis.cancel")}
           </button>
         )}
       </div>
 
-      {actionError && run && TERMINAL.has(run.status) && (
+      {actionError && (!run || TERMINAL.has(run.status)) && (
         <div className="alert-error space-y-2">
           <p>{actionError}</p>
-          {(actionError.includes("onay") || actionError.includes("Uyumluluk")) && (
+          {(isComplianceErrorCode(actionErrorCode) ||
+            actionError.toLowerCase().includes("consent") ||
+            actionError.toLowerCase().includes("compliance") ||
+            actionError.includes("onay") ||
+            actionError.includes("Uyumluluk")) && (
             <p className="text-sm">
               <Link href={`/org/${orgId}/compliance`} className="font-semibold underline">
-                Uyumluluk sayfasına git
+                {t("analysis.complianceLink")}
               </Link>
             </p>
           )}
@@ -467,31 +491,31 @@ export function AnalysisPanel({
       {run && (
         <dl className="grid gap-2 rounded-2xl bg-cream p-4 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Durum</dt>
-            <dd className="font-semibold">{statusLabel(run.status)}</dd>
+            <dt className="text-muted">{t("analysis.status")}</dt>
+            <dd className="font-semibold">{statusLabel(run.status, locale)}</dd>
           </div>
           {run.currentPhase && (
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Faz</dt>
-              <dd>{phaseLabel(run.currentPhase)}</dd>
+              <dt className="text-muted">{t("analysis.phase")}</dt>
+              <dd>{phaseLabel(run.currentPhase, locale)}</dd>
             </div>
           )}
           {TERMINAL.has(run.status) && run.terminalReason && (
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Sonuç</dt>
-              <dd>{statusLabel(run.terminalReason)}</dd>
+              <dt className="text-muted">{t("analysis.result")}</dt>
+              <dd>{statusLabel(run.terminalReason, locale)}</dd>
             </div>
           )}
           {TERMINAL.has(run.status) && run.terminalError && (
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Hata</dt>
+              <dt className="text-muted">{t("analysis.error")}</dt>
               <dd className="text-clay">{run.terminalError}</dd>
             </div>
           )}
           {runSummary?.escalated && (
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Model yükseltme</dt>
-              <dd className="font-semibold text-clay">Ağır modele geçildi</dd>
+              <dt className="text-muted">{t("analysis.modelEscalation")}</dt>
+              <dd className="font-semibold text-clay">{t("analysis.modelEscalated")}</dd>
             </div>
           )}
         </dl>
@@ -499,26 +523,30 @@ export function AnalysisPanel({
 
       {run && TERMINAL.has(run.status) && run.finalResult && (
         <div className="space-y-4 rounded-2xl bg-cream p-4 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Politika sonucu</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{t("analysis.policyResult")}</p>
           <dl className="grid gap-2">
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Karar</dt>
+              <dt className="text-muted">{t("analysis.decision")}</dt>
               <dd className={`font-semibold ${run.finalResult.decision === "BLOCK" ? "text-clay" : ""}`}>
-                {decisionLabel(run.finalResult.decision)}
+                {decisionLabel(run.finalResult.decision, locale)}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Genel risk</dt>
+              <dt className="text-muted">{t("analysis.overallRisk")}</dt>
               <dd className={isHighSeverity(run.finalResult.overallRisk) ? "font-semibold text-clay" : "font-semibold"}>
-                {riskLabel(run.finalResult.overallRisk)}
+                {riskLabel(run.finalResult.overallRisk, locale)}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-muted">Güven</dt>
+              <dt className="text-muted">{t("analysis.confidence")}</dt>
               <dd>{Math.round(run.finalResult.confidence * 100)}%</dd>
             </div>
           </dl>
-          <PolicyCopy summary={run.finalResult.summary} recommendation={run.finalResult.recommendation} />
+          <PolicyCopy
+            summary={run.finalResult.summary}
+            recommendation={run.finalResult.recommendation}
+            locale={locale}
+          />
         </div>
       )}
 
@@ -526,19 +554,19 @@ export function AnalysisPanel({
         <div className="space-y-2">
           <h3 className="font-semibold">
             {run.safetyFindings.every((finding) => isQualityFinding(finding.type))
-              ? "Kanıt durumu"
-              : "Güvenlik bulguları"}
+              ? t("analysis.evidenceStatus")
+              : t("analysis.safetyFindings")}
           </h3>
           <ul className="space-y-2 text-sm">
             {run.safetyFindings.map((finding) => {
-              const rationale = findingRationale(finding.type, finding.rationale);
+              const rationale = findingRationale(finding.type, finding.rationale, locale);
               return (
                 <li
                   key={finding.id}
                   className={`rounded-2xl bg-cream p-3 ${isHighSeverity(finding.severity) ? "text-clay" : ""}`}
                 >
                   <p className="font-semibold">
-                    {riskLabel(finding.severity)} · {findingTypeLabel(finding.type)}
+                    {riskLabel(finding.severity, locale)} · {findingTypeLabel(finding.type, locale)}
                   </p>
                   {rationale ? <p>{rationale}</p> : null}
                 </li>
@@ -550,12 +578,13 @@ export function AnalysisPanel({
 
       {run && TERMINAL.has(run.status) && run.recalls && run.recalls.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-semibold">Geri çağırma eşleşmeleri</h3>
+          <h3 className="font-semibold">{t("analysis.recalls")}</h3>
           <ul className="space-y-2 text-sm">
             {run.recalls.map((match) => (
               <li key={`${match.source}-${match.sourceRecordId}`} className="rounded-2xl bg-cream p-3">
                 <p className="font-semibold">
-                  {match.source} {match.requiresReview ? "(inceleme gerekli)" : "(doğrulandı)"}
+                  {match.source}{" "}
+                  {match.requiresReview ? t("analysis.recallReview") : t("analysis.recallConfirmed")}
                 </p>
                 {match.reference && <p className="text-muted">{match.reference}</p>}
               </li>
@@ -566,14 +595,16 @@ export function AnalysisPanel({
 
       {run && TERMINAL.has(run.status) && run.evidence && run.evidence.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-semibold">Kanıt</h3>
-          <p className="text-sm text-muted">{run.evidence.length} kaynak</p>
+          <h3 className="font-semibold">{t("analysis.evidence")}</h3>
+          <p className="text-sm text-muted">{t("analysis.evidenceCount", { count: run.evidence.length })}</p>
           <ul className="space-y-2 text-sm">
             {run.evidence.slice(0, 8).map((item, index) => (
               <li key={`${item.source}-${index}`} className="rounded-2xl bg-cream p-3">
                 <p className="font-semibold">{item.source}</p>
                 <p>{item.claim}</p>
-                <p className="text-muted">{item.supportStatus ? supportStatusLabel(item.supportStatus) : "Durum yok"}</p>
+                <p className="text-muted">
+                  {item.supportStatus ? supportStatusLabel(item.supportStatus, locale) : t("analysis.noSupportStatus")}
+                </p>
                 {item.reference && <p className="text-muted">{item.reference}</p>}
               </li>
             ))}
@@ -583,14 +614,14 @@ export function AnalysisPanel({
 
       {run && TERMINAL.has(run.status) && run.reviewInsights && run.reviewInsights.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-semibold">Yorum içgörüleri</h3>
+          <h3 className="font-semibold">{t("analysis.reviewInsights")}</h3>
           <ul className="space-y-2 text-sm">
             {run.reviewInsights.map((insight, index) => (
               <li key={`${insight.kind}-${insight.topic}-${index}`} className="rounded-2xl bg-cream p-3">
                 <p className="font-semibold">
-                  {insightKindLabel(insight.kind)} · {insight.topic} ({insight.count})
+                  {insightKindLabel(insight.kind, locale)} · {insightTopicLabel(insight.topic, locale)} ({insight.count})
                 </p>
-                <p className="text-muted">{insight.summary}</p>
+                <p className="text-muted">{localizePolicyText(insight.summary, locale)}</p>
               </li>
             ))}
           </ul>
@@ -599,10 +630,10 @@ export function AnalysisPanel({
 
       {run && TERMINAL.has(run.status) && run.finalResult?.limitations && run.finalResult.limitations.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-semibold">Sınırlamalar</h3>
+          <h3 className="font-semibold">{t("analysis.limitations")}</h3>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
             {run.finalResult.limitations.map((item) => (
-              <li key={item}>{localizePolicyText(item)}</li>
+              <li key={item}>{localizePolicyText(item, locale)}</li>
             ))}
           </ul>
         </div>
@@ -615,9 +646,7 @@ export function AnalysisPanel({
             <div role="status" className="card text-center">
               <div className="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-forest-soft" />
               <p className="text-sm text-muted">
-                {awaitingAgentWake
-                  ? "Analiz servisi uyanıyor; soğuk başlangıçta 5–10 dakika sürebilir. Sayfayı kapatmayın."
-                  : "Analiz başlatılıyor…"}
+                {awaitingAgentWake ? t("analysis.wakeWait") : t("analysis.polling")}
               </p>
             </div>
           }

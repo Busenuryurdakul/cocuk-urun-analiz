@@ -38,7 +38,7 @@ export function HomeHowTo() {
       <ol className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {HOW_TO_STEPS.map((step, index) => (
           <li key={step.title} className="flex h-full flex-col rounded-2.5xl border border-sand/90 bg-paper p-5 shadow-card">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-forest text-sm font-semibold text-paper">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-forest text-sm font-semibold text-on-brand">
               {index + 1}
             </span>
             <h3 className="mt-4 font-display text-xl text-ink">{step.title}</h3>
@@ -92,7 +92,7 @@ export function HomeHowToCompact() {
       <ol className="mt-4 space-y-2.5">
         {HOW_TO_STEPS.map((step, index) => (
           <li key={step.title} className="flex items-baseline gap-3 text-sm">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-forest text-[10px] font-semibold text-paper">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-forest text-[10px] font-semibold text-on-brand">
               {index + 1}
             </span>
             <span className="font-semibold text-ink">{step.title}</span>

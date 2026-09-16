@@ -14,12 +14,14 @@ type ExportDocument struct {
 }
 
 type ExportUserProfile struct {
-	ID            string `json:"id"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"emailVerified"`
-	MFAEnabled    bool   `json:"mfaEnabled"`
-	PersonalOrgID string `json:"personalOrgId"`
-	CreatedAt     string `json:"createdAt"`
+	ID                   string `json:"id"`
+	Email                string `json:"email"`
+	EmailVerified        bool   `json:"emailVerified"`
+	MFAEnabled           bool   `json:"mfaEnabled"`
+	PersonalOrgID        string `json:"personalOrgId"`
+	PreferredLocale      string `json:"preferredLocale"`
+	PreferredColorScheme string `json:"preferredColorScheme"`
+	CreatedAt            string `json:"createdAt"`
 }
 
 type ExportConsent struct {

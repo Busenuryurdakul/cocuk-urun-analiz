@@ -497,6 +497,18 @@ func (r *LLMUsageDailyRepository) SumSince(ctx context.Context, orgID primitive.
 	return callCount, inputTokens, outputTokens, cost, cur.Err()
 }
 
+func (r *LLMCallRepository) CountUpgradeOrFallbackSince(ctx context.Context, orgID primitive.ObjectID, from time.Time) (int, error) {
+	n, err := r.col.CountDocuments(ctx, bson.M{
+		"organizationId": orgID,
+		"createdAt":      bson.M{"$gte": from},
+		"$or": bson.A{
+			bson.M{"fallbackUsed": true},
+			bson.M{"routingReason": bson.M{"$regex": "quality_escalation=true", "$options": "i"}},
+		},
+	})
+	return int(n), err
+}
+
 func (r *LLMCallRepository) ListRecent(ctx context.Context, orgID primitive.ObjectID, limit int) ([]domain.LLMCall, error) {
 	if limit <= 0 {
 		limit = 20
