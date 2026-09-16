@@ -503,7 +503,7 @@ func (r *LLMCallRepository) CountUpgradeOrFallbackSince(ctx context.Context, org
 		"createdAt":      bson.M{"$gte": from},
 		"$or": bson.A{
 			bson.M{"fallbackUsed": true},
-			bson.M{"routingReason": bson.M{"$regex": "quality_escalation|escalat", "$options": "i"}},
+			bson.M{"routingReason": bson.M{"$regex": "quality_escalation=true", "$options": "i"}},
 		},
 	})
 	return int(n), err

@@ -62,6 +62,11 @@ export const en: MessageCatalog = {
   "analysis.polling": "Analysis in progress…",
   "analysis.complianceLink": "Go to compliance page",
   "analysis.cancelFailed": "Cancel failed",
+  "analysis.wakeFailed": "The analysis service has not woken up yet. Wait 1–2 minutes and try again.",
+  "analysis.wakeFailedDetail": "The analysis service could not wake up ({detail}). Wait 1–2 minutes and try again.",
+  "analysis.incomplete": "Analysis did not complete",
+  "analysis.incompleteDetail": "Analysis did not complete: {detail}",
+  "analysis.startFailed": "Could not start analysis",
   "modelRoute.kicker": "Model route",
   "modelRoute.intro":
     "Analyses start with {fast}. Long or complex steps are automatically escalated to {heavy}.",
@@ -69,6 +74,8 @@ export const en: MessageCatalog = {
   "modelRoute.llmStep": "LLM steps",
   "modelRoute.inputTokens": "Input tokens",
   "modelRoute.outputTokens": "Output tokens",
+  "modelRoute.runEscalated": "Escalated on this run",
+  "modelRoute.runFallback": "Fallback model used",
   "auth.fallback": "Operation failed",
   "auth.network": "Could not reach the server. Please try again shortly.",
 };

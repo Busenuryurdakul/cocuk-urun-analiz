@@ -59,6 +59,11 @@ export const tr = {
   "analysis.polling": "Analiz devam ediyor…",
   "analysis.complianceLink": "Uyumluluk sayfasına git",
   "analysis.cancelFailed": "İptal başarısız",
+  "analysis.wakeFailed": "Analiz servisi henüz uyanmadı. 1–2 dakika bekleyip tekrar deneyin.",
+  "analysis.wakeFailedDetail": "Analiz servisi uyanamadı ({detail}). 1–2 dakika bekleyip tekrar deneyin.",
+  "analysis.incomplete": "Analiz tamamlanamadı",
+  "analysis.incompleteDetail": "Analiz tamamlanamadı: {detail}",
+  "analysis.startFailed": "Analiz başlatılamadı",
   "modelRoute.kicker": "Model rotası",
   "modelRoute.intro":
     "Analizler önce {fast} ile başlar. Uzun veya karmaşık adımlarda otomatik olarak {heavy} modeline yükseltilir.",
@@ -66,6 +71,8 @@ export const tr = {
   "modelRoute.llmStep": "LLM adımı",
   "modelRoute.inputTokens": "Girdi token",
   "modelRoute.outputTokens": "Çıktı token",
+  "modelRoute.runEscalated": "Bu koşuda yükseltme yapıldı",
+  "modelRoute.runFallback": "Yedek model kullanıldı",
   "auth.fallback": "İşlem başarısız",
   "auth.network": "Sunucuya bağlanılamadı. Lütfen biraz sonra tekrar deneyin.",
 } as const;

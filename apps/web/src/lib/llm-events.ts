@@ -29,6 +29,10 @@ export function isLlmPhase(phase: string): boolean {
   return phase.startsWith("LLM_");
 }
 
+export function isQualityEscalationReason(reason?: string | null): boolean {
+  return (reason ?? "").toLowerCase().includes("quality_escalation=true");
+}
+
 export type RunLlmSummary = {
   escalated: boolean;
   fallbackUsed: boolean;

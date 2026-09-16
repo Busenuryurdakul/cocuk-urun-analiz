@@ -11,6 +11,8 @@ func TestIsUpgradeOrFallback(t *testing.T) {
 	}{
 		{name: "plain analysis", reason: "task=analysis;primary=careful_analyst;fallback=result_analyst;policy=1.0.0"},
 		{name: "deep analysis task is not an upgrade", reason: "task=deep_analysis;primary=result_analyst;fallback=careful_analyst;policy=1.0.0"},
+		{name: "de-escalated is not an upgrade", reason: "policy=de-escalated;task=analysis"},
+		{name: "quality_escalation false is not an upgrade", reason: "task=analysis;quality_escalation=false"},
 		{name: "quality escalation", reason: "task=analysis;primary=careful_analyst;fallback=result_analyst;quality_escalation=true", want: true},
 		{name: "fallback flag", fallback: true, reason: "task=analysis;primary=careful_analyst;fallback=result_analyst", want: true},
 	}

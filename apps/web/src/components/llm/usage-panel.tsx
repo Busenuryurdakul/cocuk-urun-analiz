@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { isQualityEscalationReason } from "@/lib/llm-events";
 
 export type UsageDashboardData = {
   summary: {
@@ -42,11 +43,6 @@ type UsagePanelProps = {
   periodLabel?: string;
   showDetailLink?: boolean;
 };
-
-function isEscalationReason(reason: string): boolean {
-  const lowered = reason.toLowerCase();
-  return lowered.includes("quality_escalation") || lowered.includes("escalat");
-}
 
 export function UsagePanel({
   orgId,
@@ -111,7 +107,7 @@ export function UsagePanel({
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold">{call.modelKey}</span>
                       {call.fallbackUsed && <span className="badge-muted">Fallback</span>}
-                      {isEscalationReason(call.routingReason) && <span className="badge-clay">Yükseltme</span>}
+                      {isQualityEscalationReason(call.routingReason) && <span className="badge-clay">Yükseltme</span>}
                     </div>
                     <span>{call.inputTokens + call.outputTokens} tok</span>
                   </div>

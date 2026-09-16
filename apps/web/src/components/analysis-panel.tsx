@@ -17,7 +17,7 @@ import {
   statusLabel,
   supportStatusLabel,
 } from "@/lib/analysis-labels";
-import { graphqlErrorCode, graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
+import { graphqlErrorCode, graphqlErrorMessage, graphqlRequest, isComplianceErrorCode } from "@/lib/graphql";
 import type { Locale } from "@/lib/i18n/locale-config";
 import { useLocale } from "@/lib/i18n/locale-provider";
 import { phaseLabel, summarizeRunLlm } from "@/lib/llm-events";
@@ -162,6 +162,7 @@ export function AnalysisPanel({
   });
   const [view, setView] = useState<"idle" | "loading" | "polling" | "error" | "unauthorized">("idle");
   const [actionError, setActionError] = useState("");
+  const [actionErrorCode, setActionErrorCode] = useState("");
   const [starting, setStarting] = useState(false);
   const clientRequestRef = useRef<string>("");
   const pollAttempt = useRef(0);
@@ -293,10 +294,12 @@ export function AnalysisPanel({
   useEffect(() => {
     if (!run) {
       setActionError("");
+      setActionErrorCode("");
       return;
     }
     if (!TERMINAL.has(run.status)) {
       setActionError("");
+      setActionErrorCode("");
       return;
     }
     if (run.status === "FAILED" || run.status === "REJECTED") {
@@ -304,22 +307,24 @@ export function AnalysisPanel({
         const detail = run.terminalError?.trim();
         setActionError(
           detail
-            ? `Analiz servisi uyanamadı (${detail}). 1–2 dakika bekleyip tekrar deneyin.`
-            : "Analiz servisi henüz uyanmadı. 1–2 dakika bekleyip tekrar deneyin.",
+            ? t("analysis.wakeFailedDetail", { detail })
+            : t("analysis.wakeFailed"),
         );
+        setActionErrorCode(run.terminalReason);
       } else {
         const detail = run.terminalError?.trim() || run.terminalReason?.trim();
         setActionError(
           detail
-            ? `Analiz tamamlanamadı: ${detail}`
-            : graphqlErrorMessage(run.terminalReason ?? "FAILED", "Analiz tamamlanamadı"),
+            ? t("analysis.incompleteDetail", { detail })
+            : graphqlErrorMessage(run.terminalReason ?? "FAILED", t("analysis.incomplete"), locale),
         );
+        setActionErrorCode(run.terminalReason ?? "");
       }
       setView("idle");
       return;
     }
     setView("idle");
-  }, [run?.id, run?.status, run?.terminalError, run?.terminalReason]);
+  }, [locale, run?.id, run?.status, run?.terminalError, run?.terminalReason, t]);
 
   useEffect(() => {
     if (!run || TERMINAL.has(run.status)) return;
@@ -372,6 +377,7 @@ export function AnalysisPanel({
     if (!canStart || starting) return;
     setStarting(true);
     setActionError("");
+    setActionErrorCode("");
     setEvents([]);
     setEventsRunId(null);
     setAfterSequence(0);
@@ -403,8 +409,10 @@ export function AnalysisPanel({
       setView("polling");
     } catch (err) {
       const code = graphqlErrorCode(err);
-      const message = graphqlErrorMessage(err, "Analiz başlatılamadı");
+      const message = graphqlErrorMessage(err, t("analysis.startFailed"), locale);
       setActionError(code && !message.includes(code) ? `${message} (${code})` : message);
+      setActionErrorCode(code ?? "");
+      setView("idle");
     } finally {
       setStarting(false);
     }
@@ -413,6 +421,7 @@ export function AnalysisPanel({
   async function cancelAnalysis() {
     if (!run || !canCancel) return;
     setActionError("");
+    setActionErrorCode("");
     try {
       const data = await graphqlRequest<{ cancelAgentRun: AnalysisRun }>(
         `mutation($input: CancelAgentRunInput!) {
@@ -422,7 +431,9 @@ export function AnalysisPanel({
       );
       setRun(data.cancelAgentRun);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : t("analysis.cancelFailed"));
+      const code = graphqlErrorCode(err);
+      setActionError(graphqlErrorMessage(err, t("analysis.cancelFailed"), locale));
+      setActionErrorCode(code ?? "");
     }
   }
 
@@ -460,13 +471,14 @@ export function AnalysisPanel({
         )}
       </div>
 
-      {actionError && run && TERMINAL.has(run.status) && (
+      {actionError && (!run || TERMINAL.has(run.status)) && (
         <div className="alert-error space-y-2">
           <p>{actionError}</p>
-          {(actionError.includes("onay") ||
-            actionError.includes("Uyumluluk") ||
+          {(isComplianceErrorCode(actionErrorCode) ||
             actionError.toLowerCase().includes("consent") ||
-            actionError.toLowerCase().includes("compliance")) && (
+            actionError.toLowerCase().includes("compliance") ||
+            actionError.includes("onay") ||
+            actionError.includes("Uyumluluk")) && (
             <p className="text-sm">
               <Link href={`/org/${orgId}/compliance`} className="font-semibold underline">
                 {t("analysis.complianceLink")}

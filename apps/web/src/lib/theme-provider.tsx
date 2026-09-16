@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -20,10 +21,12 @@ import {
   type ResolvedColorScheme,
 } from "@/lib/theme";
 
+type ThemeOptions = { persist?: boolean; store?: boolean };
+
 type ThemeContextValue = {
   colorScheme: ColorScheme;
   resolvedScheme: ResolvedColorScheme;
-  setColorScheme: (scheme: ColorScheme, options?: { persist?: boolean }) => Promise<boolean>;
+  setColorScheme: (scheme: ColorScheme, options?: ThemeOptions) => Promise<boolean>;
   ready: boolean;
 };
 
@@ -33,10 +36,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>("light");
   const [resolvedScheme, setResolvedScheme] = useState<ResolvedColorScheme>("light");
   const [ready, setReady] = useState(false);
+  const userTouched = useRef(false);
 
-  const sync = useCallback((next: ColorScheme) => {
+  const sync = useCallback((next: ColorScheme, options?: { store?: boolean }) => {
     setColorSchemeState(next);
-    setStoredColorScheme(next);
+    if (options?.store !== false) {
+      setStoredColorScheme(next);
+    }
     setResolvedScheme(applyColorScheme(next));
   }, []);
 
@@ -47,7 +53,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     graphqlRequest<{ me: { preferredColorScheme: string } | null }>(`{ me { preferredColorScheme } }`)
       .then((data) => {
-        if (!data.me?.preferredColorScheme) return;
+        if (userTouched.current || !data.me?.preferredColorScheme) return;
         sync(colorSchemeFromApi(data.me.preferredColorScheme));
       })
       .catch(() => undefined);
@@ -62,8 +68,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [colorScheme]);
 
   const setColorScheme = useCallback(
-    async (next: ColorScheme, options?: { persist?: boolean }) => {
-      sync(next);
+    async (next: ColorScheme, options?: ThemeOptions) => {
+      userTouched.current = true;
+      sync(next, { store: options?.store });
       if (options?.persist === false) return true;
 
       try {

@@ -34,9 +34,9 @@ type Provider interface {
 }
 
 type MockProvider struct {
-	Responses           map[string]string
-	FailKeys            map[string]bool
-	RateLimitRemaining  map[string]int
+	Responses          map[string]string
+	FailKeys           map[string]bool
+	RateLimitRemaining map[string]int
 }
 
 func (p *MockProvider) Complete(ctx context.Context, req CompletionRequest) (CompletionResult, error) {

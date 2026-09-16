@@ -43,9 +43,9 @@ export function ModelRouteStrip({
         <span className="badge-forest">{fast}</span>
         <span className="text-muted">→</span>
         <span className="badge-clay">{heavy}</span>
-        {runSummary?.escalated && <span className="badge-clay">Bu koşuda yükseltme yapıldı</span>}
+        {runSummary?.escalated && <span className="badge-clay">{t("modelRoute.runEscalated")}</span>}
         {runSummary?.fallbackUsed && !runSummary.escalated && (
-          <span className="badge-muted">Yedek model kullanıldı</span>
+          <span className="badge-muted">{t("modelRoute.runFallback")}</span>
         )}
       </div>
 

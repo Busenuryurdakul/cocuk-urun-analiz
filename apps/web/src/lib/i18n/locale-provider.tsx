@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -35,6 +36,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
   const [ready, setReady] = useState(false);
+  const userTouched = useRef(false);
 
   useEffect(() => {
     const stored = getStoredLocale();
@@ -45,7 +47,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
     graphqlRequest<{ me: { preferredLocale: string } | null }>(`{ me { preferredLocale } }`)
       .then((data) => {
-        if (!data.me?.preferredLocale) return;
+        if (userTouched.current || !data.me?.preferredLocale) return;
         const serverLocale = localeFromApi(data.me.preferredLocale);
         setLocaleState(serverLocale);
         setStoredLocale(serverLocale);
@@ -56,6 +58,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setLocale = useCallback(async (next: Locale, options?: { persist?: boolean }) => {
+    userTouched.current = true;
     setLocaleState(next);
     setStoredLocale(next);
     document.documentElement.lang = next;

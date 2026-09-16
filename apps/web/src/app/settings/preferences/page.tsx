@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { graphqlRequest } from "@/lib/graphql";
-import { LOCALE_DEFINITIONS, localeFromApi, type Locale } from "@/lib/i18n/locale";
+import { LOCALE_DEFINITIONS, localeFromApi, localeToApi, type Locale } from "@/lib/i18n/locale";
+import { t as translateMessage } from "@/lib/i18n/messages";
 import { useLocale } from "@/lib/i18n/locale-provider";
-import { COLOR_SCHEMES, colorSchemeFromApi, type ColorScheme } from "@/lib/theme";
+import { COLOR_SCHEMES, colorSchemeFromApi, colorSchemeToApi, type ColorScheme } from "@/lib/theme";
 import { useTheme } from "@/lib/theme-provider";
 
 export default function PreferencesPage() {
@@ -19,41 +20,22 @@ export default function PreferencesPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setSelected(locale);
-  }, [locale]);
-
-  useEffect(() => {
-    setSelectedTheme(colorScheme);
-  }, [colorScheme]);
-
-  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await graphqlRequest<{ me: { email: string; preferredLocale: string } }>(
-          `{ me { email preferredLocale } }`,
-        );
+        const data = await graphqlRequest<{
+          me: { email: string; preferredLocale: string; preferredColorScheme: string };
+        }>(`{ me { email preferredLocale preferredColorScheme } }`);
         if (cancelled) return;
         setEmail(data.me.email);
         const serverLocale = localeFromApi(data.me.preferredLocale);
+        const serverTheme = colorSchemeFromApi(data.me.preferredColorScheme);
         setSelected(serverLocale);
+        setSelectedTheme(serverTheme);
         void setLocale(serverLocale, { persist: false });
+        void setColorScheme(serverTheme, { persist: false });
       } catch {
-        // Guest or offline — local language preference still applies.
-      }
-
-      try {
-        const data = await graphqlRequest<{ me: { preferredColorScheme: string } | null }>(
-          `{ me { preferredColorScheme } }`,
-        );
-        if (cancelled) return;
-        if (data.me?.preferredColorScheme) {
-          const serverTheme = colorSchemeFromApi(data.me.preferredColorScheme);
-          setSelectedTheme(serverTheme);
-          void setColorScheme(serverTheme, { persist: false });
-        }
-      } catch {
-        // Older API or guest — local theme preference still applies.
+        // Guest, offline, or older API — local language/theme still apply.
       }
     })();
     return () => {
@@ -66,15 +48,26 @@ export default function PreferencesPage() {
     setMessage("");
     setError("");
     try {
-      const localeOk = await setLocale(selected);
-      const themeOk = await setColorScheme(selectedTheme);
-      if (localeOk || themeOk) {
-        setMessage(t("preferences.saved"));
-      } else {
-        setError(t("preferences.saveFailed"));
-      }
+      await graphqlRequest<{
+        updateUserPreferences: { preferredLocale: string; preferredColorScheme: string };
+      }>(
+        `mutation($input: UpdateUserPreferencesInput!) {
+          updateUserPreferences(input: $input) { preferredLocale preferredColorScheme }
+        }`,
+        {
+          input: {
+            preferredLocale: localeToApi(selected),
+            preferredColorScheme: colorSchemeToApi(selectedTheme),
+          },
+        },
+      );
+      await setLocale(selected, { persist: false });
+      await setColorScheme(selectedTheme, { persist: false });
+      setMessage(translateMessage("preferences.saved", selected));
     } catch {
-      setError(t("preferences.saveFailed"));
+      await setLocale(selected, { persist: false });
+      await setColorScheme(selectedTheme, { persist: false });
+      setError(translateMessage("preferences.saveFailed", selected));
     } finally {
       setSaving(false);
     }
@@ -82,7 +75,7 @@ export default function PreferencesPage() {
 
   function chooseTheme(next: ColorScheme) {
     setSelectedTheme(next);
-    void setColorScheme(next, { persist: false });
+    void setColorScheme(next, { persist: false, store: false });
   }
 
   const themeLabels: Record<ColorScheme, string> = {
@@ -122,10 +115,10 @@ export default function PreferencesPage() {
                   type="button"
                   aria-pressed={selectedCard}
                   onClick={() => chooseTheme(value)}
-                  className={`rounded-2xl border px-3 py-3 text-left transition ${
+                  className={`rounded-2xl border px-3 py-3 text-start transition ${
                     selectedCard
-                      ? "border-forest bg-forest-soft shadow-sm"
-                      : "border-sand bg-cream/60 hover:border-forest/30"
+                      ? "border-forest bg-forest-soft shadow-sm ring-2 ring-forest/25"
+                      : "border-sand bg-paper hover:border-forest/40"
                   }`}
                 >
                   <span

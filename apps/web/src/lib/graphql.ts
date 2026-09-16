@@ -34,6 +34,13 @@ function normalizeGraphqlErrorCode(code: string): string {
   return code.trim().toUpperCase();
 }
 
+const COMPLIANCE_ERROR_CODES = new Set([
+  "CONSENT_REQUIRED",
+  "COMPLIANCE_REJECTED",
+  "COMPLIANCE_VIOLATION",
+  "COMPLIANCE_BLOCKED",
+]);
+
 export function isAuthError(err: unknown): boolean {
   const code = graphqlErrorCode(err);
   if (!code) {
@@ -41,6 +48,11 @@ export function isAuthError(err: unknown): boolean {
   }
   const normalized = normalizeGraphqlErrorCode(code);
   return normalized === "UNAUTHORIZED" || normalized === "FORBIDDEN";
+}
+
+export function isComplianceErrorCode(code?: string | null): boolean {
+  if (!code) return false;
+  return COMPLIANCE_ERROR_CODES.has(normalizeGraphqlErrorCode(code));
 }
 
 function isNetworkFailure(err: unknown): boolean {
