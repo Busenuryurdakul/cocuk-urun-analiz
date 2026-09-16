@@ -104,6 +104,7 @@ type Mutation {
   requestAccountDeletion: AccountDeletionRequestResult!
   confirmAccountDeletion(code: String!): Boolean!
   exportMyData: UserDataExport!
+  updateUserPreferences(input: UpdateUserPreferencesInput!): User!
   createProduct(input: CreateProductInput!): CreateProductPayload!
   createUserExperience(input: CreateUserExperienceInput!): UserExperience!
   updateUserExperience(input: UpdateUserExperienceInput!): UserExperience!
@@ -226,12 +227,38 @@ input WithdrawConsentInput {
   organizationId: ID
 }
 
+enum Locale {
+  TR
+  EN
+  DE
+  FR
+  ES
+  AR
+  ZH
+  JA
+  RU
+  PT
+}
+
+enum ColorScheme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
 type User {
   id: ID!
   email: String!
   emailVerified: Boolean!
   mfaEnabled: Boolean!
   personalOrgId: ID!
+  preferredLocale: Locale!
+  preferredColorScheme: ColorScheme!
+}
+
+input UpdateUserPreferencesInput {
+  preferredLocale: Locale
+  preferredColorScheme: ColorScheme
 }
 
 type Workspace {

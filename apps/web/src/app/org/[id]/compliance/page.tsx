@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
-import { graphqlRequest } from "@/lib/graphql";
+import { graphqlErrorMessage, graphqlRequest } from "@/lib/graphql";
 
 type Policy = {
   profile: string;
@@ -18,6 +18,7 @@ type Consent = {
   policyVersion: string;
   grantedAt: string;
   withdrawnAt?: string | null;
+  organizationId?: string | null;
 };
 
 const CONSENT_PURPOSES: Record<string, { label: string; description: string }> = {
@@ -42,6 +43,7 @@ export default function OrgCompliancePage() {
   const [consents, setConsents] = useState<Consent[]>([]);
   const [profile, setProfile] = useState("KVKK");
   const [view, setView] = useState<"loading" | "success" | "error" | "unauthorized">("loading");
+  const [actionError, setActionError] = useState("");
 
   const load = useCallback(async () => {
     setView("loading");
@@ -53,7 +55,7 @@ export default function OrgCompliancePage() {
       }>(`query($id: ID!) {
         organization(organizationId: $id) { complianceProfile compliancePolicyVersion }
         activeCompliancePolicy(organizationId: $id) { profile version status }
-        myConsents { id purpose policyVersion grantedAt withdrawnAt }
+        myConsents { id purpose policyVersion grantedAt withdrawnAt organizationId }
       }`, { id: orgId });
       setPolicy(data.activeCompliancePolicy);
       setConsents(data.myConsents);
@@ -83,20 +85,39 @@ export default function OrgCompliancePage() {
     await load();
   }
 
+  function isActiveForScope(consent: Consent, purpose: string) {
+    if (consent.purpose !== purpose || consent.withdrawnAt) return false;
+    return !consent.organizationId || consent.organizationId === orgId;
+  }
+
+  function activeConsent(purpose: string) {
+    return consents.find((consent) => isActiveForScope(consent, purpose));
+  }
+
   async function grantConsent(purpose: string) {
-    await graphqlRequest(
-      `mutation($input: GrantConsentInput!) { grantConsent(input: $input) { id purpose } }`,
-      { input: { purpose, organizationId: orgId } },
-    );
-    await load();
+    setActionError("");
+    try {
+      await graphqlRequest(
+        `mutation($input: GrantConsentInput!) { grantConsent(input: $input) { id purpose } }`,
+        { input: { purpose, organizationId: orgId } },
+      );
+      await load();
+    } catch (err) {
+      setActionError(graphqlErrorMessage(err, "Onay kaydedilemedi"));
+    }
   }
 
   async function withdrawConsent(purpose: string) {
-    await graphqlRequest(
-      `mutation($input: WithdrawConsentInput!) { withdrawConsent(input: $input) }`,
-      { input: { purpose, organizationId: orgId } },
-    );
-    await load();
+    setActionError("");
+    try {
+      await graphqlRequest(
+        `mutation($input: WithdrawConsentInput!) { withdrawConsent(input: $input) }`,
+        { input: { purpose, organizationId: orgId } },
+      );
+      await load();
+    } catch (err) {
+      setActionError(graphqlErrorMessage(err, "Onay geri çekilemedi"));
+    }
   }
 
   return (
@@ -152,6 +173,7 @@ export default function OrgCompliancePage() {
                   <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl bg-cream px-3 py-2">
                     <span>
                       {CONSENT_PURPOSES[c.purpose]?.label ?? c.purpose} ({c.policyVersion})
+                      {!c.withdrawnAt ? <span className="badge-forest ml-2">Onaylandı</span> : null}
                     </span>
                     {!c.withdrawnAt ? (
                       <button type="button" className="text-sm font-semibold text-red-700 underline" onClick={() => void withdrawConsent(c.purpose)}>
@@ -165,16 +187,33 @@ export default function OrgCompliancePage() {
               </ul>
             )}
             <ul className="space-y-2 border-t border-sand pt-4 text-sm">
-              {(["REGISTRATION", "DATA_PROCESSING", "ORG_MEMBERSHIP"] as const).map((purpose) => (
-                <li key={purpose} className="rounded-xl border border-sand/70 px-3 py-3">
-                  <p className="font-medium">{CONSENT_PURPOSES[purpose].label}</p>
-                  <p className="mt-1 text-muted">{CONSENT_PURPOSES[purpose].description}</p>
-                  <button type="button" className="btn-secondary mt-3 !px-3 !py-1.5 text-xs" onClick={() => void grantConsent(purpose)}>
-                    {CONSENT_PURPOSES[purpose].label} onayla
-                  </button>
-                </li>
-              ))}
+              {(["REGISTRATION", "DATA_PROCESSING", "ORG_MEMBERSHIP"] as const).map((purpose) => {
+                const granted = activeConsent(purpose);
+                return (
+                  <li key={purpose} className="rounded-xl border border-sand/70 px-3 py-3">
+                    <p className="font-medium">{CONSENT_PURPOSES[purpose].label}</p>
+                    <p className="mt-1 text-muted">{CONSENT_PURPOSES[purpose].description}</p>
+                    {granted ? (
+                      <p className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="badge-forest">Onaylandı</span>
+                        <span className="text-xs text-muted">
+                          {granted.policyVersion} · {granted.grantedAt.slice(0, 10)}
+                        </span>
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-secondary mt-3 !px-3 !py-1.5 text-xs"
+                        onClick={() => void grantConsent(purpose)}
+                      >
+                        {CONSENT_PURPOSES[purpose].label} onayla
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
+            {actionError && <p className="alert-error">{actionError}</p>}
           </section>
         </div>
       )}

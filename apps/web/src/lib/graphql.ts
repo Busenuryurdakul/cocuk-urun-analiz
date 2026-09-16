@@ -1,3 +1,6 @@
+import { authErrorMessage as authErrorMessageForLocale } from "./i18n/auth-errors";
+import { getStoredLocale, type Locale } from "./i18n/locale";
+import { t } from "./i18n/messages";
 import { resolveApiBaseUrl } from "./api-base";
 
 const API_URL = resolveApiBaseUrl();
@@ -27,36 +30,18 @@ export function graphqlErrorCode(err: unknown): string | undefined {
   return undefined;
 }
 
-const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  EMAIL_NOT_VERIFIED:
-    "E-posta adresiniz henüz doğrulanmadı. Kayıt sırasında gönderilen bağlantıyı açın, ardından tekrar giriş yapın.",
-  INVALID_CREDENTIALS: "E-posta veya şifre hatalı.",
-  INVALID_TOKEN: "Oturum süresi doldu veya geçersiz. Giriş sayfasından tekrar deneyin.",
-  INVALID_CODE: "Doğrulama kodu hatalı veya süresi dolmuş.",
-  CHALLENGE_LOCKED: "Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.",
-  DUPLICATE: "Bu e-posta ile zaten bir hesap var.",
-  DESKTOP_SESSION_ACTIVE:
-    "Bu hesapta başka bir masaüstü oturumu açık. Önce diğer cihazdan çıkış yapın veya o cihazı güvenlik ayarlarından kaldırın.",
-  PERSONAL_ORG: "Kişisel çalışma alanına üye davet edilemez. Ekip için önce bir organizasyon oluşturun.",
-  ALREADY_MEMBER: "Bu e-posta zaten bu organizasyonun üyesi.",
-  INVITATION_PENDING: "Bu e-postaya zaten bekleyen bir davet var.",
-  CONSENT_REQUIRED:
-    "Veri işleme onayı gerekli. Uyumluluk sayfasından DATA_PROCESSING onayını verip tekrar deneyin.",
-  COMPLIANCE_REJECTED:
-    "Uyumluluk politikası analizi engelledi. Uyumluluk sayfasındaki onayları kontrol edip tekrar deneyin.",
-  COMPLIANCE_VIOLATION: "Uyumluluk ihlali — işlem reddedildi. Uyumluluk ayarlarını kontrol edin.",
-  COMPLIANCE_BLOCKED: "Uyumluluk engeli — analiz devam edemiyor.",
-  UNAUTHORIZED: "Oturum açmanız gerekiyor.",
-  FORBIDDEN: "Bu işlem için yetkiniz yok.",
-  GRAPHQL_VALIDATION_FAILED:
-    "İstek geçersiz. Form alanları API şemasıyla uyuşmuyor olabilir; sayfayı yenileyip tekrar deneyin.",
-  LLM_MODEL_DISABLED:
-    "Kullanılabilir LLM modeli yok. Sağlık durumunu kontrol edin; production ortamında API anahtarlarının tanımlı olduğundan emin olun.",
-  ORCHESTRATOR_UNAVAILABLE:
-    "Analiz servisi uyanıyor olabilir; lütfen 1–2 dakika bekleyip tekrar deneyin. Sorun sürerse birkaç dakika sonra yeniden deneyin.",
-  UPSTREAM_UNAVAILABLE:
-    "Analiz API'sine ulaşılamadı. Birkaç saniye sonra tekrar deneyin.",
-};
+function normalizeGraphqlErrorCode(code: string): string {
+  return code.trim().toUpperCase();
+}
+
+export function isAuthError(err: unknown): boolean {
+  const code = graphqlErrorCode(err);
+  if (!code) {
+    return false;
+  }
+  const normalized = normalizeGraphqlErrorCode(code);
+  return normalized === "UNAUTHORIZED" || normalized === "FORBIDDEN";
+}
 
 function isNetworkFailure(err: unknown): boolean {
   if (err instanceof TypeError) {
@@ -71,22 +56,30 @@ function isNetworkFailure(err: unknown): boolean {
   );
 }
 
-export function graphqlErrorMessage(err: unknown, fallback = "İşlem başarısız"): string {
+export function graphqlErrorMessage(
+  err: unknown,
+  fallback?: string,
+  locale: Locale = getStoredLocale(),
+): string {
+  const resolvedFallback = fallback ?? t("auth.fallback", locale);
   const code = graphqlErrorCode(err);
-  if (code && AUTH_ERROR_MESSAGES[code]) {
-    return AUTH_ERROR_MESSAGES[code];
+  if (code) {
+    const mapped = authErrorMessageForLocale(normalizeGraphqlErrorCode(code), locale);
+    if (mapped) {
+      return mapped;
+    }
   }
   if (isNetworkFailure(err)) {
-    return "Sunucuya bağlanılamadı. Lütfen biraz sonra tekrar deneyin.";
+    return t("auth.network", locale);
   }
   if (code) {
-    return `${fallback} (${code})`;
+    return `${resolvedFallback} (${code})`;
   }
-  return fallback;
+  return resolvedFallback;
 }
 
-export function authErrorMessage(err: unknown, fallback = "İşlem başarısız"): string {
-  return graphqlErrorMessage(err, fallback);
+export function authErrorMessage(err: unknown, fallback?: string, locale?: Locale): string {
+  return graphqlErrorMessage(err, fallback, locale ?? getStoredLocale());
 }
 
 type MiyunaDesktop = {

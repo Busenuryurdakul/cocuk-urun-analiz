@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
 import { clearDesktopSession, graphqlRequest } from "@/lib/graphql";
+import { useLocale } from "@/lib/i18n/locale-provider";
 
 type AppShellProps = {
   title: string;
@@ -28,6 +29,7 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const pathname = usePathname();
+  const { t } = useLocale();
 
   async function logout() {
     await graphqlRequest(`mutation { logout }`).catch(() => undefined);
@@ -36,28 +38,37 @@ export function AppShell({
   }
 
   const items = [
-    { href: "/workspace", label: "Çalışma alanı", match: (p: string) => p === "/workspace" },
-    { href: "/settings/security", label: "Güvenlik", match: (p: string) => p.startsWith("/settings") },
+    { href: "/workspace", label: t("nav.workspace"), match: (p: string) => p === "/workspace" },
+    {
+      href: "/settings/preferences",
+      label: t("nav.preferences"),
+      match: (p: string) => p.startsWith("/settings/preferences"),
+    },
+    {
+      href: "/settings/security",
+      label: t("nav.security"),
+      match: (p: string) => p.startsWith("/settings/security"),
+    },
     ...(orgId
       ? [
           {
             href: `/org/${orgId}/products`,
-            label: "Ürünler",
+            label: t("nav.products"),
             match: (p: string) => p.includes("/products"),
           },
           {
             href: `/org/${orgId}/members`,
-            label: "Üyeler",
+            label: t("nav.members"),
             match: (p: string) => p.includes("/members"),
           },
           {
             href: `/org/${orgId}/compliance`,
-            label: "Uyumluluk",
+            label: t("nav.compliance"),
             match: (p: string) => p.includes("/compliance"),
           },
           {
             href: `/org/${orgId}/llm`,
-            label: "LLM",
+            label: t("nav.llm"),
             match: (p: string) => p.includes("/llm"),
           },
         ]
@@ -66,7 +77,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="bg-forest-deep px-5 py-6 text-paper lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
+      <aside className="bg-forest-deep px-5 py-6 text-on-brand lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
         <Logo href="/workspace" tone="paper" size="sm" />
         <nav className="mt-8 space-y-1">
           {!restricted &&
@@ -82,15 +93,15 @@ export function AppShell({
             ))}
           {restricted && (
             <Link href="/auth/login" className="nav-item">
-              Giriş yap
+              {t("nav.login")}
             </Link>
           )}
         </nav>
         <div className="mt-auto hidden pt-8 lg:block">
-          {accountEmail && !restricted && <p className="truncate px-3 text-xs text-paper/50">{accountEmail}</p>}
+          {accountEmail && !restricted && <p className="truncate px-3 text-xs text-on-brand/50">{accountEmail}</p>}
           {!restricted && (
             <button type="button" onClick={() => void logout()} className="nav-item mt-2 w-full text-left">
-              Çıkış
+              {t("nav.logout")}
             </button>
           )}
         </div>
@@ -110,11 +121,11 @@ export function AppShell({
           {accountEmail && !restricted && <p className="text-xs text-muted">{accountEmail}</p>}
           {!restricted ? (
             <button type="button" onClick={() => void logout()} className="link-quiet">
-              Çıkış
+              {t("nav.logout")}
             </button>
           ) : (
             <Link href="/auth/login" className="link-quiet">
-              Giriş yap
+              {t("nav.login")}
             </Link>
           )}
         </div>

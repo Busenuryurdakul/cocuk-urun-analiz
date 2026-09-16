@@ -36,7 +36,7 @@ func ApplyHallucinationGuard(in GuardInput) GuardResult {
 			continue
 		}
 		if m.RequiresReview || m.Method == recall.MethodFuzzyName {
-			out.Limitations = appendUnique(out.Limitations, "Weak or fuzzy recall match was not treated as confirmed.")
+			out.Limitations = appendUnique(out.Limitations, "Zayıf veya bulanık geri çağırma eşleşmesi doğrulanmış kabul edilmedi.")
 			continue
 		}
 		if m.Matched {
@@ -47,7 +47,7 @@ func ApplyHallucinationGuard(in GuardInput) GuardResult {
 
 	if mentionsRecall(blob) && !confirmedRecall && !hasOfficialRecallEvidence(in.Evidence) {
 		out.Flags = appendUnique(out.Flags, string(domain.FlagInventedRecall))
-		out.Limitations = appendUnique(out.Limitations, "Model mentioned a recall that is not backed by an official confirmed match.")
+		out.Limitations = appendUnique(out.Limitations, "Model, resmi doğrulanmış eşleşmeyle desteklenmeyen bir geri çağırma belirtti.")
 	}
 
 	unsupportedCritical := false
@@ -62,23 +62,23 @@ func ApplyHallucinationGuard(in GuardInput) GuardResult {
 	}
 	if unsupportedCritical {
 		out.Flags = appendUnique(out.Flags, string(domain.FlagUnsupportedClaim))
-		out.Limitations = appendUnique(out.Limitations, "Unsupported claims were downgraded and are not shown as verified facts.")
+		out.Limitations = appendUnique(out.Limitations, "Desteklenmeyen iddialar düşürüldü ve doğrulanmış gerçek olarak gösterilmiyor.")
 	}
 	if contradicted {
 		out.Flags = appendUnique(out.Flags, string(domain.FlagContradictoryEvidence))
-		out.Limitations = appendUnique(out.Limitations, "Contradictory evidence requires human review.")
+		out.Limitations = appendUnique(out.Limitations, "Çelişkili kanıtlar insan incelemesi gerektiriyor.")
 	}
 	if len(in.Evidence) == 0 && len(in.Findings) == 0 {
 		out.Flags = appendUnique(out.Flags, string(domain.FlagInsufficientEvidence))
-		out.Limitations = appendUnique(out.Limitations, "No supporting evidence was persisted for this analysis.")
+		out.Limitations = appendUnique(out.Limitations, "Bu analiz için destekleyici kanıt kaydedilmedi.")
 	}
 	if overconfident(blob) && (unsupportedCritical || len(in.Evidence) == 0) {
 		out.Flags = appendUnique(out.Flags, string(domain.FlagOverconfidentConclusion))
-		out.Limitations = appendUnique(out.Limitations, "Overconfident language was stripped from the user-facing conclusion.")
+		out.Limitations = appendUnique(out.Limitations, "Aşırı güvenli ifadeler kullanıcıya yönelik sonuçtan çıkarıldı.")
 	}
 	if sourceMismatch(blob, in.Evidence, in.Matches) {
 		out.Flags = appendUnique(out.Flags, string(domain.FlagSourceMismatch))
-		out.Limitations = appendUnique(out.Limitations, "A cited source does not match persisted evidence.")
+		out.Limitations = appendUnique(out.Limitations, "Atıf yapılan kaynak, kaydedilmiş kanıtla eşleşmiyor.")
 	}
 	return out
 }

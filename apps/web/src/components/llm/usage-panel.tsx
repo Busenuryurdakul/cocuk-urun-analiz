@@ -45,7 +45,7 @@ type UsagePanelProps = {
 
 function isEscalationReason(reason: string): boolean {
   const lowered = reason.toLowerCase();
-  return lowered.includes("escalat") || lowered.includes("deep_analysis") || lowered.includes("quality");
+  return lowered.includes("quality_escalation") || lowered.includes("escalat");
 }
 
 export function UsagePanel({
@@ -56,15 +56,13 @@ export function UsagePanel({
   periodLabel = "bu ay",
   showDetailLink = true,
 }: UsagePanelProps) {
-  const escalationCalls = usage.recentCalls.filter((call) => isEscalationReason(call.routingReason)).length;
-
   return (
     <section className={compact ? "space-y-4" : "card space-y-5"}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="kicker">LLM kullanımı</p>
           <h2 className="mt-1 font-display text-2xl">{title}</h2>
-          <p className="mt-1 text-sm text-muted">Cursor benzeri özet — {periodLabel}</p>
+          <p className="mt-1 text-sm text-muted">Dönem özeti — {periodLabel}, tüm çağrılar</p>
         </div>
         {!compact && showDetailLink && (
           <Link href={`/org/${orgId}/llm`} className="btn-secondary !px-3 !py-1.5 text-xs">
@@ -78,7 +76,8 @@ export function UsagePanel({
         <UsageStat label="Çağrı" value={String(usage.summary.callCount)} />
         <UsageStat
           label="Yükseltme / fallback"
-          value={String(Math.max(usage.summary.fallbackCount, escalationCalls))}
+          value={String(usage.summary.fallbackCount)}
+          hint="Aynı dönemdeki yükseltme veya fallback çağrıları"
         />
         <UsageStat label="Tahmini maliyet" value={`$${usage.summary.estimatedCostUsd.toFixed(4)}`} />
       </div>
@@ -127,11 +126,12 @@ export function UsagePanel({
   );
 }
 
-function UsageStat({ label, value }: { label: string; value: string }) {
+function UsageStat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-2xl border border-sand bg-cream/60 px-4 py-3">
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 font-display text-2xl text-forest">{value}</p>
+      {hint ? <p className="mt-1 text-[11px] leading-snug text-muted">{hint}</p> : null}
     </div>
   );
 }

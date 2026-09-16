@@ -88,7 +88,7 @@ export default function HomePage() {
                 ["Raporu incele", "Sinyaller, eksik bilgiler ve kaynak bağlantıları tek raporda sunulur."],
               ].map(([title, body], i) => (
                 <li key={title} className="flex gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-forest text-xs font-semibold text-paper">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-forest text-xs font-semibold text-on-brand">
                     {i + 1}
                   </span>
                   <div>

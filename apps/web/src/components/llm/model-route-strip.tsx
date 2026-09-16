@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/lib/i18n/locale-provider";
 import { modelDisplayName, type RunLlmSummary } from "@/lib/llm-events";
 
 type ModelRouteStripProps = {
@@ -18,6 +19,7 @@ export function ModelRouteStrip({
   modelNames,
   runSummary,
 }: ModelRouteStripProps) {
+  const { t } = useLocale();
   const fastKey = defaultModelKey.trim() || "careful_analyst";
   const heavyKey = fallbackModelKey.trim() || "result_analyst";
   const fast = modelDisplayName(fastKey, modelNames);
@@ -27,14 +29,13 @@ export function ModelRouteStrip({
     <div className="rounded-2xl border border-sand bg-cream/70 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="kicker">Model rotası</p>
+          <p className="kicker">{t("modelRoute.kicker")}</p>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Analizler önce <span className="font-semibold text-ink">{fast}</span> ile başlar. Uzun veya karmaşık
-            adımlarda otomatik olarak <span className="font-semibold text-ink">{heavy}</span> modeline yükseltilir.
+            {t("modelRoute.intro", { fast, heavy })}
           </p>
         </div>
         <Link href={`/org/${orgId}/llm`} className="btn-ghost !px-3 !py-1.5 text-xs">
-          Model ayarları
+          {t("modelRoute.settings")}
         </Link>
       </div>
 
@@ -51,15 +52,15 @@ export function ModelRouteStrip({
       {runSummary && runSummary.llmSteps > 0 && (
         <dl className="mt-4 grid gap-2 border-t border-sand pt-3 text-xs sm:grid-cols-3">
           <div>
-            <dt className="text-muted">LLM adımı</dt>
+            <dt className="text-muted">{t("modelRoute.llmStep")}</dt>
             <dd className="font-semibold">{runSummary.llmSteps}</dd>
           </div>
           <div>
-            <dt className="text-muted">Girdi token</dt>
+            <dt className="text-muted">{t("modelRoute.inputTokens")}</dt>
             <dd className="font-semibold">{runSummary.totalInputTokens.toLocaleString()}</dd>
           </div>
           <div>
-            <dt className="text-muted">Çıktı token</dt>
+            <dt className="text-muted">{t("modelRoute.outputTokens")}</dt>
             <dd className="font-semibold">{runSummary.totalOutputTokens.toLocaleString()}</dd>
           </div>
         </dl>

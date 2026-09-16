@@ -47,7 +47,7 @@ export default function WorkspacePage() {
             ),
             graphqlRequest<{ llmUsageDashboard: UsageDashboardData }>(
               `query($id: ID!, $fromDate: String!) {
-                llmUsageDashboard(organizationId: $id, fromDate: $fromDate, recentLimit: 5) {
+                llmUsageDashboard(organizationId: $id, fromDate: $fromDate, recentLimit: 12) {
                   summary { callCount inputTokens outputTokens totalTokens estimatedCostUsd fallbackCount }
                   byModel { modelKey displayName callCount inputTokens outputTokens totalTokens estimatedCostUsd }
                   recentCalls { id modelKey personaKey routingReason fallbackUsed inputTokens outputTokens latencyMs status createdAt }

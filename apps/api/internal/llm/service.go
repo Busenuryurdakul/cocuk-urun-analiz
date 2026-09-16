@@ -354,12 +354,52 @@ func (s *Service) GetOrgSettings(ctx context.Context, actorID, orgID primitive.O
 	}
 	settings, err := s.OrgSettings.FindByOrg(ctx, orgID)
 	if err != nil {
-		if err == repository.ErrNotFound {
-			return &domain.LLMOrgSettings{OrganizationID: orgID}, nil
+		if err != repository.ErrNotFound {
+			return nil, err
 		}
-		return nil, err
+		settings = &domain.LLMOrgSettings{OrganizationID: orgID}
 	}
+	s.fillEffectiveOrgSettings(ctx, orgID, settings)
 	return settings, nil
+}
+
+func (s *Service) fillEffectiveOrgSettings(ctx context.Context, orgID primitive.ObjectID, settings *domain.LLMOrgSettings) {
+	if settings.DefaultModelKey != "" && settings.FallbackModelKey != "" && settings.PersonaKey != "" {
+		return
+	}
+	if s.Snapshots != nil {
+		var snap *domain.ConfigSnapshot
+		if settings.ActiveConfigSnapshotID != nil {
+			if found, err := s.Snapshots.FindByID(ctx, *settings.ActiveConfigSnapshotID); err == nil {
+				snap = found
+			}
+		}
+		if snap == nil {
+			if found, err := s.Snapshots.FindLatestPublished(ctx, &orgID, domain.ConfigSnapshotKindPhase6LLM); err == nil {
+				snap = found
+			}
+		}
+		if snap != nil {
+			if settings.DefaultModelKey == "" {
+				settings.DefaultModelKey = snap.DefaultModelKey
+			}
+			if settings.FallbackModelKey == "" {
+				settings.FallbackModelKey = snap.FallbackModelKey
+			}
+			if settings.PersonaKey == "" {
+				settings.PersonaKey = snap.LLMPersonaKey
+			}
+		}
+	}
+	if settings.DefaultModelKey == "" {
+		settings.DefaultModelKey = ModelKeyCareful
+	}
+	if settings.FallbackModelKey == "" {
+		settings.FallbackModelKey = ModelKeyResult
+	}
+	if settings.PersonaKey == "" {
+		settings.PersonaKey = domain.PersonaCarefulAnalyst
+	}
 }
 
 type UsageDashboard struct {
@@ -414,7 +454,6 @@ func (s *Service) UsageDashboard(ctx context.Context, actorID, orgID primitive.O
 		displayNames[m.ModelKey] = m.DisplayName
 	}
 	byModel := make([]UsageDashboardModel, 0, len(aggregates))
-	fallbackCount := 0
 	for _, row := range aggregates {
 		byModel = append(byModel, UsageDashboardModel{
 			ModelKey:         row.ModelKey,
@@ -425,10 +464,9 @@ func (s *Service) UsageDashboard(ctx context.Context, actorID, orgID primitive.O
 			EstimatedCostUSD: row.EstimatedCostUSD,
 		})
 	}
-	for _, call := range recent {
-		if call.FallbackUsed {
-			fallbackCount++
-		}
+	fallbackCount, err := s.Calls.CountUpgradeOrFallbackSince(ctx, orgID, fromTime)
+	if err != nil {
+		return nil, err
 	}
 	return &UsageDashboard{
 		Summary: UsageDashboardSummary{
@@ -457,11 +495,23 @@ func (s *Service) TestConfiguration(ctx context.Context, actorID, orgID primitiv
 	})
 }
 
-func (s *Service) UsageSummary(ctx context.Context, actorID, orgID primitive.ObjectID, fromDate string) (int, int, int, float64, error) {
+func (s *Service) UsageSummary(ctx context.Context, actorID, orgID primitive.ObjectID, fromDate string) (int, int, int, float64, int, error) {
 	if _, err := s.requireUsageRead(ctx, actorID, orgID); err != nil {
-		return 0, 0, 0, 0, err
+		return 0, 0, 0, 0, 0, err
 	}
-	return s.Usage.SumSince(ctx, orgID, fromDate)
+	callCount, inputTokens, outputTokens, cost, err := s.Usage.SumSince(ctx, orgID, fromDate)
+	if err != nil {
+		return 0, 0, 0, 0, 0, err
+	}
+	fromTime, err := time.Parse("2006-01-02", fromDate)
+	if err != nil {
+		return 0, 0, 0, 0, 0, ErrInvalidInput
+	}
+	fallbackCount, err := s.Calls.CountUpgradeOrFallbackSince(ctx, orgID, fromTime)
+	if err != nil {
+		return 0, 0, 0, 0, 0, err
+	}
+	return callCount, inputTokens, outputTokens, cost, fallbackCount, nil
 }
 
 func (s *Service) GetCall(ctx context.Context, actorID, orgID, callID primitive.ObjectID) (*domain.LLMCall, error) {

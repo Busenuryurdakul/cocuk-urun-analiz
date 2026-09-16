@@ -69,17 +69,78 @@ func IsElectronPlatform(p DevicePlatform) bool {
 	return p == DevicePlatformElectronWin || p == DevicePlatformElectronMac
 }
 
+type Locale string
+
+const (
+	LocaleTR Locale = "TR"
+	LocaleEN Locale = "EN"
+	LocaleDE Locale = "DE"
+	LocaleFR Locale = "FR"
+	LocaleES Locale = "ES"
+	LocaleAR Locale = "AR"
+	LocaleZH Locale = "ZH"
+	LocaleJA Locale = "JA"
+	LocaleRU Locale = "RU"
+	LocalePT Locale = "PT"
+)
+
+func NormalizeLocale(v string) Locale {
+	switch Locale(v) {
+	case LocaleEN:
+		return LocaleEN
+	case LocaleDE:
+		return LocaleDE
+	case LocaleFR:
+		return LocaleFR
+	case LocaleES:
+		return LocaleES
+	case LocaleAR:
+		return LocaleAR
+	case LocaleZH:
+		return LocaleZH
+	case LocaleJA:
+		return LocaleJA
+	case LocaleRU:
+		return LocaleRU
+	case LocalePT:
+		return LocalePT
+	default:
+		return LocaleTR
+	}
+}
+
+type ColorScheme string
+
+const (
+	ColorSchemeLight  ColorScheme = "LIGHT"
+	ColorSchemeDark   ColorScheme = "DARK"
+	ColorSchemeSystem ColorScheme = "SYSTEM"
+)
+
+func NormalizeColorScheme(v string) ColorScheme {
+	switch ColorScheme(v) {
+	case ColorSchemeDark:
+		return ColorSchemeDark
+	case ColorSchemeSystem:
+		return ColorSchemeSystem
+	default:
+		return ColorSchemeLight
+	}
+}
+
 type User struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty"`
-	Email         string             `bson:"email"`
-	PasswordHash  string             `bson:"passwordHash"`
-	EmailVerified bool               `bson:"emailVerified"`
-	MFAEnabled    bool               `bson:"mfaEnabled"`
-	MFASecret     string             `bson:"mfaSecret,omitempty"`
-	PersonalOrgID primitive.ObjectID `bson:"personalOrgId"`
-	DeletedAt     *time.Time         `bson:"deletedAt,omitempty"`
-	CreatedAt     time.Time          `bson:"createdAt"`
-	UpdatedAt     time.Time          `bson:"updatedAt"`
+	ID                   primitive.ObjectID `bson:"_id,omitempty"`
+	Email                string             `bson:"email"`
+	PasswordHash         string             `bson:"passwordHash"`
+	EmailVerified        bool               `bson:"emailVerified"`
+	MFAEnabled           bool               `bson:"mfaEnabled"`
+	MFASecret            string             `bson:"mfaSecret,omitempty"`
+	PersonalOrgID        primitive.ObjectID `bson:"personalOrgId"`
+	PreferredLocale      Locale             `bson:"preferredLocale,omitempty"`
+	PreferredColorScheme ColorScheme        `bson:"preferredColorScheme,omitempty"`
+	DeletedAt            *time.Time         `bson:"deletedAt,omitempty"`
+	CreatedAt            time.Time          `bson:"createdAt"`
+	UpdatedAt            time.Time          `bson:"updatedAt"`
 }
 
 func (u *User) IsDeleted() bool {
