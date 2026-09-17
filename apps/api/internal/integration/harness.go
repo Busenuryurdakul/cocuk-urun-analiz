@@ -35,6 +35,8 @@ import (
 
 const internalToken = "phase5-integration-token"
 
+var integrationHarnessEnabled bool
+
 type Phase5Harness struct {
 	T              *testing.T
 	Ctx            context.Context

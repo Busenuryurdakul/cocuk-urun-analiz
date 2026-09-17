@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-var integrationHarnessEnabled bool
-
 func TestMain(m *testing.M) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
