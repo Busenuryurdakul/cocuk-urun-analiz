@@ -189,13 +189,13 @@ func seedTrendyolMapping(t *testing.T, h *Phase5Harness, productID primitive.Obj
 	t.Helper()
 	err := h.App.Products.Mappings.Create(h.Ctx, &domain.ProductSourceMapping{
 		OrganizationID:  h.OrgID,
-		ProductID:         productID,
-		Source:            domain.MarketplaceTrendyol,
-		SourceProductID:   "987654",
-		SourceURL:         "https://www.trendyol.com/test-product-p-987654",
-		MatchStatus:       domain.MatchVerified,
-		MatchMethod:       domain.MatchExplicit,
-		Confidence:        1,
+		ProductID:       productID,
+		Source:          domain.MarketplaceTrendyol,
+		SourceProductID: "987654",
+		SourceURL:       "https://www.trendyol.com/test-product-p-987654",
+		MatchStatus:     domain.MatchVerified,
+		MatchMethod:     domain.MatchExplicit,
+		Confidence:      1,
 	})
 	if err != nil {
 		t.Fatal(err)
