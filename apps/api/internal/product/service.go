@@ -16,7 +16,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var ErrForbidden = errors.New("forbidden")
+var (
+	ErrForbidden      = errors.New("forbidden")
+	ErrInvalidRating  = errors.New("product rating must be between 0 and 5")
+)
 
 type Service struct {
 	Products *repository.ProductRepository
@@ -58,6 +61,9 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Produc
 	}
 	if !rbac.CanManageProducts(role) {
 		return nil, false, ErrForbidden
+	}
+	if err := ValidateOptionalRating(input.Rating); err != nil {
+		return nil, false, err
 	}
 
 	sourceProductID := normalize.NormalizeIdentifier(input.SourceProductID)
@@ -152,6 +158,21 @@ func (s *Service) List(ctx context.Context, actorID, organizationID primitive.Ob
 
 func NowUTC() time.Time {
 	return time.Now().UTC()
+}
+
+func ValidateOptionalRating(raw string) error {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return nil
+	}
+	n, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return ErrInvalidRating
+	}
+	if n < 0 || n > 5 {
+		return ErrInvalidRating
+	}
+	return nil
 }
 
 func optionalNumberOrString(raw string) any {

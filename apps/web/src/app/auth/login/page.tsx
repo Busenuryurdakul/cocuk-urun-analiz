@@ -164,6 +164,11 @@ export default function LoginPage() {
             className="input"
           />
         </label>
+        <p className="-mt-2 text-right">
+          <Link href="/auth/forgot-password" className="text-sm font-semibold text-forest underline underline-offset-4">
+            Şifremi unuttum
+          </Link>
+        </p>
         {turnstileEnabled() && (
           <TurnstileWidget onToken={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
         )}

@@ -80,8 +80,14 @@ function validateProductForm(values: {
   if (values.originalPrice.trim() && !pricePattern.test(values.originalPrice.trim())) {
     return "Liste fiyatı pozitif bir sayı olmalıdır.";
   }
-  if (values.rating.trim() && !pricePattern.test(values.rating.trim())) {
-    return "Puan sayısal olmalıdır.";
+  if (values.rating.trim()) {
+    if (!pricePattern.test(values.rating.trim())) {
+      return "Puan sayısal olmalıdır.";
+    }
+    const ratingValue = Number(values.rating.trim());
+    if (ratingValue < 0 || ratingValue > 5) {
+      return "Puan 0 ile 5 arasında olmalıdır (yıldız ölçeği).";
+    }
   }
   if (values.reviewCount.trim() && !/^\d+$/.test(values.reviewCount.trim())) {
     return "Yorum sayısı tam sayı olmalıdır.";
@@ -238,8 +244,17 @@ export default function NewProductPage() {
               <input className="input" value={seller} onChange={(e) => setSeller(e.target.value)} />
             </label>
             <label className="label">
-              Puan
-              <input className="input" inputMode="decimal" min="0" max="5" value={rating} onChange={(e) => setRating(e.target.value)} />
+              Puan (0–5 yıldız)
+              <input
+                className="input"
+                inputMode="decimal"
+                min="0"
+                max="5"
+                step="0.1"
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                placeholder="Örn. 4.5"
+              />
             </label>
             <label className="label">
               Yorum sayısı

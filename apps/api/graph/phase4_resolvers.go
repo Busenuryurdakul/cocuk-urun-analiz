@@ -20,7 +20,7 @@ func mapPhase4Error(err error) error {
 	switch {
 	case errors.Is(err, product.ErrForbidden), errors.Is(err, ugc.ErrForbidden), errors.Is(err, marketplace.ErrForbidden):
 		return gqlError("FORBIDDEN", errForbidden)
-	case errors.Is(err, ugc.ErrInvalidNarrative):
+	case errors.Is(err, ugc.ErrInvalidNarrative), errors.Is(err, product.ErrInvalidRating):
 		return gqlError("INVALID_INPUT", err)
 	case errors.Is(err, fetch.ErrHostNotAllowed), errors.Is(err, fetch.ErrInvalidURL), errors.Is(err, fetch.ErrSchemeNotAllowed):
 		return gqlError("FETCH_POLICY_VIOLATION", err)

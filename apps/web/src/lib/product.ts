@@ -104,8 +104,14 @@ export function productField(product: Product, key: ProductFieldKey): ProductFie
   return product[key];
 }
 
+export const PREVIEW_HIGHLIGHT_FIELDS = ["materials", "targetAge", "safetyWarnings"] as const satisfies readonly ProductFieldKey[];
+
 export function missingFieldCount(product: Product): number {
   return PRODUCT_FIELD_LABELS.filter(({ key }) => product[key]?.missing).length;
+}
+
+export function previewMissingCount(product: Product): number {
+  return PREVIEW_HIGHLIGHT_FIELDS.filter((key) => product[key]?.missing).length;
 }
 
 export function formatPrice(product: Product): string | null {
