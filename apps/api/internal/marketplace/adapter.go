@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	importpkg "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/import"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/domain"
+	importpkg "github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/import"
 	"github.com/Busenuryurdakul/cocuk-urun-analiz/apps/api/internal/normalize"
 )
 

@@ -10,7 +10,7 @@ import (
 
 func TestMergePreservesLocalWhenExternalEmpty(t *testing.T) {
 	current := domain.Product{
-		Name: domain.ProductFieldMeta{Value: "Local Name", Missing: false},
+		Name:  domain.ProductFieldMeta{Value: "Local Name", Missing: false},
 		Brand: domain.ProductFieldMeta{Value: "acme", Missing: false},
 	}
 	incoming := normalize.ProductInput{Name: "", Brand: ""}
