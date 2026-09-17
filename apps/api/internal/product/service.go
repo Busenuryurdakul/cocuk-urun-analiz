@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	ErrForbidden      = errors.New("forbidden")
-	ErrInvalidRating  = errors.New("product rating must be between 0 and 5")
+	ErrForbidden     = errors.New("forbidden")
+	ErrInvalidRating = errors.New("product rating must be between 0 and 5")
 )
 
 type Service struct {

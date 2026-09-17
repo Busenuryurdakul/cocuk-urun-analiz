@@ -150,8 +150,8 @@ func toModelSyncPayload(result *marketplace.SyncResult) *model.SyncProductFromSo
 		Updated:       result.Updated,
 		UpdatedFields: result.UpdatedFields,
 		Source:        strPtr(result.Source),
-		SourceURL:       strPtr(result.SourceURL),
-		Warning:         strPtr(result.Warning),
+		SourceURL:     strPtr(result.SourceURL),
+		Warning:       strPtr(result.Warning),
 	}
 	if result.SyncedAt != nil {
 		s := result.SyncedAt.UTC().Format(time.RFC3339)

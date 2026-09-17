@@ -67,6 +67,7 @@ export const tr = {
     "Model çıktısı platform uyumluluk kurallarına uymadı. İnceleme adımında yasaklı güvenlik iddiaları (ör. «certified safe») tespit edildi.",
   "analysis.complianceBlockedDetail": "Uyumluluk engeli: {detail}",
   "analysis.startFailed": "Analiz başlatılamadı",
+  "analysis.technicalDetails": "Teknik ayrıntılar",
   "modelRoute.kicker": "Model rotası",
   "modelRoute.intro":
     "Analizler önce {fast} ile başlar. Uzun veya karmaşık adımlarda otomatik olarak {heavy} modeline yükseltilir.",
