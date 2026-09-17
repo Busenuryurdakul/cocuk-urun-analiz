@@ -88,6 +88,9 @@ func WithLLMUseMock(useMock bool) HarnessOption {
 
 func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 	t.Helper()
+	if !integrationHarnessEnabled {
+		t.Skip("mongodb/redis unavailable for integration harness")
+	}
 	cfg := harnessConfig{}
 	for _, opt := range opts {
 		opt(&cfg)
