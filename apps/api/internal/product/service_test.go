@@ -49,6 +49,31 @@ func (m *memoryMappings) FindBySourceProduct(_ context.Context, organizationID p
 	return nil, repository.ErrNotFound
 }
 
+func TestValidateOptionalRating(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		raw string
+		ok  bool
+	}{
+		{"", true},
+		{"0", true},
+		{"5", true},
+		{"4.5", true},
+		{"6", false},
+		{"-1", false},
+		{"abc", false},
+	}
+	for _, tc := range cases {
+		err := product.ValidateOptionalRating(tc.raw)
+		if tc.ok && err != nil {
+			t.Fatalf("rating %q: expected ok, got %v", tc.raw, err)
+		}
+		if !tc.ok && err == nil {
+			t.Fatalf("rating %q: expected error", tc.raw)
+		}
+	}
+}
+
 func TestProductServiceDedupViaMapping(t *testing.T) {
 	orgID := primitive.NewObjectID()
 	productID := primitive.NewObjectID()

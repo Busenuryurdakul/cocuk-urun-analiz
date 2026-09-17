@@ -229,6 +229,8 @@ type Product struct {
 	StockStatus    ProductFieldMeta   `bson:"stockStatus"`
 	SKU            ProductFieldMeta   `bson:"sku"`
 	CreatedBy      primitive.ObjectID `bson:"createdBy"`
+	LastSyncedAt   *time.Time         `bson:"lastSyncedAt,omitempty"`
+	LastSyncSource string             `bson:"lastSyncSource,omitempty"`
 	CreatedAt      time.Time          `bson:"createdAt"`
 	UpdatedAt      time.Time          `bson:"updatedAt"`
 }

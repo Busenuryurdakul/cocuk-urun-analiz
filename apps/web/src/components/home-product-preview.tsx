@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { graphqlRequest } from "@/lib/graphql";
-import { PRODUCT_FIELD_SELECTION, fieldValue, formatPrice, missingFieldCount, productSubtitle, productTitle, type Product } from "@/lib/product";
+import { PRODUCT_FIELD_SELECTION, fieldValue, formatPrice, previewMissingCount, productSubtitle, productTitle, type Product } from "@/lib/product";
 
 type Workspace = { organizationId: string; name: string; type: string };
 
@@ -107,7 +107,7 @@ export function HomeProductPreview() {
         <dl className="mt-6 grid grid-cols-3 gap-3 text-center">
           <MiniStat value={formatPrice(product) ?? "—"} label="Fiyat" />
           <MiniStat value={fieldValue(product.rating) ?? "—"} label="Puan" />
-          <MiniStat value={String(missingFieldCount(product))} label="Eksik alan" />
+          <MiniStat value={String(previewMissingCount(product))} label="Eksik alan" />
         </dl>
 
         <ul className="mt-6 space-y-3 text-sm">

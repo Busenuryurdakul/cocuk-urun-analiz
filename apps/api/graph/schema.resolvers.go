@@ -644,6 +644,31 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 	}, nil
 }
 
+// SyncProductFromSource is the resolver for the syncProductFromSource field.
+func (r *mutationResolver) SyncProductFromSource(ctx context.Context, input model.SyncProductFromSourceInput) (*model.SyncProductFromSourcePayload, error) {
+	actorID, err := requireActor(ctx)
+	if err != nil {
+		return nil, gqlError("UNAUTHORIZED", err)
+	}
+	orgID, err := parseObjectID(input.OrganizationID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	productID, err := parseObjectID(input.ProductID)
+	if err != nil {
+		return nil, gqlError("INVALID_ID", err)
+	}
+	force := false
+	if input.Force != nil {
+		force = *input.Force
+	}
+	result, err := r.MarketplaceService.SyncProductFromSource(ctx, orgID, productID, actorID, force)
+	if err != nil {
+		return nil, mapPhase4Error(err)
+	}
+	return toModelSyncPayload(result), nil
+}
+
 // CreateUserExperience is the resolver for the createUserExperience field.
 func (r *mutationResolver) CreateUserExperience(ctx context.Context, input model.CreateUserExperienceInput) (*model.UserExperience, error) {
 	actorID, err := requireActor(ctx)

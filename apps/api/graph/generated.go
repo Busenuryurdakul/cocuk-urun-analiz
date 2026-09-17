@@ -402,6 +402,7 @@ type ComplexityRoot struct {
 		StartMarketplaceFileImport          func(childComplexity int, input model.StartMarketplaceFileImportInput) int
 		StartMarketplaceURLImport           func(childComplexity int, input model.StartMarketplaceURLImportInput) int
 		SwitchWorkspace                     func(childComplexity int, organizationID string) int
+		SyncProductFromSource               func(childComplexity int, input model.SyncProductFromSourceInput) int
 		TestLLMConfiguration                func(childComplexity int, input model.TestLLMConfigurationInput) int
 		UpdateMemberRole                    func(childComplexity int, input model.UpdateMemberRoleInput) int
 		UpdateOrganizationComplianceProfile func(childComplexity int, input model.UpdateComplianceProfileInput) int
@@ -441,6 +442,7 @@ type ComplexityRoot struct {
 		Description    func(childComplexity int) int
 		ID             func(childComplexity int) int
 		ImageRefs      func(childComplexity int) int
+		LastSyncedAt   func(childComplexity int) int
 		Materials      func(childComplexity int) int
 		Name           func(childComplexity int) int
 		OrganizationID func(childComplexity int) int
@@ -542,6 +544,16 @@ type ComplexityRoot struct {
 		RecordType func(childComplexity int) int
 	}
 
+	SyncProductFromSourcePayload struct {
+		Product       func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceURL     func(childComplexity int) int
+		SyncedAt      func(childComplexity int) int
+		Updated       func(childComplexity int) int
+		UpdatedFields func(childComplexity int) int
+		Warning       func(childComplexity int) int
+	}
+
 	User struct {
 		Email                func(childComplexity int) int
 		EmailVerified        func(childComplexity int) int
@@ -618,6 +630,7 @@ type MutationResolver interface {
 	ExportMyData(ctx context.Context) (*model.UserDataExport, error)
 	UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.User, error)
 	CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.CreateProductPayload, error)
+	SyncProductFromSource(ctx context.Context, input model.SyncProductFromSourceInput) (*model.SyncProductFromSourcePayload, error)
 	CreateUserExperience(ctx context.Context, input model.CreateUserExperienceInput) (*model.UserExperience, error)
 	UpdateUserExperience(ctx context.Context, input model.UpdateUserExperienceInput) (*model.UserExperience, error)
 	DeleteUserExperience(ctx context.Context, input model.DeleteUserExperienceInput) (bool, error)
@@ -2439,6 +2452,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SwitchWorkspace(childComplexity, args["organizationId"].(string)), true
+	case "Mutation.syncProductFromSource":
+		if e.complexity.Mutation.SyncProductFromSource == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_syncProductFromSource_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SyncProductFromSource(childComplexity, args["input"].(model.SyncProductFromSourceInput)), true
 	case "Mutation.testLLMConfiguration":
 		if e.complexity.Mutation.TestLLMConfiguration == nil {
 			break
@@ -2677,6 +2701,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.ImageRefs(childComplexity), true
+	case "Product.lastSyncedAt":
+		if e.complexity.Product.LastSyncedAt == nil {
+			break
+		}
+
+		return e.complexity.Product.LastSyncedAt(childComplexity), true
 	case "Product.materials":
 		if e.complexity.Product.Materials == nil {
 			break
@@ -3298,6 +3328,49 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SourceCount.RecordType(childComplexity), true
 
+	case "SyncProductFromSourcePayload.product":
+		if e.complexity.SyncProductFromSourcePayload.Product == nil {
+			break
+		}
+
+		return e.complexity.SyncProductFromSourcePayload.Product(childComplexity), true
+	case "SyncProductFromSourcePayload.source":
+		if e.complexity.SyncProductFromSourcePayload.Source == nil {
+			break
+		}
+
+		return e.complexity.SyncProductFromSourcePayload.Source(childComplexity), true
+	case "SyncProductFromSourcePayload.sourceUrl":
+		if e.complexity.SyncProductFromSourcePayload.SourceURL == nil {
+			break
+		}
+
+		return e.complexity.SyncProductFromSourcePayload.SourceURL(childComplexity), true
+	case "SyncProductFromSourcePayload.syncedAt":
+		if e.complexity.SyncProductFromSourcePayload.SyncedAt == nil {
+			break
+		}
+
+		return e.complexity.SyncProductFromSourcePayload.SyncedAt(childComplexity), true
+	case "SyncProductFromSourcePayload.updated":
+		if e.complexity.SyncProductFromSourcePayload.Updated == nil {
+			break
+		}
+
+		return e.complexity.SyncProductFromSourcePayload.Updated(childComplexity), true
+	case "SyncProductFromSourcePayload.updatedFields":
+		if e.complexity.SyncProductFromSourcePayload.UpdatedFields == nil {
+			break
+		}
+
+		return e.complexity.SyncProductFromSourcePayload.UpdatedFields(childComplexity), true
+	case "SyncProductFromSourcePayload.warning":
+		if e.complexity.SyncProductFromSourcePayload.Warning == nil {
+			break
+		}
+
+		return e.complexity.SyncProductFromSourcePayload.Warning(childComplexity), true
+
 	case "User.email":
 		if e.complexity.User.Email == nil {
 			break
@@ -3502,6 +3575,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputStartAgentRunInput,
 		ec.unmarshalInputStartMarketplaceFileImportInput,
 		ec.unmarshalInputStartMarketplaceURLImportInput,
+		ec.unmarshalInputSyncProductFromSourceInput,
 		ec.unmarshalInputTestLLMConfigurationInput,
 		ec.unmarshalInputUpdateComplianceProfileInput,
 		ec.unmarshalInputUpdateMemberRoleInput,
@@ -3966,6 +4040,17 @@ func (ec *executionContext) field_Mutation_switchWorkspace_args(ctx context.Cont
 		return nil, err
 	}
 	args["organizationId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_syncProductFromSource_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSyncProductFromSourceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSyncProductFromSourceInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -6380,6 +6465,8 @@ func (ec *executionContext) fieldContext_CreateProductPayload_product(_ context.
 				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
+			case "lastSyncedAt":
+				return ec.fieldContext_Product_lastSyncedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Product_createdAt(ctx, field)
 			case "updatedAt":
@@ -12729,6 +12816,63 @@ func (ec *executionContext) fieldContext_Mutation_createProduct(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_syncProductFromSource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_syncProductFromSource,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SyncProductFromSource(ctx, fc.Args["input"].(model.SyncProductFromSourceInput))
+		},
+		nil,
+		ec.marshalNSyncProductFromSourcePayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSyncProductFromSourcePayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_syncProductFromSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "product":
+				return ec.fieldContext_SyncProductFromSourcePayload_product(ctx, field)
+			case "updated":
+				return ec.fieldContext_SyncProductFromSourcePayload_updated(ctx, field)
+			case "updatedFields":
+				return ec.fieldContext_SyncProductFromSourcePayload_updatedFields(ctx, field)
+			case "source":
+				return ec.fieldContext_SyncProductFromSourcePayload_source(ctx, field)
+			case "sourceUrl":
+				return ec.fieldContext_SyncProductFromSourcePayload_sourceUrl(ctx, field)
+			case "syncedAt":
+				return ec.fieldContext_SyncProductFromSourcePayload_syncedAt(ctx, field)
+			case "warning":
+				return ec.fieldContext_SyncProductFromSourcePayload_warning(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SyncProductFromSourcePayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_syncProductFromSource_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createUserExperience(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14886,6 +15030,35 @@ func (ec *executionContext) fieldContext_Product_sku(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Product_lastSyncedAt(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Product_lastSyncedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.LastSyncedAt, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Product_lastSyncedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Product",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Product_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15578,6 +15751,8 @@ func (ec *executionContext) fieldContext_Query_products(ctx context.Context, fie
 				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
+			case "lastSyncedAt":
+				return ec.fieldContext_Product_lastSyncedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Product_createdAt(ctx, field)
 			case "updatedAt":
@@ -15663,6 +15838,8 @@ func (ec *executionContext) fieldContext_Query_product(ctx context.Context, fiel
 				return ec.fieldContext_Product_stockStatus(ctx, field)
 			case "sku":
 				return ec.fieldContext_Product_sku(ctx, field)
+			case "lastSyncedAt":
+				return ec.fieldContext_Product_lastSyncedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Product_createdAt(ctx, field)
 			case "updatedAt":
@@ -18029,6 +18206,255 @@ func (ec *executionContext) fieldContext_SourceCount_count(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncProductFromSourcePayload_product(ctx context.Context, field graphql.CollectedField, obj *model.SyncProductFromSourcePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncProductFromSourcePayload_product,
+		func(ctx context.Context) (any, error) {
+			return obj.Product, nil
+		},
+		nil,
+		ec.marshalNProduct2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐProduct,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncProductFromSourcePayload_product(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncProductFromSourcePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Product_id(ctx, field)
+			case "organizationId":
+				return ec.fieldContext_Product_organizationId(ctx, field)
+			case "name":
+				return ec.fieldContext_Product_name(ctx, field)
+			case "brand":
+				return ec.fieldContext_Product_brand(ctx, field)
+			case "category":
+				return ec.fieldContext_Product_category(ctx, field)
+			case "description":
+				return ec.fieldContext_Product_description(ctx, field)
+			case "targetAge":
+				return ec.fieldContext_Product_targetAge(ctx, field)
+			case "materials":
+				return ec.fieldContext_Product_materials(ctx, field)
+			case "safetyWarnings":
+				return ec.fieldContext_Product_safetyWarnings(ctx, field)
+			case "currentPrice":
+				return ec.fieldContext_Product_currentPrice(ctx, field)
+			case "originalPrice":
+				return ec.fieldContext_Product_originalPrice(ctx, field)
+			case "currency":
+				return ec.fieldContext_Product_currency(ctx, field)
+			case "seller":
+				return ec.fieldContext_Product_seller(ctx, field)
+			case "rating":
+				return ec.fieldContext_Product_rating(ctx, field)
+			case "reviewCount":
+				return ec.fieldContext_Product_reviewCount(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Product_attributes(ctx, field)
+			case "imageRefs":
+				return ec.fieldContext_Product_imageRefs(ctx, field)
+			case "stockStatus":
+				return ec.fieldContext_Product_stockStatus(ctx, field)
+			case "sku":
+				return ec.fieldContext_Product_sku(ctx, field)
+			case "lastSyncedAt":
+				return ec.fieldContext_Product_lastSyncedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Product_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Product_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Product", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncProductFromSourcePayload_updated(ctx context.Context, field graphql.CollectedField, obj *model.SyncProductFromSourcePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncProductFromSourcePayload_updated,
+		func(ctx context.Context) (any, error) {
+			return obj.Updated, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncProductFromSourcePayload_updated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncProductFromSourcePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncProductFromSourcePayload_updatedFields(ctx context.Context, field graphql.CollectedField, obj *model.SyncProductFromSourcePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncProductFromSourcePayload_updatedFields,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedFields, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncProductFromSourcePayload_updatedFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncProductFromSourcePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncProductFromSourcePayload_source(ctx context.Context, field graphql.CollectedField, obj *model.SyncProductFromSourcePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncProductFromSourcePayload_source,
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncProductFromSourcePayload_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncProductFromSourcePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncProductFromSourcePayload_sourceUrl(ctx context.Context, field graphql.CollectedField, obj *model.SyncProductFromSourcePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncProductFromSourcePayload_sourceUrl,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceURL, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncProductFromSourcePayload_sourceUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncProductFromSourcePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncProductFromSourcePayload_syncedAt(ctx context.Context, field graphql.CollectedField, obj *model.SyncProductFromSourcePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncProductFromSourcePayload_syncedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.SyncedAt, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncProductFromSourcePayload_syncedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncProductFromSourcePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncProductFromSourcePayload_warning(ctx context.Context, field graphql.CollectedField, obj *model.SyncProductFromSourcePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncProductFromSourcePayload_warning,
+		func(ctx context.Context) (any, error) {
+			return obj.Warning, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncProductFromSourcePayload_warning(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncProductFromSourcePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21434,6 +21860,51 @@ func (ec *executionContext) unmarshalInputStartMarketplaceURLImportInput(ctx con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSyncProductFromSourceInput(ctx context.Context, obj any) (model.SyncProductFromSourceInput, error) {
+	var it model.SyncProductFromSourceInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["force"]; !present {
+		asMap["force"] = false
+	}
+
+	fieldsInOrder := [...]string{"organizationId", "productId", "force"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "productId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProductID = data
+		case "force":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("force"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Force = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTestLLMConfigurationInput(ctx context.Context, obj any) (model.TestLLMConfigurationInput, error) {
 	var it model.TestLLMConfigurationInput
 	asMap := map[string]any{}
@@ -24305,6 +24776,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "syncProductFromSource":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_syncProductFromSource(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createUserExperience":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createUserExperience(ctx, field)
@@ -24664,6 +25142,8 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "lastSyncedAt":
+			out.Values[i] = ec._Product_lastSyncedAt(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Product_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -25822,6 +26302,63 @@ func (ec *executionContext) _SourceCount(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var syncProductFromSourcePayloadImplementors = []string{"SyncProductFromSourcePayload"}
+
+func (ec *executionContext) _SyncProductFromSourcePayload(ctx context.Context, sel ast.SelectionSet, obj *model.SyncProductFromSourcePayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, syncProductFromSourcePayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SyncProductFromSourcePayload")
+		case "product":
+			out.Values[i] = ec._SyncProductFromSourcePayload_product(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updated":
+			out.Values[i] = ec._SyncProductFromSourcePayload_updated(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedFields":
+			out.Values[i] = ec._SyncProductFromSourcePayload_updatedFields(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._SyncProductFromSourcePayload_source(ctx, field, obj)
+		case "sourceUrl":
+			out.Values[i] = ec._SyncProductFromSourcePayload_sourceUrl(ctx, field, obj)
+		case "syncedAt":
+			out.Values[i] = ec._SyncProductFromSourcePayload_syncedAt(ctx, field, obj)
+		case "warning":
+			out.Values[i] = ec._SyncProductFromSourcePayload_warning(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -28499,6 +29036,25 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNSyncProductFromSourceInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSyncProductFromSourceInput(ctx context.Context, v any) (model.SyncProductFromSourceInput, error) {
+	res, err := ec.unmarshalInputSyncProductFromSourceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSyncProductFromSourcePayload2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSyncProductFromSourcePayload(ctx context.Context, sel ast.SelectionSet, v model.SyncProductFromSourcePayload) graphql.Marshaler {
+	return ec._SyncProductFromSourcePayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSyncProductFromSourcePayload2ᚖgithubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐSyncProductFromSourcePayload(ctx context.Context, sel ast.SelectionSet, v *model.SyncProductFromSourcePayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SyncProductFromSourcePayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTestLLMConfigurationInput2githubᚗcomᚋBusenuryurdakulᚋcocukᚑurunᚑanalizᚋappsᚋapiᚋgraphᚋmodelᚐTestLLMConfigurationInput(ctx context.Context, v any) (model.TestLLMConfigurationInput, error) {

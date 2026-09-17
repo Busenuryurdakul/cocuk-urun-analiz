@@ -9,7 +9,7 @@ export function MarketingHeader() {
         <a href="/#nasil-kullanilir" className="btn-ghost hidden sm:inline-flex">
           Nasıl kullanılır
         </a>
-        <Link href="/auth/login" className="btn-ghost hidden sm:inline-flex">
+        <Link href="/auth/login" className="btn-ghost">
           Giriş yap
         </Link>
         <Link href="/auth/register" className="btn-primary">

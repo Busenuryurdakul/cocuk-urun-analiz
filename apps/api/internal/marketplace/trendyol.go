@@ -11,10 +11,12 @@ import (
 
 var trendyolProductRE = regexp.MustCompile(`(?i)-p-(\d+)`)
 
-type TrendyolAdapter struct{}
+type TrendyolAdapter struct {
+	settings ProviderSettings
+}
 
-func NewTrendyolAdapter() *TrendyolAdapter {
-	return &TrendyolAdapter{}
+func NewTrendyolAdapter(settings ProviderSettings) *TrendyolAdapter {
+	return &TrendyolAdapter{settings: settings}
 }
 
 func (a *TrendyolAdapter) Source() domain.MarketplaceSource {
@@ -41,9 +43,19 @@ func (a *TrendyolAdapter) Fetch(ctx context.Context, rawURL string) (*FetchResul
 		return nil, ErrUnsupportedURL
 	}
 	_ = ctx
+	if !a.settings.TrendyolConfigured() {
+		return &FetchResult{
+			Deferred:        true,
+			DeferredReason:  domain.DeferredFetchReason,
+			Source:          domain.MarketplaceTrendyol,
+			SourceURL:       rawURL,
+			SourceProductID: productID,
+		}, nil
+	}
+	// Trendyol seller API does not expose public marketplace URL content-id lookup in the standard contract.
 	return &FetchResult{
 		Deferred:        true,
-		DeferredReason:  domain.DeferredFetchReason,
+		DeferredReason:  blockedProviderContractReason,
 		Source:          domain.MarketplaceTrendyol,
 		SourceURL:       rawURL,
 		SourceProductID: productID,

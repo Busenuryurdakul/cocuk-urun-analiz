@@ -28,8 +28,24 @@ export type Product = {
   imageRefs: ProductField;
   stockStatus: ProductField;
   sku: ProductField;
+  lastSyncedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export const SYNC_UPDATED_FIELD_LABELS: Record<string, string> = {
+  name: "Ürün adı",
+  price: "Fiyat",
+  rating: "Puan",
+  reviewCount: "Yorum sayısı",
+  availability: "Stok durumu",
+  brand: "Marka",
+  images: "Görseller",
+};
+
+export const SYNC_SOURCE_LABELS: Record<string, string> = {
+  TRENDYOL: "Trendyol",
+  HEPSIBURADA: "Hepsiburada",
 };
 
 export const PRODUCT_FIELD_SELECTION = `
@@ -52,6 +68,7 @@ export const PRODUCT_FIELD_SELECTION = `
   imageRefs { value missing missingReason source }
   stockStatus { value missing missingReason source }
   sku { value missing missingReason source }
+  lastSyncedAt
   createdAt
   updatedAt
 `;
@@ -87,8 +104,14 @@ export function productField(product: Product, key: ProductFieldKey): ProductFie
   return product[key];
 }
 
+export const PREVIEW_HIGHLIGHT_FIELDS = ["materials", "targetAge", "safetyWarnings"] as const satisfies readonly ProductFieldKey[];
+
 export function missingFieldCount(product: Product): number {
   return PRODUCT_FIELD_LABELS.filter(({ key }) => product[key]?.missing).length;
+}
+
+export function previewMissingCount(product: Product): number {
+  return PREVIEW_HIGHLIGHT_FIELDS.filter((key) => product[key]?.missing).length;
 }
 
 export function formatPrice(product: Product): string | null {

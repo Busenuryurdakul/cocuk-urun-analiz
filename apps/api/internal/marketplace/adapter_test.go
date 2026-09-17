@@ -8,7 +8,7 @@ import (
 )
 
 func TestHepsiburadaURLDetection(t *testing.T) {
-	adapter := marketplace.NewHepsiburadaAdapter()
+	adapter := marketplace.NewHepsiburadaAdapter(marketplace.ProviderSettings{})
 	ok, id := adapter.DetectURL("https://www.hepsiburada.com/product/lego-set-hb123")
 	if !ok || id != "lego-set-hb123" {
 		t.Fatalf("unexpected detect result ok=%v id=%q", ok, id)
@@ -16,7 +16,7 @@ func TestHepsiburadaURLDetection(t *testing.T) {
 }
 
 func TestTrendyolURLDetection(t *testing.T) {
-	adapter := marketplace.NewTrendyolAdapter()
+	adapter := marketplace.NewTrendyolAdapter(marketplace.ProviderSettings{})
 	ok, id := adapter.DetectURL("https://www.trendyol.com/some-product-p-987654")
 	if !ok || id != "987654" {
 		t.Fatalf("unexpected detect result ok=%v id=%q", ok, id)
@@ -24,7 +24,7 @@ func TestTrendyolURLDetection(t *testing.T) {
 }
 
 func TestFetchDeferredWithReason(t *testing.T) {
-	adapter := marketplace.NewTrendyolAdapter()
+	adapter := marketplace.NewTrendyolAdapter(marketplace.ProviderSettings{})
 	result, err := adapter.Fetch(t.Context(), "https://www.trendyol.com/item-p-1")
 	if err != nil {
 		t.Fatalf("fetch: %v", err)

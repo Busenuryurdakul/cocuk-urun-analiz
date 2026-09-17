@@ -35,6 +35,8 @@ import (
 
 const internalToken = "phase5-integration-token"
 
+var integrationHarnessEnabled bool
+
 type Phase5Harness struct {
 	T              *testing.T
 	Ctx            context.Context
@@ -88,6 +90,9 @@ func WithLLMUseMock(useMock bool) HarnessOption {
 
 func NewPhase5Harness(t *testing.T, opts ...HarnessOption) *Phase5Harness {
 	t.Helper()
+	if !integrationHarnessEnabled {
+		t.Skip("mongodb/redis unavailable for integration harness")
+	}
 	cfg := harnessConfig{}
 	for _, opt := range opts {
 		opt(&cfg)
