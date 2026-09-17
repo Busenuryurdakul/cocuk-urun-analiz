@@ -47,18 +47,18 @@ type Config struct {
 	S3SecretKey            string
 	S3Bucket               string
 	S3ForcePathStyle       bool
-	LLMUseMock             bool
-	LLMRequestTimeout      time.Duration
-	LLMMaxRetries          int
-	SyncCooldown           time.Duration
+	LLMUseMock              bool
+	LLMRequestTimeout       time.Duration
+	LLMMaxRetries           int
+	SyncCooldown            time.Duration
 	MarketplaceFetchTimeout time.Duration
-	TrendyolAPIBaseURL     string
-	TrendyolAPIKey         string
-	TrendyolAPISecret      string
-	TrendyolSupplierID     string
-	HepsiburadaAPIBaseURL  string
-	HepsiburadaAPIKey      string
-	HepsiburadaAPISecret   string
+	TrendyolAPIBaseURL      string
+	TrendyolAPIKey          string
+	TrendyolAPISecret       string
+	TrendyolSupplierID      string
+	HepsiburadaAPIBaseURL   string
+	HepsiburadaAPIKey       string
+	HepsiburadaAPISecret    string
 }
 
 // Load reads configuration from environment with dev defaults.

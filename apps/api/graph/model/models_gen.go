@@ -464,6 +464,7 @@ type Product struct {
 	ImageRefs      *ProductFieldMeta `json:"imageRefs"`
 	StockStatus    *ProductFieldMeta `json:"stockStatus"`
 	Sku            *ProductFieldMeta `json:"sku"`
+	LastSyncedAt   *string           `json:"lastSyncedAt,omitempty"`
 	CreatedAt      string            `json:"createdAt"`
 	UpdatedAt      string            `json:"updatedAt"`
 }
@@ -590,6 +591,22 @@ type StartMarketplaceFileImportInput struct {
 type StartMarketplaceURLImportInput struct {
 	OrganizationID string `json:"organizationId"`
 	SourceURL      string `json:"sourceUrl"`
+}
+
+type SyncProductFromSourceInput struct {
+	OrganizationID string `json:"organizationId"`
+	ProductID      string `json:"productId"`
+	Force          *bool  `json:"force,omitempty"`
+}
+
+type SyncProductFromSourcePayload struct {
+	Product       *Product `json:"product"`
+	Updated       bool     `json:"updated"`
+	UpdatedFields []string `json:"updatedFields"`
+	Source        *string  `json:"source,omitempty"`
+	SourceURL     *string  `json:"sourceUrl,omitempty"`
+	SyncedAt      *string  `json:"syncedAt,omitempty"`
+	Warning       *string  `json:"warning,omitempty"`
 }
 
 type TestLLMConfigurationInput struct {

@@ -7,8 +7,16 @@ import { AnalysisPanel } from "@/components/analysis-panel";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
 import { ProductMetaGrid, ProductSummaryStats } from "@/components/product-fields";
-import { graphqlRequest } from "@/lib/graphql";
-import { PRODUCT_FIELD_SELECTION, fieldValue, productSubtitle, productTitle, type Product } from "@/lib/product";
+import { GraphQLRequestError, graphqlRequest } from "@/lib/graphql";
+import {
+  PRODUCT_FIELD_SELECTION,
+  SYNC_SOURCE_LABELS,
+  SYNC_UPDATED_FIELD_LABELS,
+  fieldValue,
+  productSubtitle,
+  productTitle,
+  type Product,
+} from "@/lib/product";
 
 type UserExperience = {
   id: string;
@@ -79,6 +87,12 @@ export default function ProductDetailPage() {
   const [formState, setFormState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
 
+  type SyncUiState = "idle" | "loading" | "updated" | "noop" | "deferred" | "cooldown" | "mapping-missing" | "error";
+  const [syncState, setSyncState] = useState<SyncUiState>("idle");
+  const [syncMessage, setSyncMessage] = useState("");
+  const [syncSource, setSyncSource] = useState<string | null>(null);
+  const [syncUpdatedFields, setSyncUpdatedFields] = useState<string[]>([]);
+
   const load = useCallback(async () => {
     setView("loading");
     try {
@@ -122,6 +136,92 @@ export default function ProductDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function syncLiveData() {
+    setSyncState("loading");
+    setSyncMessage("");
+    setSyncUpdatedFields([]);
+    setSyncSource(null);
+    try {
+      const data = await graphqlRequest<{
+        syncProductFromSource: {
+          updated: boolean;
+          updatedFields: string[];
+          source?: string | null;
+          syncedAt?: string | null;
+          warning?: string | null;
+        };
+      }>(
+        `mutation($input: SyncProductFromSourceInput!) {
+          syncProductFromSource(input: $input) {
+            updated
+            updatedFields
+            source
+            syncedAt
+            warning
+          }
+        }`,
+        { input: { organizationId: orgId, productId, force: false } },
+      );
+      const payload = data.syncProductFromSource;
+      const warning = payload.warning?.trim() ?? "";
+      setSyncSource(payload.source ?? null);
+
+      if (warning.includes("canlı API erişimi yapılandırılmamış")) {
+        setSyncState("deferred");
+        setSyncMessage("Canlı API erişimi yapılandırılmamış");
+        return;
+      }
+      if (warning.includes("kısa süre önce")) {
+        setSyncState("cooldown");
+        setSyncMessage("Ürün kısa süre önce güncellendi");
+        return;
+      }
+      if (payload.syncedAt) {
+        setSyncUpdatedFields(payload.updatedFields);
+        if (payload.updated) {
+          setSyncState("updated");
+          setSyncMessage("Veriler güncellendi");
+        } else {
+          setSyncState("noop");
+          setSyncMessage("Veriler zaten güncel");
+        }
+        await load();
+        return;
+      }
+      setSyncState("noop");
+      setSyncMessage(warning || "Veriler zaten güncel");
+    } catch (err) {
+      const code = err instanceof GraphQLRequestError ? err.code : undefined;
+      if (code === "NO_SOURCE_MAPPING") {
+        setSyncState("mapping-missing");
+        setSyncMessage("Bu ürün için canlı veri kaynağı bulunamadı.");
+        return;
+      }
+      setSyncState("error");
+      setSyncMessage("Veriler güncellenemedi");
+    }
+  }
+
+  function syncButtonLabel(): string {
+    switch (syncState) {
+      case "loading":
+        return "Canlı veri çekiliyor...";
+      case "updated":
+        return "Veriler güncellendi";
+      case "noop":
+        return "Veriler zaten güncel";
+      case "deferred":
+        return "Canlı API erişimi yapılandırılmamış";
+      case "cooldown":
+        return "Ürün kısa süre önce güncellendi";
+      case "mapping-missing":
+      case "error":
+        return "Veriler güncellenemedi";
+      default:
+        return "Canlı Veriyi Güncelle";
+    }
+  }
 
   async function grantConsentAndSubmit(e: FormEvent) {
     e.preventDefault();
@@ -204,6 +304,37 @@ export default function ProductDetailPage() {
             </div>
             <ProductSummaryStats product={product} />
             <ProductMetaGrid product={product} />
+
+            <div className="border-t border-sand pt-4 space-y-3">
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={syncState === "loading"}
+                onClick={() => void syncLiveData()}
+              >
+                {syncButtonLabel()}
+              </button>
+              <p className="text-sm text-muted">
+                Son canlı güncelleme:{" "}
+                {product.lastSyncedAt
+                  ? new Date(product.lastSyncedAt).toLocaleString("tr-TR")
+                  : "Henüz canlı güncelleme yapılmadı"}
+              </p>
+              {syncSource && (
+                <p className="text-sm text-muted">
+                  Kaynak: {SYNC_SOURCE_LABELS[syncSource] ?? syncSource}
+                </p>
+              )}
+              {syncUpdatedFields.length > 0 && (
+                <p className="text-sm text-muted">
+                  Güncellenen alanlar:{" "}
+                  {syncUpdatedFields.map((f) => SYNC_UPDATED_FIELD_LABELS[f] ?? f).join(", ")}
+                </p>
+              )}
+              {syncMessage && syncState !== "idle" && syncState !== "loading" && (
+                <p className="text-sm text-muted">{syncMessage}</p>
+              )}
+            </div>
           </section>
 
           <AnalysisPanel orgId={orgId} productId={productId} canStart canCancel />

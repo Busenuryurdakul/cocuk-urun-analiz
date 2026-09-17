@@ -46,6 +46,47 @@ func (r *ProductRepository) FindByID(ctx context.Context, organizationID, produc
 	return &product, nil
 }
 
+func (r *ProductRepository) Update(ctx context.Context, organizationID primitive.ObjectID, product *domain.Product) error {
+	now := time.Now().UTC()
+	product.UpdatedAt = now
+	filter := bson.M{
+		"_id":            product.ID,
+		"organizationId": organizationID,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"name":           product.Name,
+			"brand":          product.Brand,
+			"category":       product.Category,
+			"description":    product.Description,
+			"targetAge":      product.TargetAge,
+			"materials":      product.Materials,
+			"safetyWarnings": product.SafetyWarnings,
+			"currentPrice":   product.CurrentPrice,
+			"originalPrice":  product.OriginalPrice,
+			"currency":       product.Currency,
+			"seller":         product.Seller,
+			"rating":         product.Rating,
+			"reviewCount":    product.ReviewCount,
+			"attributes":     product.Attributes,
+			"imageRefs":      product.ImageRefs,
+			"stockStatus":    product.StockStatus,
+			"sku":            product.SKU,
+			"lastSyncedAt":   product.LastSyncedAt,
+			"lastSyncSource": product.LastSyncSource,
+			"updatedAt":      product.UpdatedAt,
+		},
+	}
+	res, err := r.col.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (r *ProductRepository) ListByOrg(ctx context.Context, organizationID primitive.ObjectID, limit int) ([]domain.Product, error) {
 	if limit <= 0 {
 		limit = 50

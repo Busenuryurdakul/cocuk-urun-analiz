@@ -209,17 +209,20 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 
 	importQueue := &queue.ImportQueue{Redis: redisClient}
+	providerSettings := marketplace.SettingsFromConfig(cfg)
 	marketplaceSvc := &marketplace.Service{
-		Runs:           importRunsRepo,
-		Reviews:        reviewsRepo,
-		Raw:            rawPayloadRepo,
-		Products:       productSvc,
-		DatasetRecords: datasetRecordsRepo,
-		Registry:       marketplace.DefaultRegistry(),
-		Queue:          importQueue,
-		Storage:        s3Client,
-		Security:       security,
-		Tenant:         guard,
+		Runs:             importRunsRepo,
+		Reviews:          reviewsRepo,
+		Raw:              rawPayloadRepo,
+		Products:         productSvc,
+		DatasetRecords:   datasetRecordsRepo,
+		Registry:         marketplace.DefaultRegistry(providerSettings),
+		Queue:            importQueue,
+		Storage:          s3Client,
+		Security:         security,
+		Tenant:           guard,
+		ProviderSettings: providerSettings,
+		SyncCooldown:     cfg.SyncCooldown,
 	}
 	importConsumer := marketplace.NewConsumer(marketplaceSvc, 2*time.Second)
 

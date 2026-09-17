@@ -28,8 +28,24 @@ export type Product = {
   imageRefs: ProductField;
   stockStatus: ProductField;
   sku: ProductField;
+  lastSyncedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export const SYNC_UPDATED_FIELD_LABELS: Record<string, string> = {
+  name: "Ürün adı",
+  price: "Fiyat",
+  rating: "Puan",
+  reviewCount: "Yorum sayısı",
+  availability: "Stok durumu",
+  brand: "Marka",
+  images: "Görseller",
+};
+
+export const SYNC_SOURCE_LABELS: Record<string, string> = {
+  TRENDYOL: "Trendyol",
+  HEPSIBURADA: "Hepsiburada",
 };
 
 export const PRODUCT_FIELD_SELECTION = `
@@ -52,6 +68,7 @@ export const PRODUCT_FIELD_SELECTION = `
   imageRefs { value missing missingReason source }
   stockStatus { value missing missingReason source }
   sku { value missing missingReason source }
+  lastSyncedAt
   createdAt
   updatedAt
 `;

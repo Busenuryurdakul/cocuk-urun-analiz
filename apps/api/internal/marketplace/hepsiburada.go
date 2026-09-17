@@ -11,10 +11,12 @@ import (
 
 var hepsiburadaProductRE = regexp.MustCompile(`(?i)/(?:p|product)/([^/?#]+)`)
 
-type HepsiburadaAdapter struct{}
+type HepsiburadaAdapter struct {
+	settings ProviderSettings
+}
 
-func NewHepsiburadaAdapter() *HepsiburadaAdapter {
-	return &HepsiburadaAdapter{}
+func NewHepsiburadaAdapter(settings ProviderSettings) *HepsiburadaAdapter {
+	return &HepsiburadaAdapter{settings: settings}
 }
 
 func (a *HepsiburadaAdapter) Source() domain.MarketplaceSource {
@@ -41,9 +43,18 @@ func (a *HepsiburadaAdapter) Fetch(ctx context.Context, rawURL string) (*FetchRe
 		return nil, ErrUnsupportedURL
 	}
 	_ = ctx
+	if !a.settings.HepsiburadaConfigured() {
+		return &FetchResult{
+			Deferred:        true,
+			DeferredReason:  domain.DeferredFetchReason,
+			Source:          domain.MarketplaceHepsiburada,
+			SourceURL:       rawURL,
+			SourceProductID: productID,
+		}, nil
+	}
 	return &FetchResult{
 		Deferred:        true,
-		DeferredReason:  domain.DeferredFetchReason,
+		DeferredReason:  blockedProviderContractReason,
 		Source:          domain.MarketplaceHepsiburada,
 		SourceURL:       rawURL,
 		SourceProductID: productID,
