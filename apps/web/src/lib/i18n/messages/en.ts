@@ -70,6 +70,7 @@ export const en: MessageCatalog = {
     "Model output violated platform compliance rules. Forbidden safety claims (e.g. “certified safe”) were detected in the review step.",
   "analysis.complianceBlockedDetail": "Compliance block: {detail}",
   "analysis.startFailed": "Could not start analysis",
+  "analysis.technicalDetails": "Technical details",
   "modelRoute.kicker": "Model route",
   "modelRoute.intro":
     "Analyses start with {fast}. Long or complex steps are automatically escalated to {heavy}.",

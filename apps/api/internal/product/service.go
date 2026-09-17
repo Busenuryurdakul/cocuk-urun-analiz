@@ -16,7 +16,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+<<<<<<< HEAD
 var ErrForbidden = errors.New("forbidden")
+=======
+var (
+	ErrForbidden     = errors.New("forbidden")
+	ErrInvalidRating = errors.New("product rating must be between 0 and 5")
+)
+>>>>>>> adfd3f2 (fix: restore CI by adding technical details and gofmt)
 
 type Service struct {
 	Products *repository.ProductRepository
