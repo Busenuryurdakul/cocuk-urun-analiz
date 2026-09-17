@@ -167,6 +167,36 @@ func (h *syncHarness) successFetch(price string) {
 	}
 }
 
+func (h *syncHarness) successFetchNoOp(price string) {
+	priceVal := any(price)
+	if price == "" {
+		priceVal = nil
+	}
+	h.mock.fetchFn = func(ctx context.Context, rawURL string) (*FetchResult, error) {
+		return &FetchResult{
+			Source:          domain.MarketplaceTrendyol,
+			SourceURL:       rawURL,
+			SourceProductID: "424242",
+			Product: &normalize.ProductInput{
+				Name:         "Canonical Product",
+				Brand:        "LocalBrand",
+				CurrentPrice: priceVal,
+				Rating:       4.0,
+				ReviewCount:  5,
+				StockStatus:  "in_stock",
+			},
+			FetchedAt: time.Now().UTC(),
+		}, nil
+	}
+}
+
+func (h *syncHarness) persistImportRun(run *domain.MarketplaceImportRun) {
+	h.t.Helper()
+	if err := h.svc.Runs.Create(h.ctx, run); err != nil {
+		h.t.Fatal(err)
+	}
+}
+
 func (h *syncHarness) deferredFetch() {
 	h.mock.fetchFn = func(ctx context.Context, rawURL string) (*FetchResult, error) {
 		return &FetchResult{
