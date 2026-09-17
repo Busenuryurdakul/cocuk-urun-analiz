@@ -50,7 +50,7 @@ func TestSyncProductFromSourceSuccessfulUpdate(t *testing.T) {
 
 func TestSyncProductFromSourceSuccessfulNoOpStillUpdatesLastSyncedAt(t *testing.T) {
 	h := newSyncHarness(t)
-	h.successFetch("100")
+	h.successFetchNoOp("100")
 	prod := h.createProductWithMapping("100", nil)
 
 	result, err := h.svc.SyncProductFromSource(h.ctx, h.orgID, prod.ID, h.actorID, false)

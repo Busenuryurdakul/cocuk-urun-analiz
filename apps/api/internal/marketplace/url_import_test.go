@@ -20,6 +20,7 @@ func TestProcessURLImportNewURLCreatesProductAndMapping(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run)
 
 	if err := h.svc.processURLImport(h.ctx, h.orgID, run); err != nil {
 		t.Fatalf("processURLImport: %v", err)
@@ -61,6 +62,7 @@ func TestProcessURLImportExistingMappingUpdatesProduct(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run)
 
 	if err := h.svc.processURLImport(h.ctx, h.orgID, run); err != nil {
 		t.Fatalf("processURLImport: %v", err)
@@ -96,6 +98,7 @@ func TestProcessURLImportDeferredPartialNoProduct(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run)
 	if err := h.svc.processURLImport(h.ctx, h.orgID, run); err != nil {
 		t.Fatalf("processURLImport: %v", err)
 	}
@@ -135,6 +138,7 @@ func TestProcessURLImportUsesOrganizationAndActor(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run)
 	if err := h.svc.processURLImport(h.ctx, h.orgID, run); err != nil {
 		t.Fatal(err)
 	}
@@ -166,6 +170,7 @@ func TestProcessURLImportWrongTenantOrganizationRejected(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run)
 	if err := h.svc.processURLImport(h.ctx, h.otherOrgID, run); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -186,6 +191,7 @@ func TestProcessURLImportProviderErrorFailsRun(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run)
 	if err := h.svc.processURLImport(h.ctx, h.orgID, run); err != nil {
 		t.Fatalf("processURLImport: %v", err)
 	}
@@ -206,6 +212,7 @@ func TestProcessURLImportReviewDedup(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run)
 	if err := h.svc.processURLImport(h.ctx, h.orgID, run); err != nil {
 		t.Fatal(err)
 	}
@@ -218,6 +225,7 @@ func TestProcessURLImportReviewDedup(t *testing.T) {
 		AccessMode:     domain.AccessPermittedPublic,
 		Status:         domain.ImportPending,
 	}
+	h.persistImportRun(run2)
 	if err := h.svc.processURLImport(h.ctx, h.orgID, run2); err != nil {
 		t.Fatal(err)
 	}

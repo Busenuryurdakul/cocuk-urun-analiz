@@ -66,7 +66,7 @@ func TestProductRepositoryUpdateTenantScoped(t *testing.T) {
 	if got.Name.Value != "Updated" {
 		t.Fatalf("expected updated name")
 	}
-	if got.CreatedAt != createdAt {
+	if !got.CreatedAt.Truncate(time.Millisecond).Equal(createdAt.Truncate(time.Millisecond)) {
 		t.Fatal("createdAt must be preserved")
 	}
 	if got.ID != targetID || got.OrganizationID != orgA {
