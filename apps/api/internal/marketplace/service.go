@@ -25,16 +25,18 @@ var (
 )
 
 type Service struct {
-	Runs           *repository.MarketplaceImportRunRepository
-	Reviews        *repository.MarketplaceReviewRepository
-	Raw            *repository.RawSourcePayloadRepository
-	Products       *product.Service
-	DatasetRecords *repository.DatasetRecordRepository
-	Registry       *Registry
-	Queue          *queue.ImportQueue
-	Storage        *storage.S3Client
-	Security       *repository.SecurityEventRepository
-	Tenant         *tenant.Guard
+	Runs             *repository.MarketplaceImportRunRepository
+	Reviews          *repository.MarketplaceReviewRepository
+	Raw              *repository.RawSourcePayloadRepository
+	Products         *product.Service
+	DatasetRecords   *repository.DatasetRecordRepository
+	Registry         *Registry
+	Queue            *queue.ImportQueue
+	Storage          *storage.S3Client
+	Security         *repository.SecurityEventRepository
+	Tenant           *tenant.Guard
+	ProviderSettings ProviderSettings
+	SyncCooldown     time.Duration
 }
 
 type StartURLImportInput struct {
@@ -231,11 +233,51 @@ func (s *Service) processURLImport(ctx context.Context, organizationID primitive
 	if result.Deferred {
 		run.Status = domain.ImportPartial
 		run.ErrorCode = "DEFERRED_WITH_REASON"
-		run.ErrorMessage = result.DeferredReason
+		run.ErrorMessage = deferredWarning(result.DeferredReason)
 		run.RecordsSeen = 1
 		run.RecordsRejected = 1
 		return s.finishRun(ctx, organizationID, run)
 	}
+
+	existing, mapErr := s.Products.Mappings.FindBySourceProduct(ctx, organizationID, run.Source, result.SourceProductID)
+	if mapErr == nil {
+		prod, err := s.Products.Products.FindByID(ctx, organizationID, existing.ProductID)
+		if err != nil {
+			run.Status = domain.ImportFailed
+			run.ErrorMessage = err.Error()
+			return s.finishRun(ctx, organizationID, run)
+		}
+		syncResult, err := s.syncWithMapping(ctx, organizationID, run.RequestedBy, prod, existing, true)
+		if err != nil {
+			run.Status = domain.ImportFailed
+			run.ErrorCode = "SYNC_FAILED"
+			run.ErrorMessage = err.Error()
+			return s.finishRun(ctx, organizationID, run)
+		}
+		run.Status = domain.ImportSucceeded
+		run.RecordsSeen = 1
+		run.RecordsAccepted = 1
+		if syncResult != nil && syncResult.Warning != "" {
+			run.ErrorMessage = syncResult.Warning
+		}
+		return s.finishRun(ctx, organizationID, run)
+	}
+	if !errors.Is(mapErr, repository.ErrNotFound) {
+		run.Status = domain.ImportFailed
+		run.ErrorMessage = mapErr.Error()
+		return s.finishRun(ctx, organizationID, run)
+	}
+
+	_, accepted, err := s.importFromLiveFetch(ctx, organizationID, run.RequestedBy, result)
+	if err != nil {
+		run.Status = domain.ImportFailed
+		run.ErrorCode = "PERSIST_FAILED"
+		run.ErrorMessage = err.Error()
+		return s.finishRun(ctx, organizationID, run)
+	}
+	run.Status = domain.ImportSucceeded
+	run.RecordsSeen = accepted
+	run.RecordsAccepted = accepted
 	return s.finishRun(ctx, organizationID, run)
 }
 

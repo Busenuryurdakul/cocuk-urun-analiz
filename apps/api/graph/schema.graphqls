@@ -106,6 +106,7 @@ type Mutation {
   exportMyData: UserDataExport!
   updateUserPreferences(input: UpdateUserPreferencesInput!): User!
   createProduct(input: CreateProductInput!): CreateProductPayload!
+  syncProductFromSource(input: SyncProductFromSourceInput!): SyncProductFromSourcePayload!
   createUserExperience(input: CreateUserExperienceInput!): UserExperience!
   updateUserExperience(input: UpdateUserExperienceInput!): UserExperience!
   deleteUserExperience(input: DeleteUserExperienceInput!): Boolean!
@@ -419,8 +420,25 @@ type Product {
   imageRefs: ProductFieldMeta!
   stockStatus: ProductFieldMeta!
   sku: ProductFieldMeta!
+  lastSyncedAt: String
   createdAt: String!
   updatedAt: String!
+}
+
+input SyncProductFromSourceInput {
+  organizationId: ID!
+  productId: ID!
+  force: Boolean = false
+}
+
+type SyncProductFromSourcePayload {
+  product: Product!
+  updated: Boolean!
+  updatedFields: [String!]!
+  source: String
+  sourceUrl: String
+  syncedAt: String
+  warning: String
 }
 
 type CreateProductPayload {

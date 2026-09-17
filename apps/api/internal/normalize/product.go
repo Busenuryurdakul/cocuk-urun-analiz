@@ -23,6 +23,7 @@ type ProductInput struct {
 	ReviewCount    any
 	SKU            string
 	StockStatus    string
+	ImageRefs      string
 	Source         string
 	SourceRecordID string
 }
@@ -76,6 +77,7 @@ func NormalizeProductInput(input ProductInput, source, sourceRecordID string) do
 		ReviewCount:    fieldMeta(input.ReviewCount, source, sourceRecordID),
 		SKU:            fieldMeta(strings.TrimSpace(input.SKU), source, sourceRecordID),
 		StockStatus:    fieldMeta(strings.TrimSpace(input.StockStatus), source, sourceRecordID),
+		ImageRefs:      fieldMeta(strings.TrimSpace(input.ImageRefs), source, sourceRecordID),
 	}
 }
 

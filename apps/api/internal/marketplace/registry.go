@@ -15,8 +15,11 @@ func NewRegistry(adapters ...Adapter) *Registry {
 	return &Registry{adapters: adapters}
 }
 
-func DefaultRegistry() *Registry {
-	return NewRegistry(NewHepsiburadaAdapter(), NewTrendyolAdapter())
+func DefaultRegistry(settings ProviderSettings) *Registry {
+	return NewRegistry(
+		NewHepsiburadaAdapter(settings),
+		NewTrendyolAdapter(settings),
+	)
 }
 
 func (r *Registry) Detect(rawURL string) (domain.MarketplaceSource, string, bool) {

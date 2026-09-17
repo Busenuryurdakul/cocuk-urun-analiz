@@ -26,6 +26,10 @@ func mapPhase4Error(err error) error {
 		return gqlError("FETCH_POLICY_VIOLATION", err)
 	case errors.Is(err, marketplace.ErrInvalidSource):
 		return gqlError("INVALID_SOURCE", err)
+	case errors.Is(err, marketplace.ErrNoSourceMapping):
+		return gqlError("NO_SOURCE_MAPPING", err)
+	case errors.Is(err, marketplace.ErrProviderFetch):
+		return gqlError("PROVIDER_FETCH_FAILED", err)
 	default:
 		return mapAuthError(err)
 	}
@@ -107,7 +111,7 @@ func isEmptyFieldValue(value any) bool {
 }
 
 func toModelProduct(p *domain.Product) *model.Product {
-	return &model.Product{
+	out := &model.Product{
 		ID:             p.ID.Hex(),
 		OrganizationID: p.OrganizationID.Hex(),
 		Name:           toModelProductField(p.Name),
@@ -130,6 +134,33 @@ func toModelProduct(p *domain.Product) *model.Product {
 		CreatedAt:      p.CreatedAt.UTC().Format(time.RFC3339),
 		UpdatedAt:      p.UpdatedAt.UTC().Format(time.RFC3339),
 	}
+	if p.LastSyncedAt != nil {
+		s := p.LastSyncedAt.UTC().Format(time.RFC3339)
+		out.LastSyncedAt = &s
+	}
+	return out
+}
+
+func toModelSyncPayload(result *marketplace.SyncResult) *model.SyncProductFromSourcePayload {
+	if result == nil {
+		return &model.SyncProductFromSourcePayload{}
+	}
+	out := &model.SyncProductFromSourcePayload{
+		Product:       toModelProduct(result.Product),
+		Updated:       result.Updated,
+		UpdatedFields: result.UpdatedFields,
+		Source:        strPtr(result.Source),
+		SourceURL:       strPtr(result.SourceURL),
+		Warning:         strPtr(result.Warning),
+	}
+	if result.SyncedAt != nil {
+		s := result.SyncedAt.UTC().Format(time.RFC3339)
+		out.SyncedAt = &s
+	}
+	if out.UpdatedFields == nil {
+		out.UpdatedFields = []string{}
+	}
+	return out
 }
 
 func toModelUserExperience(ux *domain.UserExperience) *model.UserExperience {
