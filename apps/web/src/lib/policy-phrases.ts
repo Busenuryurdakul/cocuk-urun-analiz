@@ -5,7 +5,7 @@ export type PolicyPhrase = Partial<Record<Locale, string>> & { en: string; tr: s
 export const POLICY_PHRASES: PolicyPhrase[] = [
   {
     en: "Risk signals exist but the match or evidence is not strong enough to block automatically.",
-    tr: "Risk işaretleri var ancak eşleşme veya kanıt, otomatik engelleme için yeterince güçlü değil.",
+    tr: "Risk işaretleri var ancak eşleşme veya kaynak, otomatik engelleme için yeterince güçlü değil.",
     de: "Es gibt Risikosignale, aber Übereinstimmung oder Beweise reichen nicht für eine automatische Sperre.",
     fr: "Des signaux de risque existent, mais la correspondance ou les preuves ne suffisent pas pour bloquer automatiquement.",
     es: "Hay señales de riesgo, pero la coincidencia o la evidencia no son suficientes para bloquear automáticamente.",
@@ -29,7 +29,7 @@ export const POLICY_PHRASES: PolicyPhrase[] = [
   },
   {
     en: "High-severity finding is backed by strong persisted evidence.",
-    tr: "Yüksek şiddetli bir bulgu güçlü kanıtla destekleniyor.",
+    tr: "Yüksek şiddetli bir bulgu güçlü kaynakla destekleniyor.",
     de: "Ein schwerwiegendes Ergebnis wird durch starke gespeicherte Beweise gestützt.",
     fr: "Une constatation grave est étayée par des preuves solides persistées.",
     es: "Un hallazgo de alta gravedad está respaldado por evidencia sólida persistida.",
@@ -41,7 +41,7 @@ export const POLICY_PHRASES: PolicyPhrase[] = [
   },
   {
     en: "Sources disagree. A human reviewer should inspect the evidence.",
-    tr: "Kaynaklar birbiriyle çelişiyor. Bir incelemenin kanıtı kontrol etmesi gerekir.",
+    tr: "Kaynaklar birbiriyle çelişiyor. Bir incelemenin kaynakları kontrol etmesi gerekir.",
     de: "Quellen widersprechen sich. Ein Prüfer sollte die Beweise untersuchen.",
     fr: "Les sources divergent. Un relecteur humain doit inspecter les preuves.",
     es: "Las fuentes no coinciden. Un revisor humano debe inspeccionar la evidencia.",
@@ -149,7 +149,7 @@ export const POLICY_PHRASES: PolicyPhrase[] = [
   },
   {
     en: "Contradictory evidence requires human review.",
-    tr: "Çelişkili kanıtlar insan incelemesi gerektiriyor.",
+    tr: "Çelişkili kaynaklar insan incelemesi gerektiriyor.",
     de: "Widersprüchliche Beweise erfordern menschliche Prüfung.",
     fr: "Des preuves contradictoires nécessitent un examen humain.",
     es: "La evidencia contradictoria requiere revisión humana.",
@@ -161,7 +161,7 @@ export const POLICY_PHRASES: PolicyPhrase[] = [
   },
   {
     en: "No supporting evidence was persisted for this analysis.",
-    tr: "Bu analiz için destekleyici kanıt kaydedilmedi.",
+    tr: "Bu analiz için destekleyici kaynak kaydedilmedi.",
     de: "Für diese Analyse wurden keine unterstützenden Beweise gespeichert.",
     fr: "Aucune preuve de support n'a été persistée pour cette analyse.",
     es: "No se persistió evidencia de apoyo para este análisis.",
@@ -233,7 +233,7 @@ export const POLICY_PHRASES: PolicyPhrase[] = [
   },
   {
     en: "A cited source does not match persisted evidence.",
-    tr: "Atıf yapılan kaynak, kaydedilmiş kanıtla eşleşmiyor.",
+    tr: "Atıf yapılan kaynak, kaydedilmiş kayıtla eşleşmiyor.",
     de: "Eine zitierte Quelle passt nicht zu gespeicherten Beweisen.",
     fr: "Une source citée ne correspond pas aux preuves persistées.",
     es: "Una fuente citada no coincide con la evidencia persistida.",

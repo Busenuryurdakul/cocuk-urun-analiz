@@ -96,7 +96,7 @@ const TOOL_LABELS: LabelTable = {
     PII_REDACTOR: "Kişisel veri maskeleme",
     REVIEW_ANALYZER: "Yorum analizcisi",
     RECALL_CHECKER: "Geri çağırma denetimi",
-    EVIDENCE_COLLECTOR: "Kanıt toplayıcı",
+    EVIDENCE_COLLECTOR: "Kaynak toplayıcı",
     SAFETY_ANALYZER: "Güvenlik analizcisi",
   },
   en: {
@@ -151,7 +151,7 @@ const ROUTING_KEY_LABELS: LabelTable = {
     fromModel: "Kaynak model",
     persona: "Davranış profili",
     policy: "Politika sürümü",
-    evidence_required: "Kanıt gerekli",
+    evidence_required: "Kaynak gerekli",
     quality_escalation: "Kalite yükseltmesi",
     safety: "Güvenlik riski",
     reason: "Neden",

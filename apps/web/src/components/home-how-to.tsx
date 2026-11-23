@@ -28,9 +28,9 @@ export function HomeHowTo() {
     <section id="nasil-kullanilir" className="mt-16 scroll-mt-24">
       <div className="max-w-2xl space-y-3">
         <p className="kicker">Nasıl kullanılır</p>
-        <h2 className="display text-3xl sm:text-4xl">İlk kayıttan kanıtlı rapora</h2>
+        <h2 className="display text-3xl sm:text-4xl">İlk kayıttan rapora</h2>
         <p className="text-base leading-relaxed text-muted">
-          Miyuna; çocuk ürününü kaydedip kaynaklarını toplayarak kanıtlı bir risk değerlendirmesi üretmeni sağlar.
+          Miyuna; çocuk ürününü kaydedip kaynaklarını toplayarak bir risk değerlendirmesi üretmeni sağlar.
           Aşağıdaki beş adım, sitede göreceğin sırayla aynıdır.
         </p>
       </div>
@@ -81,31 +81,6 @@ export function HomeHowTo() {
         </div>
       </div>
     </section>
-  );
-}
-
-export function HomeHowToCompact() {
-  return (
-    <aside className="rounded-2.5xl border border-sand/90 bg-cream/70 p-5">
-      <p className="kicker">Nasıl kullanılır</p>
-      <h2 className="mt-2 font-display text-xl text-ink">Siteyi beş adımda kullan</h2>
-      <ol className="mt-4 space-y-2.5">
-        {HOW_TO_STEPS.map((step, index) => (
-          <li key={step.title} className="flex items-baseline gap-3 text-sm">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-forest text-[10px] font-semibold text-on-brand">
-              {index + 1}
-            </span>
-            <span className="font-semibold text-ink">{step.title}</span>
-          </li>
-        ))}
-      </ol>
-      <p className="mt-3 text-xs leading-relaxed text-muted">
-        Kayıt, organizasyon, ürün, kaynaklar ve kanıtlı rapor — her adım çalışma alanında sırayla görünür.
-      </p>
-      <Link href="/#nasil-kullanilir" className="link-quiet mt-3 inline-flex">
-        Detaylı rehberi oku
-      </Link>
-    </aside>
   );
 }
 

@@ -6,13 +6,23 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AnalysisPanel } from "@/components/analysis-panel";
 import { AsyncView } from "@/components/async-view";
 import { AppShell } from "@/components/layout/app-shell";
-import { ProductMetaGrid, ProductSummaryStats } from "@/components/product-fields";
+import { IntelligenceStatusStrip } from "@/components/product/intelligence-status-strip";
+import {
+  ProductIntelligenceSummary,
+  ProductKeyFindings,
+  ProductRecallBlock,
+  ProductSignalBlock,
+} from "@/components/product/product-findings-recall";
+import { ProductIntelligenceHeader } from "@/components/product/product-intelligence-header";
+import { ProductIntelligenceRail } from "@/components/product/product-intelligence-rail";
+import { ProductMetadataGroups } from "@/components/product/product-metadata-groups";
+import { Card } from "@/components/ui/card";
+import { ANALYSIS_RUN_FIELDS, type AnalysisRun } from "@/lib/analysis-types";
 import { GraphQLRequestError, graphqlRequest } from "@/lib/graphql";
 import {
   PRODUCT_FIELD_SELECTION,
   SYNC_SOURCE_LABELS,
   SYNC_UPDATED_FIELD_LABELS,
-  fieldValue,
   productSubtitle,
   productTitle,
   type Product,
@@ -73,6 +83,7 @@ export default function ProductDetailPage() {
   const productId = params.productId;
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [latestRun, setLatestRun] = useState<AnalysisRun | null>(null);
   const [experiences, setExperiences] = useState<UserExperience[]>([]);
   const [reviews, setReviews] = useState<MarketplaceReview[]>([]);
   const [summary, setSummary] = useState<DatasetSummary | null>(null);
@@ -123,6 +134,16 @@ export default function ProductDetailPage() {
       setExperiences(data.userExperiences);
       setReviews(data.productMarketplaceReviews);
       setSummary(data.datasetEligibilitySummary);
+
+      const runsData = await graphqlRequest<{ analysisRuns: AnalysisRun[] }>(
+        `query($orgId: ID!) {
+          analysisRuns(organizationId: $orgId, limit: 20) { ${ANALYSIS_RUN_FIELDS} }
+        }`,
+        { orgId },
+      ).catch(() => ({ analysisRuns: [] as AnalysisRun[] }));
+
+      const runForProduct = runsData.analysisRuns.find((r) => r.productId === productId) ?? null;
+      setLatestRun(runForProduct);
       setView("success");
     } catch (err) {
       if (err instanceof Error && (err.message === "UNAUTHORIZED" || err.message === "FORBIDDEN")) {
@@ -272,10 +293,14 @@ export default function ProductDetailPage() {
   return (
     <AppShell
       title={product ? productTitle(product) : "Ürün detayı"}
-      kicker="Ürün"
+      kicker="Product Intelligence"
       orgId={orgId}
       restricted={view === "unauthorized"}
-      description={product ? productSubtitle(product) || "Kanıt, deneyim ve marketplace kaynakları." : "Kanıt, deneyim ve marketplace kaynakları."}
+      description={
+        product
+          ? productSubtitle(product) || "Ürün güvenlik zekâsı, analiz sonuçları ve kaynaklar."
+          : "Ürün güvenlik zekâsı, analiz sonuçları ve kaynaklar."
+      }
     >
       {view === "loading" && <AsyncView state="loading" />}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
@@ -291,53 +316,50 @@ export default function ProductDetailPage() {
       )}
 
       {view === "success" && product && (
-        <div className="space-y-6">
-          <section className="card space-y-4">
-            <div>
-              <p className="kicker">Veritabanı kaydı</p>
-              <h2 className="mt-2 font-display text-2xl">{productTitle(product)}</h2>
-              {fieldValue(product.description) ? (
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{fieldValue(product.description)}</p>
-              ) : (
-                <p className="mt-2 text-sm text-muted">Açıklama kaynağında yok — üretilmez.</p>
-              )}
-            </div>
-            <ProductSummaryStats product={product} />
-            <ProductMetaGrid product={product} />
+        <div className="space-y-8">
+          <ProductIntelligenceHeader
+            product={product}
+            syncButtonLabel={syncButtonLabel()}
+            syncDisabled={syncState === "loading"}
+            onSync={() => void syncLiveData()}
+            lastSyncedLabel={
+              product.lastSyncedAt
+                ? `Son canlı güncelleme: ${new Date(product.lastSyncedAt).toLocaleString("tr-TR")}`
+                : "Henüz canlı güncelleme yapılmadı"
+            }
+            syncMessage={
+              [
+                syncSource ? `Kaynak: ${SYNC_SOURCE_LABELS[syncSource] ?? syncSource}` : null,
+                syncUpdatedFields.length > 0
+                  ? `Güncellenen: ${syncUpdatedFields.map((f) => SYNC_UPDATED_FIELD_LABELS[f] ?? f).join(", ")}`
+                  : null,
+                syncMessage && syncState !== "idle" && syncState !== "loading" ? syncMessage : null,
+              ]
+                .filter(Boolean)
+                .join(" · ") || undefined
+            }
+          />
 
-            <div className="border-t border-sand pt-4 space-y-3">
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={syncState === "loading"}
-                onClick={() => void syncLiveData()}
-              >
-                {syncButtonLabel()}
-              </button>
-              <p className="text-sm text-muted">
-                Son canlı güncelleme:{" "}
-                {product.lastSyncedAt
-                  ? new Date(product.lastSyncedAt).toLocaleString("tr-TR")
-                  : "Henüz canlı güncelleme yapılmadı"}
-              </p>
-              {syncSource && (
-                <p className="text-sm text-muted">
-                  Kaynak: {SYNC_SOURCE_LABELS[syncSource] ?? syncSource}
-                </p>
-              )}
-              {syncUpdatedFields.length > 0 && (
-                <p className="text-sm text-muted">
-                  Güncellenen alanlar:{" "}
-                  {syncUpdatedFields.map((f) => SYNC_UPDATED_FIELD_LABELS[f] ?? f).join(", ")}
-                </p>
-              )}
-              {syncMessage && syncState !== "idle" && syncState !== "loading" && (
-                <p className="text-sm text-muted">{syncMessage}</p>
-              )}
-            </div>
-          </section>
+          <IntelligenceStatusStrip run={latestRun} />
 
-          <AnalysisPanel orgId={orgId} productId={productId} canStart canCancel />
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12">
+            <div className="order-2 space-y-6 lg:order-1 lg:col-span-8">
+              <ProductIntelligenceSummary run={latestRun} />
+              <ProductRecallBlock run={latestRun} />
+              <ProductKeyFindings run={latestRun} />
+              <ProductSignalBlock product={product} run={latestRun} lastSyncedAt={product.lastSyncedAt} />
+              <AnalysisPanel orgId={orgId} productId={productId} canStart canCancel />
+            </div>
+            <div className="order-1 space-y-4 lg:order-2 lg:col-span-4">
+              <ProductIntelligenceRail product={product} run={latestRun} />
+              <div className="hidden lg:block">
+                <ProductMetadataGroups product={product} />
+              </div>
+            </div>
+            <div className="order-3 lg:hidden">
+              <ProductMetadataGroups product={product} />
+            </div>
+          </div>
 
           <section className="card space-y-4">
             <div>
