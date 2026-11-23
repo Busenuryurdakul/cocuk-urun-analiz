@@ -19,14 +19,14 @@ export default function HomePage() {
       <main className="mx-auto max-w-6xl px-6">
         <section className="grid items-center gap-12 pb-8 pt-6 lg:grid-cols-[1.1fr_0.9fr] lg:pt-10">
           <div className="space-y-7">
-            <p className="kicker">Çocuk ürünleri · kanıta dayalı karar desteği</p>
+            <p className="kicker">Çocuk ürünleri · kaynağa dayalı karar desteği</p>
 
             <div className="relative max-w-xl">
               <EvidencePattern />
               <h1 className="display relative text-5xl leading-[1.08] sm:text-6xl">
                 Bir skora değil,
                 <span className="relative mt-1 block text-forest">
-                  kanıtına güven.
+                  kaynağına güven.
                   <HandDrawnUnderline />
                 </span>
               </h1>
@@ -63,7 +63,7 @@ export default function HomePage() {
 
         <section className="mt-10 grid gap-4 sm:grid-cols-3">
           {[
-            ["Kanıt önce", "Ciddi bir iddia, bağlı kanıt olmadan kesin dil kullanamaz."],
+            ["Kaynak önce", "Ciddi bir iddia, bağlı kaynak olmadan kesin dil kullanamaz."],
             ["Eksik alan görünür", "Kaynakta olmayan bilgi uydurulmaz — bilgi eksik olarak işaretlenir."],
             ["Sertifika değil", "Karar destek sistemidir; resmi onay veya güvenlik garantisi vermez."],
           ].map(([title, body]) => (
@@ -79,7 +79,7 @@ export default function HomePage() {
         <section className="mt-16 grid gap-10 lg:grid-cols-2">
           <div className="space-y-4">
             <p className="kicker">Analiz süreci</p>
-            <h2 className="display text-3xl">Üründen kanıtlı rapora dört adım</h2>
+            <h2 className="display text-3xl">Üründen rapora dört adım</h2>
             <ol className="space-y-4 pt-2">
               {[
                 ["Ürünü ekle", "Ürün bilgilerini elle, dosyayla veya izin verilen ürün bağlantısıyla ekle."],
@@ -128,7 +128,7 @@ function PlatformPanel() {
           <span className="text-clay">masaüstünde</span> devam et.
         </h2>
         <p className="text-sm leading-relaxed text-muted">
-          Tek çalışma alanı, ortak kanıt modeli ve tüm cihazlarda kesintisiz analiz deneyimi.
+          Tek çalışma alanı, ortak kaynak modeli ve tüm cihazlarda kesintisiz analiz deneyimi.
         </p>
       </div>
 

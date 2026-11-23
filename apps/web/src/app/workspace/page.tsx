@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AsyncView } from "@/components/async-view";
+import { WorkspaceDashboard, WorkspaceDashboardSkeleton } from "@/components/dashboard/workspace-dashboard";
 import { AppShell } from "@/components/layout/app-shell";
 import { UsagePanel, type UsageDashboardData } from "@/components/llm/usage-panel";
-import { ProductCardMeta } from "@/components/product-fields";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ANALYSIS_RUN_FIELDS, type AnalysisRun, type MarketplaceImportRun } from "@/lib/analysis-types";
 import { graphqlRequest } from "@/lib/graphql";
 import { PRODUCT_FIELD_SELECTION, type Product } from "@/lib/product";
 import { monthStartIsoDate } from "@/lib/llm-events";
@@ -27,7 +30,9 @@ export default function WorkspacePage() {
   const [me, setMe] = useState<Me | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [productOrgId, setProductOrgId] = useState<string | null>(null);
+  const [analysisRuns, setAnalysisRuns] = useState<AnalysisRun[]>([]);
+  const [importRuns, setImportRuns] = useState<MarketplaceImportRun[]>([]);
+  const [activeOrg, setActiveOrg] = useState<Workspace | null>(null);
   const [llmUsage, setLlmUsage] = useState<UsageDashboardData | null>(null);
 
   useEffect(() => {
@@ -40,11 +45,26 @@ export default function WorkspacePage() {
         setWorkspaces(data.myWorkspaces);
         const org = data.myWorkspaces.find((ws) => ws.type === "ORGANIZATION") ?? data.myWorkspaces[0];
         if (org) {
-          const [productResult, usageResult] = await Promise.all([
+          setActiveOrg(org);
+          const [productResult, runsResult, importsResult, usageResult] = await Promise.all([
             graphqlRequest<{ products: Product[] }>(
-              `query($id: ID!) { products(organizationId: $id, limit: 8) { ${PRODUCT_FIELD_SELECTION} } }`,
+              `query($id: ID!) { products(organizationId: $id, limit: 100) { ${PRODUCT_FIELD_SELECTION} } }`,
               { id: org.organizationId },
             ),
+            graphqlRequest<{ analysisRuns: AnalysisRun[] }>(
+              `query($id: ID!) {
+                analysisRuns(organizationId: $id, limit: 50) { ${ANALYSIS_RUN_FIELDS} }
+              }`,
+              { id: org.organizationId },
+            ).catch(() => ({ analysisRuns: [] as AnalysisRun[] })),
+            graphqlRequest<{ marketplaceImportRuns: MarketplaceImportRun[] }>(
+              `query($id: ID!) {
+                marketplaceImportRuns(organizationId: $id, limit: 10) {
+                  id source sourceUrl status recordsAccepted recordsRejected createdAt
+                }
+              }`,
+              { id: org.organizationId },
+            ).catch(() => ({ marketplaceImportRuns: [] as MarketplaceImportRun[] })),
             graphqlRequest<{ llmUsageDashboard: UsageDashboardData }>(
               `query($id: ID!, $fromDate: String!) {
                 llmUsageDashboard(organizationId: $id, fromDate: $fromDate, recentLimit: 12) {
@@ -56,8 +76,9 @@ export default function WorkspacePage() {
               { id: org.organizationId, fromDate: monthStartIsoDate() },
             ).catch(() => null),
           ]);
-          setProductOrgId(org.organizationId);
           setProducts(productResult.products);
+          setAnalysisRuns(runsResult.analysisRuns);
+          setImportRuns(importsResult.marketplaceImportRuns);
           if (usageResult) setLlmUsage(usageResult.llmUsageDashboard);
         }
         setViewState("success");
@@ -73,111 +94,116 @@ export default function WorkspacePage() {
 
   return (
     <AppShell
-      title="Çalışma alanı"
+      title="Intelligence merkezi"
       kicker="Miyuna"
-      description="Organizasyonlarınız, rolleriniz ve ürün analizine giriş."
+      description="Ürün kataloğunuzdaki analiz sinyalleri, risk dağılımı ve öncelikli uyarılar."
+      orgId={activeOrg?.organizationId}
+      organizationLabel={activeOrg?.name}
       accountEmail={me?.email}
       actions={
         viewState === "success" ? (
-          <Link href="/org/create" className="btn-primary">
-            Organizasyon oluştur
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {activeOrg && (
+              <Link href={`/org/${activeOrg.organizationId}/products/new`}>
+                <Button variant="accent" size="sm">
+                  Ürün ekle
+                </Button>
+              </Link>
+            )}
+            <Link href="/org/create">
+              <Button variant="secondary" size="sm">
+                Organizasyon oluştur
+              </Button>
+            </Link>
+          </div>
         ) : undefined
       }
     >
-      {viewState === "loading" && <AsyncView state="loading" />}
+      {viewState === "loading" && <WorkspaceDashboardSkeleton />}
       {viewState === "unauthorized" && (
         <AsyncView
           state="unauthorized"
           unauthorized={
-            <div className="card space-y-3 text-center">
+            <Card className="space-y-3 text-center">
               <p className="text-sm text-muted">Oturum gerekli.</p>
-              <Link href="/auth/login" className="btn-primary">
+              <Link href="/auth/login" className="btn-primary inline-flex">
                 Giriş yap
               </Link>
-            </div>
+            </Card>
           }
         />
       )}
       {viewState === "error" && <AsyncView state="error" />}
       {viewState === "success" && me && (
-        <section className="space-y-6">
-          <div className="card">
-            <p className="kicker">Hesap</p>
-            <p className="mt-2 font-display text-2xl">{me.email}</p>
-          </div>
-          <div className="card">
-            <h2 className="font-display text-2xl">Çalışma alanları</h2>
-            {workspaces.length === 0 ? (
-              <div className="mt-4">
-                <AsyncView state="empty" />
-              </div>
-            ) : (
-              <ul className="mt-5 space-y-3">
-                {workspaces.map((ws) => (
-                  <li
-                    key={ws.organizationId}
-                    className="flex flex-col gap-3 rounded-2xl border border-sand bg-cream/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="font-semibold">{ws.name}</p>
-                      <p className="text-sm text-muted">{ws.type}</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="badge-muted">{ws.role}</span>
-                      {ws.type === "ORGANIZATION" && (
-                        <>
-                          <Link href={`/org/${ws.organizationId}/products`} className="btn-secondary !px-3 !py-1.5 text-xs">
-                            Ürünler
-                          </Link>
-                          <Link href={`/org/${ws.organizationId}/llm`} className="btn-ghost !px-3 !py-1.5 text-xs">
-                            LLM
-                          </Link>
-                          <Link href={`/org/${ws.organizationId}/members`} className="btn-ghost !px-3 !py-1.5 text-xs">
-                            Yönet
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {productOrgId && llmUsage && (
-            <div className="card">
-              <UsagePanel orgId={productOrgId} usage={llmUsage} compact title="LLM kullanım özeti" />
-            </div>
+        <div className="space-y-10">
+          {activeOrg ? (
+            <WorkspaceDashboard
+              orgId={activeOrg.organizationId}
+              orgName={activeOrg.name}
+              products={products}
+              analysisRuns={analysisRuns}
+              importRuns={importRuns}
+            />
+          ) : (
+            <Card variant="tinted" className="text-center">
+              <p className="text-sm text-muted">Intelligence görünümü için bir organizasyon gerekli.</p>
+              <Link href="/org/create" className="btn-primary mt-4 inline-flex">
+                Organizasyon oluştur
+              </Link>
+            </Card>
           )}
-          {productOrgId && (
-            <div className="card">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-2xl">Veritabanındaki ürünler</h2>
-                <Link href={`/org/${productOrgId}/products`} className="btn-ghost !px-3 !py-1.5 text-xs">
-                  Tümünü gör
-                </Link>
-              </div>
-              {products.length === 0 ? (
+
+          <section className="grid gap-6 lg:grid-cols-2">
+            <Card padding="md">
+              <p className="kicker">Hesap</p>
+              <p className="mt-2 font-heading text-xl text-ink">{me.email}</p>
+            </Card>
+            <Card padding="md">
+              <h2 className="card-title">Çalışma alanları</h2>
+              {workspaces.length === 0 ? (
                 <div className="mt-4">
                   <AsyncView state="empty" />
                 </div>
               ) : (
-                <ul className="mt-5 grid gap-3">
-                  {products.map((product) => (
-                    <li key={product.id}>
-                      <Link
-                        href={`/org/${productOrgId}/products/${product.id}`}
-                        className="block rounded-2xl border border-sand bg-cream/60 px-4 py-4 transition hover:bg-paper"
-                      >
-                        <ProductCardMeta product={product} />
-                      </Link>
+                <ul className="mt-4 space-y-2">
+                  {workspaces.map((ws) => (
+                    <li
+                      key={ws.organizationId}
+                      className="flex flex-col gap-2 rounded-xl border border-border/70 bg-base px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div>
+                        <p className="font-medium text-ink">{ws.name}</p>
+                        <p className="text-sm text-muted">{ws.type}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="badge-muted">{ws.role}</span>
+                        {ws.type === "ORGANIZATION" && (
+                          <>
+                            <Link
+                              href={`/org/${ws.organizationId}/products`}
+                              className="btn-secondary !px-3 !py-1.5 text-xs"
+                            >
+                              Ürünler
+                            </Link>
+                            <Link href={`/org/${ws.organizationId}/llm`} className="btn-ghost !px-3 !py-1.5 text-xs">
+                              LLM
+                            </Link>
+                          </>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
               )}
-            </div>
+            </Card>
+          </section>
+
+          {activeOrg && llmUsage && (
+            <Card padding="md">
+              <UsagePanel orgId={activeOrg.organizationId} usage={llmUsage} compact title="LLM kullanım özeti" />
+            </Card>
           )}
-        </section>
+        </div>
       )}
     </AppShell>
   );

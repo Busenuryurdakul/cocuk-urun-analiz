@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AsyncView } from "@/components/async-view";
+import { StatusRibbon } from "@/components/miyuna/status-ribbon";
 import { ModelRouteStrip } from "@/components/llm/model-route-strip";
 import { RunEventTimeline } from "@/components/llm/run-event-timeline";
 import { TechnicalDetails } from "@/components/technical-details";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { FilterPill } from "@/components/ui/filter-pill";
+import { cn } from "@/lib/cn";
+import { decisionToRibbon, riskToRibbon, severityToRibbon } from "@/lib/product-intelligence";
 import {
   decisionLabel,
   findingRationale,
@@ -191,6 +196,7 @@ export function AnalysisPanel({
   }, [activeEvents]);
 
   const [awaitingAgentWake, setAwaitingAgentWake] = useState(false);
+  const [findingFilter, setFindingFilter] = useState<"all" | "critical" | "high">("all");
 
   useEffect(() => {
     if (!run || run.status !== "PENDING" || activeEvents.length > 0 || pollStartedAt == null) {
@@ -461,39 +467,82 @@ export function AnalysisPanel({
     }
   }
 
+  const finalResult = run?.finalResult;
+  const decisionTint =
+    finalResult?.decision === "BLOCK"
+      ? "from-risk/[0.07] via-surface to-secondary"
+      : finalResult?.decision === "REVIEW_REQUIRED"
+        ? "from-primary/[0.07] via-surface to-secondary"
+        : finalResult?.decision === "ALLOW_WITH_WARNING"
+          ? "from-caution/[0.07] via-surface to-secondary"
+          : finalResult?.decision === "ALLOW"
+            ? "from-safe/[0.07] via-surface to-secondary"
+            : "from-secondary/50 to-surface";
+
+  const filteredFindings =
+    run?.safetyFindings?.filter((finding) => {
+      if (findingFilter === "all") return true;
+      if (findingFilter === "critical") return finding.severity === "CRITICAL";
+      return finding.severity === "HIGH";
+    }) ?? [];
+
+  const nextAction =
+    finalResult?.decision === "BLOCK"
+      ? "Politika engeli — uyumluluk profilinizi ve onay durumunuzu kontrol edin."
+      : finalResult?.decision === "REVIEW_REQUIRED"
+        ? "İnsan incelemesi gerekli — bulguları ve recall sinyallerini doğrulayın."
+        : finalResult?.decision === "ALLOW_WITH_WARNING"
+          ? "Uyarı ile izin — dikkat noktalarını ve sınırlamaları gözden geçirin."
+          : finalResult?.decision === "ALLOW"
+            ? "Mevcut kaynaklar karar için yeterli görünüyor."
+            : null;
+
+  const runTechnicalPayload = run
+    ? [
+        `status: ${run.status}`,
+        run.currentPhase ? `phase: ${run.currentPhase}` : null,
+        run.terminalReason ? `terminalReason: ${run.terminalReason}` : null,
+        run.traceId ? `traceId: ${run.traceId}` : null,
+        run.clientRequestId ? `clientRequestId: ${run.clientRequestId}` : null,
+        runSummary?.escalated ? "modelEscalated: true" : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
+
   return (
-    <section className="card min-w-0 space-y-5 overflow-hidden">
-      <div>
+    <section className="min-w-0 space-y-6 overflow-hidden">
+      <Card padding="md" className="border-primary/10">
         <p className="kicker">{t("analysis.kicker")}</p>
-        <h2 className="mt-1 font-display text-2xl">{t("analysis.title")}</h2>
-        <p className="mt-1 text-sm text-muted">{t("analysis.intro")}</p>
-      </div>
+        <h2 className="mt-2 font-heading text-section-title">{t("analysis.title")}</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary">{t("analysis.intro")}</p>
 
-      <ModelRouteStrip
-        orgId={orgId}
-        defaultModelKey={llmContext.defaultModelKey}
-        fallbackModelKey={llmContext.fallbackModelKey}
-        modelNames={llmContext.modelNames}
-        runSummary={run ? runSummary : null}
-      />
+        <ModelRouteStrip
+          orgId={orgId}
+          defaultModelKey={llmContext.defaultModelKey}
+          fallbackModelKey={llmContext.fallbackModelKey}
+          modelNames={llmContext.modelNames}
+          runSummary={run ? runSummary : null}
+        />
 
-      <div className="flex flex-wrap gap-3">
-        {canStart && (
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={starting || (run != null && !TERMINAL.has(run.status))}
-            onClick={() => void startAnalysis()}
-          >
-            {starting ? t("analysis.starting") : t("analysis.start")}
-          </button>
-        )}
-        {run && canCancel && !TERMINAL.has(run.status) && (
-          <button type="button" className="btn-secondary" onClick={() => void cancelAnalysis()}>
-            {t("analysis.cancel")}
-          </button>
-        )}
-      </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          {canStart && (
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={starting || (run != null && !TERMINAL.has(run.status))}
+              onClick={() => void startAnalysis()}
+            >
+              {starting ? t("analysis.starting") : t("analysis.start")}
+            </button>
+          )}
+          {run && canCancel && !TERMINAL.has(run.status) && (
+            <button type="button" className="btn-secondary" onClick={() => void cancelAnalysis()}>
+              {t("analysis.cancel")}
+            </button>
+          )}
+        </div>
+      </Card>
 
       {actionError && (!run || TERMINAL.has(run.status)) && (
         <div className="alert-error space-y-2">
@@ -515,158 +564,220 @@ export function AnalysisPanel({
         </div>
       )}
       {view === "unauthorized" && <AsyncView state="unauthorized" />}
-      {run && (
-        <dl className="grid gap-2 rounded-2xl bg-cream p-4 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">{t("analysis.status")}</dt>
-            <dd className="font-semibold">{statusLabel(run.status, locale)}</dd>
-          </div>
-          {run.currentPhase && (
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">{t("analysis.phase")}</dt>
-              <dd>{phaseLabel(run.currentPhase, locale)}</dd>
-            </div>
-          )}
-          {TERMINAL.has(run.status) && run.terminalReason && (
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">{t("analysis.result")}</dt>
-              <dd>{statusLabel(run.terminalReason, locale)}</dd>
-            </div>
-          )}
-          {TERMINAL.has(run.status) && run.terminalError && (
-            <div className="col-span-full space-y-1">
-              <dt className="text-muted">{t("analysis.error")}</dt>
-              <dd className="text-clay">
-                {humanizeAnalysisError(run.terminalError, locale).message}
-              </dd>
-              <TechnicalDetails label={t("analysis.technicalDetails")} value={run.terminalError} />
-            </div>
-          )}
-          {runSummary?.escalated && (
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">{t("analysis.modelEscalation")}</dt>
-              <dd className="font-semibold text-clay">{t("analysis.modelEscalated")}</dd>
-            </div>
-          )}
-        </dl>
-      )}
 
-      {run && TERMINAL.has(run.status) && run.finalResult && (
-        <div className="space-y-4 rounded-2xl bg-cream p-4 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{t("analysis.policyResult")}</p>
-          <dl className="grid gap-2">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">{t("analysis.decision")}</dt>
-              <dd className={`font-semibold ${run.finalResult.decision === "BLOCK" ? "text-clay" : ""}`}>
-                {decisionLabel(run.finalResult.decision, locale)}
-              </dd>
+      {run && TERMINAL.has(run.status) && finalResult && (
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-card-lg border border-border/70 bg-gradient-to-br p-6 sm:p-8",
+            decisionTint,
+          )}
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted">
+                {t("analysis.policyResult")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <StatusRibbon
+                  variant={decisionToRibbon(finalResult.decision)}
+                  label={decisionLabel(finalResult.decision, locale)}
+                />
+                <StatusRibbon
+                  variant={riskToRibbon(finalResult.overallRisk)}
+                  label={riskLabel(finalResult.overallRisk, locale)}
+                />
+              </div>
+              <PolicyCopy
+                summary={finalResult.summary}
+                recommendation={finalResult.recommendation}
+                locale={locale}
+              />
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">{t("analysis.overallRisk")}</dt>
-              <dd className={isHighSeverity(run.finalResult.overallRisk) ? "font-semibold text-clay" : "font-semibold"}>
-                {riskLabel(run.finalResult.overallRisk, locale)}
-              </dd>
+            <div className="shrink-0 text-right text-sm text-muted">
+              <p>{t("analysis.confidence")}</p>
+              <p className="font-heading text-3xl font-semibold text-ink">
+                {Math.round(finalResult.confidence * 100)}%
+              </p>
+              {run.completedAt && (
+                <p className="mt-2 text-xs">{new Date(run.completedAt).toLocaleString(locale === "tr" ? "tr-TR" : "en-US")}</p>
+              )}
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">{t("analysis.confidence")}</dt>
-              <dd>{Math.round(run.finalResult.confidence * 100)}%</dd>
-            </div>
-          </dl>
-          <PolicyCopy
-            summary={run.finalResult.summary}
-            recommendation={run.finalResult.recommendation}
-            locale={locale}
-          />
+          </div>
         </div>
       )}
 
+      {run && TERMINAL.has(run.status) && finalResult && (
+        <Card padding="md">
+          <CardHeader>
+            <CardTitle>Neden bu sonuç?</CardTitle>
+          </CardHeader>
+          <div className="space-y-4 text-sm text-text-secondary">
+            <PolicyCopy
+              summary={finalResult.summary}
+              recommendation={finalResult.recommendation}
+              locale={locale}
+            />
+            {run.safetyFindings && run.safetyFindings.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Destekleyen bulgular</p>
+                <ul className="space-y-1">
+                  {run.safetyFindings.slice(0, 4).map((finding) => (
+                    <li key={finding.id} className="flex gap-2">
+                      <span className="text-primary">•</span>
+                      <span>
+                        {findingTypeLabel(finding.type, locale)} —{" "}
+                        {findingRationale(finding.type, finding.rationale, locale)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {finalResult.limitations.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Dikkat noktaları</p>
+                <ul className="space-y-1">
+                  {finalResult.limitations.slice(0, 3).map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="text-caution">•</span>
+                      <span>{localizePolicyText(item, locale)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {nextAction && (
+        <Card padding="md" className="border-primary/15 bg-primary/[0.03]">
+          <CardTitle className="text-base">Önerilen sonraki adım</CardTitle>
+          <p className="mt-2 text-sm text-text-secondary">{nextAction}</p>
+          {(finalResult?.decision === "BLOCK" || finalResult?.decision === "REVIEW_REQUIRED") && (
+            <Link href={`/org/${orgId}/compliance`} className="btn-secondary mt-4 inline-flex text-sm">
+              {t("analysis.complianceLink")}
+            </Link>
+          )}
+        </Card>
+      )}
+
       {run && TERMINAL.has(run.status) && run.safetyFindings && run.safetyFindings.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-semibold">
-            {run.safetyFindings.every((finding) => isQualityFinding(finding.type))
-              ? t("analysis.evidenceStatus")
-              : t("analysis.safetyFindings")}
-          </h3>
+        <Card padding="md">
+          <CardHeader>
+            <CardTitle>
+              {run.safetyFindings.every((finding) => isQualityFinding(finding.type))
+                ? t("analysis.evidenceStatus")
+                : t("analysis.safetyFindings")}
+            </CardTitle>
+          </CardHeader>
+          <div className="mb-4 flex flex-wrap gap-2">
+            <FilterPill active={findingFilter === "all"} onClick={() => setFindingFilter("all")}>
+              Tümü
+            </FilterPill>
+            <FilterPill active={findingFilter === "critical"} onClick={() => setFindingFilter("critical")}>
+              Kritik
+            </FilterPill>
+            <FilterPill active={findingFilter === "high"} onClick={() => setFindingFilter("high")}>
+              Yüksek
+            </FilterPill>
+          </div>
           <ul className="space-y-2 text-sm">
-            {run.safetyFindings.map((finding) => {
+            {filteredFindings.map((finding) => {
               const rationale = findingRationale(finding.type, finding.rationale, locale);
+              const isHigh = isHighSeverity(finding.severity);
               return (
                 <li
                   key={finding.id}
-                  className={`rounded-2xl bg-cream p-3 ${isHighSeverity(finding.severity) ? "text-clay" : ""}`}
+                  className={cn(
+                    "rounded-xl border px-4 py-3",
+                    isHigh ? "border-risk/25 bg-risk/[0.04]" : "border-border/70 bg-secondary/30",
+                  )}
                 >
-                  <p className="font-semibold">
-                    {riskLabel(finding.severity, locale)} · {findingTypeLabel(finding.type, locale)}
-                  </p>
-                  {rationale ? <p>{rationale}</p> : null}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusRibbon
+                      variant={severityToRibbon(finding.severity)}
+                      label={riskLabel(finding.severity, locale)}
+                      size="sm"
+                    />
+                    <span className="text-xs text-muted">{findingTypeLabel(finding.type, locale)}</span>
+                  </div>
+                  {rationale ? <p className="mt-2 text-text-secondary">{rationale}</p> : null}
                 </li>
               );
             })}
           </ul>
-        </div>
+        </Card>
       )}
 
-      {run && TERMINAL.has(run.status) && run.recalls && run.recalls.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-semibold">{t("analysis.recalls")}</h3>
-          <ul className="space-y-2 text-sm">
-            {run.recalls.map((match) => (
-              <li key={`${match.source}-${match.sourceRecordId}`} className="rounded-2xl bg-cream p-3">
-                <p className="font-semibold">
-                  {match.source}{" "}
-                  {match.requiresReview ? t("analysis.recallReview") : t("analysis.recallConfirmed")}
-                </p>
-                {match.reference && <p className="text-muted">{match.reference}</p>}
-              </li>
-            ))}
+      {run && TERMINAL.has(run.status) && run.recalls && run.recalls.some((m) => m.matched) && (
+        <Card padding="md">
+          <CardTitle className="text-base">{t("analysis.recalls")}</CardTitle>
+          <ul className="mt-4 space-y-2 text-sm">
+            {run.recalls
+              .filter((m) => m.matched)
+              .map((match) => (
+                <li key={`${match.source}-${match.sourceRecordId}`} className="rounded-xl border border-border/70 px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{match.source}</span>
+                    <StatusRibbon
+                      variant={match.requiresReview ? "review" : "recall"}
+                      size="sm"
+                      label={match.requiresReview ? t("analysis.recallReview") : t("analysis.recallConfirmed")}
+                    />
+                  </div>
+                  {match.reference && <p className="mt-1 text-muted">{match.reference}</p>}
+                </li>
+              ))}
           </ul>
-        </div>
+        </Card>
+      )}
+
+      {run && TERMINAL.has(run.status) && run.recalls && !run.recalls.some((m) => m.matched) && (
+        <Card padding="md">
+          <CardTitle className="text-base">{t("analysis.recalls")}</CardTitle>
+          <p className="mt-2 text-sm text-text-secondary">Aktif geri çağırma eşleşmesi bulunmadı.</p>
+        </Card>
       )}
 
       {run && TERMINAL.has(run.status) && run.evidence && run.evidence.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-semibold">{t("analysis.evidence")}</h3>
-          <p className="text-sm text-muted">{t("analysis.evidenceCount", { count: run.evidence.length })}</p>
-          <ul className="space-y-2 text-sm">
+        <details className="rounded-card border border-border/70 bg-surface px-4 py-3">
+          <summary className="cursor-pointer list-none py-1 text-sm font-medium text-ink marker:content-none [&::-webkit-details-marker]:hidden">
+            {t("analysis.evidence")} ({t("analysis.evidenceCount", { count: run.evidence.length })})
+          </summary>
+          <ul className="mt-3 space-y-2 pb-2 text-sm">
             {run.evidence.slice(0, 8).map((item, index) => (
-              <li key={`${item.source}-${index}`} className="rounded-2xl bg-cream p-3">
-                <p className="font-semibold">{item.source}</p>
-                <p>{item.claim}</p>
-                <p className="text-muted">
+              <li key={`${item.source}-${index}`} className="rounded-xl bg-secondary/40 p-3">
+                <p className="font-medium">{item.source}</p>
+                <p className="text-text-secondary">{item.claim}</p>
+                <p className="text-xs text-muted">
                   {item.supportStatus ? supportStatusLabel(item.supportStatus, locale) : t("analysis.noSupportStatus")}
                 </p>
-                {item.reference && <p className="text-muted">{item.reference}</p>}
+                {item.reference && <p className="text-xs text-muted">{item.reference}</p>}
               </li>
             ))}
           </ul>
-        </div>
+        </details>
       )}
 
       {run && TERMINAL.has(run.status) && run.reviewInsights && run.reviewInsights.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-semibold">{t("analysis.reviewInsights")}</h3>
-          <ul className="space-y-2 text-sm">
+        <Card padding="md">
+          <CardTitle className="text-base">{t("analysis.reviewInsights")}</CardTitle>
+          <ul className="mt-3 space-y-2 text-sm">
             {run.reviewInsights.map((insight, index) => (
-              <li key={`${insight.kind}-${insight.topic}-${index}`} className="rounded-2xl bg-cream p-3">
-                <p className="font-semibold">
+              <li key={`${insight.kind}-${insight.topic}-${index}`} className="rounded-xl bg-secondary/40 p-3">
+                <p className="font-medium">
                   {insightKindLabel(insight.kind, locale)} · {insightTopicLabel(insight.topic, locale)} ({insight.count})
                 </p>
                 <p className="text-muted">{localizePolicyText(insight.summary, locale)}</p>
               </li>
             ))}
           </ul>
-        </div>
+        </Card>
       )}
 
-      {run && TERMINAL.has(run.status) && run.finalResult?.limitations && run.finalResult.limitations.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-semibold">{t("analysis.limitations")}</h3>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-            {run.finalResult.limitations.map((item) => (
-              <li key={item}>{localizePolicyText(item, locale)}</li>
-            ))}
-          </ul>
-        </div>
+      {run && (
+        <TechnicalDetails label={t("analysis.technicalDetails")} value={runTechnicalPayload} />
       )}
 
       {view === "polling" && run && !TERMINAL.has(run.status) && (
@@ -674,10 +785,15 @@ export function AnalysisPanel({
           state="loading"
           loading={
             <div role="status" className="card text-center">
-              <div className="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-forest-soft" />
+              <div className="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-secondary" />
               <p className="text-sm text-muted">
                 {awaitingAgentWake ? t("analysis.wakeWait") : t("analysis.polling")}
               </p>
+              {run.currentPhase && (
+                <p className="mt-1 text-xs text-muted">
+                  {t("analysis.phase")}: {phaseLabel(run.currentPhase, locale)}
+                </p>
+              )}
             </div>
           }
         />

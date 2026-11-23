@@ -92,7 +92,7 @@ export const FINDING_TYPE_LABELS: LabelTable = {
     CHOKING: "Boğulma riski", SUFFOCATION: "Nefes alma riski", STRANGULATION: "Boğma / ip riski",
     CHEMICAL: "Kimyasal risk", FIRE: "Yangın riski", ELECTRICAL: "Elektrik riski", STRUCTURAL: "Yapısal risk",
     AGE_SUITABILITY: "Yaş uygunluğu", HYGIENE: "Hijyen", INJURY: "Yaralanma riski", RECALL: "Geri çağırma",
-    MISLEADING_CLAIM: "Yanıltıcı iddia", OTHER: "Diğer", INSUFFICIENT_EVIDENCE: "Yetersiz kanıt",
+    MISLEADING_CLAIM: "Yanıltıcı iddia", OTHER: "Diğer", INSUFFICIENT_EVIDENCE: "Yetersiz kaynak",
   },
   en: {
     CHOKING: "Choking risk", SUFFOCATION: "Suffocation risk", STRANGULATION: "Strangulation / cord risk",

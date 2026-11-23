@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { HomeHowToCompact } from "@/components/home-how-to";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { TurnstileWidget, turnstileEnabled } from "@/components/turnstile-widget";
 import {
@@ -118,7 +117,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthShell title="Giriş yap" subtitle="Çalışma alanınıza ve kanıtlı ürün analizine dönün.">
+    <AuthShell title="Giriş yap" subtitle="Çalışma alanınıza ve ürün analizine dönün.">
       {error && (
         <div role="alert" className="alert-error">
           <p>{error}</p>
@@ -183,8 +182,6 @@ export default function LoginPage() {
           Kayıt ol
         </Link>
       </p>
-
-      <HomeHowToCompact />
     </AuthShell>
   );
 }

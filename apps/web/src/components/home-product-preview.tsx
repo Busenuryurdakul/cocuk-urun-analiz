@@ -82,7 +82,7 @@ export function HomeProductPreview() {
             <p className="mt-1 text-sm text-muted">{productSubtitle(product) || "Kaynak alanları eksik olabilir"}</p>
           </div>
           <span className={product.brand.missing ? "badge-clay" : "badge-forest"}>
-            {product.brand.missing ? "Marka eksik" : "Kanıtlı alanlar"}
+            {product.brand.missing ? "Marka eksik" : "Kaynaklar tam"}
           </span>
         </div>
 
@@ -153,7 +153,7 @@ function SampleReportCard() {
             <h2 className="mt-2 font-display text-2xl leading-tight">Ahşap aktivite küpü</h2>
             <p className="mt-1 text-sm text-muted">0–3 yaş · marka alanı eksik</p>
           </div>
-          <span className="badge-clay">Kanıtlı</span>
+          <span className="badge-clay">Kaynaklı</span>
         </div>
         <p className="mt-6 text-sm text-muted">
           Giriş yaptığınızda bu kart, organizasyonunuzdaki gerçek ürün kaydını ve eksik alanları gösterir.

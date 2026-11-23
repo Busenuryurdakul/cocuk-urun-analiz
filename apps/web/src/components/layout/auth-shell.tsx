@@ -24,7 +24,7 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
           <p className="font-display text-4xl leading-tight text-on-brand">
             Sadece skoru değil,
             <br />
-            arkasındaki kanıtı gör.
+            arkasındaki kaynağı gör.
           </p>
           <p className="text-sm leading-relaxed text-on-brand/85">
             Çocuk ürünlerinde her iddia bir kaynağa bağlanır. Eksik alan uydurulmaz; resmi
